@@ -1,3 +1,4 @@
+
 pluginManagement {
     repositories {
         gradlePluginPortal()
@@ -8,6 +9,7 @@ pluginManagement {
         id("com.android.application") version("7.1.0-alpha10")
         id("com.android.library") version("7.1.0-alpha10")
         id("org.jetbrains.kotlin.android") version("1.5.10")
+        id("org.jetbrains.kotlin.jvm") version("1.5.30")
     }
 }
 
@@ -21,7 +23,3 @@ dependencyResolutionManagement {
 }
 rootProject.name = "LoveFinder"
 include(":app")
-val compose_version = "1.0.0"
-val kotlin_android = "1.5.10"
-val android_library = "7.1.0-alpha10"
-val android_application = "7.1.0-alpha10"

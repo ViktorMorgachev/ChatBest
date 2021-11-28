@@ -1,3 +1,5 @@
+import com.pet.buildsrc.*
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -49,16 +51,15 @@ android {
 }
 
 dependencies {
-
-    implementation("androidx.core:core-ktx:1.7.0")
-    implementation("androidx.compose.ui:ui:1.0.0")
-    implementation("androidx.compose.material:material:1.0.0")
-    implementation("androidx.compose.ui:ui-tooling-preview:1.0.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.3.1")
-    implementation("androidx.activity:activity-compose:1.3.0")
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.3")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.0.0")
-    debugImplementation("androidx.compose.ui:ui-tooling:1.0.0")
+    implementation(Libs.androidx_core_ktx)
+    implementation(Libs.compose_ui)
+    implementation(Libs.compose_material)
+    implementation(Libs.compose_ui_tooling_preview)
+    implementation(Libs.androidx_lifecycle_runtime_ktx)
+    implementation(Libs.android_activity_compose)
+    testImplementation(TestLibs.junit)
+    androidTestImplementation(AndroidTestLibs.ext_junit)
+    androidTestImplementation(AndroidTestLibs.android_test_espresso_core)
+    androidTestImplementation(AndroidTestLibs.androidx_compose_ui_test_junit4)
+    debugImplementation(DebugLibs.compose_ui_tooling)
 }
