@@ -14,8 +14,6 @@ object Versions {
     val android_test_espresso_core = "3.4.0"
     val androidx_compose_ui_test_junit4 = "1.0.0"
     val compose_ui_tooling = "1.0.0"
-
-
 }
 
 object Libs {
