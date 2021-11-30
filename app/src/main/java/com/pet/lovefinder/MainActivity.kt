@@ -5,18 +5,19 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.pet.lovefinder.ui.theme.LoveFinderTheme
 
-val data = listOf("Alice" to "996242423234", "Tom" to "996334534544", "Kolin" to "9962323234234")
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,12 +25,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             LoveFinderTheme {
                 MyApp()
-                /* data.forEach {
-                     Column {
-                         Greeting(name = it.first)
-                         Greeting(name = it.second)
-                     }
-                 }*/
             }
         }
     }
@@ -45,24 +40,24 @@ fun MyAppPreview() {
 
 @Composable
 fun MyApp() {
-    val shouldShowOnboarding = remember { mutableStateOf(true) }
+    val shouldShowOnboarding = rememberSaveable { mutableStateOf(true) }
     if (shouldShowOnboarding.value) {
         OnboardingScreen { shouldShowOnboarding.value = !shouldShowOnboarding.value }
     } else Greetings()
 }
 
 @Composable
-private fun Greetings(names: List<String> = listOf("World", "Compose")) {
-    Column(modifier = Modifier.padding(vertical = 4.dp)) {
-        for (name in names) {
-            Greeting(name = name)
+private fun Greetings(names: List<String> = List(10000) { "$it" }) {
+    LazyColumn(modifier = Modifier.padding(vertical = 4.dp)) {
+        items(items = names){
+            Greeting(name = it)
         }
     }
 }
 
 @Composable
 private fun Greeting(name: String) {
-    val expanded = remember { mutableStateOf(false) }
+    val expanded = rememberSaveable { mutableStateOf(false) }
     val extraPading = if (expanded.value) 48.dp else 0.dp
     Surface(color = MaterialTheme.colors.primary, modifier = Modifier
         .fillMaxWidth()
@@ -71,7 +66,7 @@ private fun Greeting(name: String) {
             Column(modifier = Modifier
                 .weight(1f)
                 .padding(bottom = extraPading)) {
-                Text(text = "Hello,")
+                Text(text = "Element")
                 Text(text = name)
             }
             OutlinedButton(onClick = {
@@ -107,6 +102,6 @@ fun OnboardingScreen(onContinueClicked: () -> Unit) {
 @Composable
 fun OnboardingPreview() {
     LoveFinderTheme {
-        OnboardingScreen{}
+        OnboardingScreen {}
     }
 }
