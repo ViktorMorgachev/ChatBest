@@ -19,7 +19,7 @@ object Versions {
 object Libs {
     val compose_ui = "androidx.compose.ui:ui:${Versions.compose_version}"
     val compose_material = "androidx.compose.material:material:${Versions.compose_version}"
-    val compose_ui_tooling_preview = "ndroidx.compose.ui:ui-tooling-preview:${Versions.compose_version}"
+    val compose_ui_tooling_preview = "androidx.compose.ui:ui-tooling-preview:${Versions.compose_version}"
     val androidx_core_ktx = "androidx.core:core-ktx:${Versions.androidx_core_ktx}"
     val androidx_lifecycle_runtime_ktx = "androidx.lifecycle:lifecycle-runtime-ktx:${Versions.androidx_lifecycle_runtime}"
     val android_activity_compose = "androidx.activity:activity-compose:${Versions.android_activity_compose}"
