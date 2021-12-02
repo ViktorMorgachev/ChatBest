@@ -56,6 +56,7 @@ dependencies {
     implementation(Libs.compose_ui_tooling_preview)
     implementation(Libs.androidx_lifecycle_runtime_ktx)
     implementation(Libs.android_activity_compose)
+    implementation(Libs.compose_material_icons_extended)
     testImplementation(TestLibs.junit)
     androidTestImplementation(AndroidTestLibs.ext_junit)
     androidTestImplementation(AndroidTestLibs.android_test_espresso_core)

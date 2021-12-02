@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">LoveFinder</string>
+    <string name="show_less">Show less</string>
+    <string name="show_more">Show more</string>
+    <string name="test_string">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam convallis bibendum lorem, id vehicula nisl posuere convallis. Nam ut rutrum lectus. Quisque nec lobortis ipsum. Phasellus eu iaculis purus, eu fringilla justo. Etiam mollis, erat vel pharetra consequat, diam orci aliquet ipsum, vitae volutpat justo erat nec diam. Vestibulum vulputate dui eget ante fringilla, nec consequat diam convallis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Proin vel libero malesuada dolor scelerisque mollis. Integer auctor pulvinar nulla, quis pharetra eros accumsan ac. Nullam dapibus feugiat hendrerit. Praesent vehicula molestie semper. Sed condimentum pulvinar leo, in mattis dolor ultrices sit amet. Nunc urna tellus, pharetra vel ex a, vulputate tempor quam. Cras quis hendrerit massa. Curabitur fermentum purus et massa semper hendrerit</string>
 </resources>
