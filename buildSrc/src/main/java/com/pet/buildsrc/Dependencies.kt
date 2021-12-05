@@ -14,6 +14,8 @@ object Versions {
     val android_test_espresso_core = "3.4.0"
     val androidx_compose_ui_test_junit4 = "1.0.0"
     val compose_material_icons_extended = compose_version
+    val activity_compose = "1.4.0"
+
 }
 
 object Libs {
@@ -22,8 +24,8 @@ object Libs {
     val compose_ui_tooling_preview = "androidx.compose.ui:ui-tooling-preview:${Versions.compose_version}"
     val androidx_core_ktx = "androidx.core:core-ktx:${Versions.androidx_core_ktx}"
     val androidx_lifecycle_runtime_ktx = "androidx.lifecycle:lifecycle-runtime-ktx:${Versions.androidx_lifecycle_runtime}"
-    val android_activity_compose = "androidx.activity:activity-compose:${Versions.android_activity_compose}"
     val compose_material_icons_extended = "androidx.compose.material:material-icons-extended:${Versions.compose_version}"
+    val compose_activity ="androidx.activity:activity-compose:${Versions.activity_compose}"
 }
 
 object TestLibs{
