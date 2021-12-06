@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -25,6 +26,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.pet.lovefinder.ui.theme.LoveFinderTheme
+import com.pet.lovefinder.ui.theme.*
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,16 +59,28 @@ fun MyApp() {
                     }
                 }
             )
-        }, bottomBar = {
+        },
+        bottomBar = {
             BottomAppBar(modifier = Modifier) {
                 val bottomItems = listOf(Icons.Filled.Chat to "Chat",
                     Icons.Filled.Favorite to "Favorite",
                     Icons.Filled.Settings to "Settings")
                 BottomItems(items = bottomItems, modifier = Modifier.weight(1f, true))
-               /* IconButton(onClick = {  }) { Icon(Icons.Filled.Menu, contentDescription = "Меню")}
-                Spacer(Modifier.weight(1f, true))
-                IconButton(onClick = {  }) { Icon(Icons.Filled.Search, contentDescription = "Поиск")}*/
+                /* IconButton(onClick = {  }) { Icon(Icons.Filled.Menu, contentDescription = "Меню")}
+                 Spacer(Modifier.weight(1f, true))
+                 IconButton(onClick = {  }) { Icon(Icons.Filled.Search, contentDescription = "Поиск")}*/
             }
+
+        },
+        floatingActionButton = {
+            var added by rememberSaveable { mutableStateOf(false) }
+            FloatingActionButton(
+                content = {
+                    if (added) Icon(Icons.Filled.Clear, contentDescription = "Удалить")
+                    else Icon(Icons.Filled.Add, contentDescription = "Добавить")
+                },
+                onClick = { added = !added }
+            )
 
         }
     ) { innerPadding ->
@@ -98,11 +113,43 @@ private fun BottomItem(
 @Preview(showBackground = true, widthDp = 320)
 @Composable
 private fun Greetings(modifier: Modifier = Modifier, names: List<String> = List(10000) { "$it" }) {
-    LazyColumn(modifier = Modifier.padding(vertical = 4.dp)) {
-        items(items = names) {
-            Greeting(name = it)
+    Column() {
+        val coroutineScope = rememberCoroutineScope()
+        val scrollState = rememberLazyListState()
+        Row(modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp)) {
+            Button(onClick = {
+                coroutineScope.launch {
+                    scrollState.animateScrollToItem(0)
+                }
+            }, modifier = Modifier
+                .weight(1f)
+                .padding(vertical = 4.dp)
+                .padding(end = 4.dp)) {
+                Text(text = "Scroll up")
+                Icon(imageVector = Icons.Filled.ArrowUpward, contentDescription = "Scroll up")
+            }
+            Button(onClick = {
+                coroutineScope.launch {
+                    scrollState.animateScrollToItem(names.size - 1)
+                }
+            }, modifier = Modifier
+                .weight(1f)
+                .padding(vertical = 4.dp)
+                .padding(start = 4.dp)) {
+                Text(text = "Scroll down")
+                Icon(imageVector = Icons.Filled.ArrowDownward, contentDescription = "Scroll down")
+            }
+        }
+
+        LazyColumn(modifier = Modifier.padding(vertical = 4.dp), scrollState) {
+            items(items = names) {
+                Greeting(name = it)
+            }
         }
     }
+
 }
 
 @Composable
