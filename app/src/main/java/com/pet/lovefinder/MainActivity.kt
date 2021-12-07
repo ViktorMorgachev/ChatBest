@@ -110,7 +110,7 @@ private fun BottomItem(
 
 @Preview(uiMode = UI_MODE_NIGHT_YES, name = "DefaultPreviewDark")
 //@Preview(uiMode = UI_MODE_NIGHT_NO, name = "DefaultPreviewLight")
-@Preview(showBackground = true, widthDp = 320)
+@Preview(showBackground = true, widthDp = 320, showSystemUi = true, device = "Xiaomi")
 @Composable
 private fun Greetings(modifier: Modifier = Modifier, names: List<String> = List(10000) { "$it" }) {
     Column() {
@@ -232,10 +232,13 @@ fun LayoutsCodelab() {
 
 }
 
+@Preview
 @Composable
 fun BodyContent(modifier: Modifier = Modifier) {
-    Column(modifier = modifier) {
-        Text(text = "Hi there!")
-        Text(text = "Thanks for going through the Layouts codelab")
+    MyOwnColumn(modifier.padding(16.dp)) {
+        Text("MyOwnColumn")
+        Text("places items")
+        Text("vertically.")
+        Text("We've done it by hand!")
     }
 }
