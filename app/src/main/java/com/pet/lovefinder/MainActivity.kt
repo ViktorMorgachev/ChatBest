@@ -29,6 +29,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.Dimension
+import androidx.constraintlayout.compose.atLeast
 import com.pet.lovefinder.ui.theme.LoveFinderTheme
 import com.pet.lovefinder.ui.theme.*
 import kotlinx.coroutines.launch
@@ -277,25 +279,12 @@ fun Chip(modifier: Modifier = Modifier, text: String) {
 @Composable
 fun ConstraintLayoutContent() {
     ConstraintLayout {
-        val (button, text, button2) = createRefs()
-        
-        Button(onClick = { /*TODO*/ }, modifier = Modifier.constrainAs(button) {
-            top.linkTo(parent.top, margin = 16.dp)
-        }) {
-            Text(text = "Create")
-        }
-
-        Text(text = "Text", modifier = Modifier.constrainAs(text) {
-            top.linkTo(button.bottom, margin = 16.dp)
-            centerAround(button.end)
-        })
-
-        val barier = createEndBarrier(button, text)
-        Button(onClick = { /*TODO*/ }, modifier = Modifier.constrainAs(button2) {
-            top.linkTo(parent.top, margin = 16.dp)
-            start.linkTo(barier)
-        }) {
-            Text(text = "Delete")
-        }
+        val text = createRef()
+        val guidline = createGuidelineFromStart(fraction = 0.5f)
+        Text(text = "This is a very very very very very very very long text",
+            Modifier.constrainAs(text) {
+                linkTo(start = guidline, end = parent.end)
+                width = Dimension.preferredWrapContent.atLeast(50.dp)
+            })
     }
 }
