@@ -23,12 +23,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
 import androidx.constraintlayout.compose.atLeast
 import com.pet.lovefinder.ui.theme.LoveFinderTheme
@@ -41,7 +44,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             LoveFinderTheme {
                 // MyApp()
-                BodyContent()
+                //BodyContent()
+               // ConstraintLayoutContent()
+                Surface {
+                    TwoText(textFirst = "Hi", textSecond = "There")
+                }
             }
         }
     }
@@ -278,13 +285,52 @@ fun Chip(modifier: Modifier = Modifier, text: String) {
 @Preview
 @Composable
 fun ConstraintLayoutContent() {
-    ConstraintLayout {
-        val text = createRef()
-        val guidline = createGuidelineFromStart(fraction = 0.5f)
-        Text(text = "This is a very very very very very very very long text",
-            Modifier.constrainAs(text) {
-                linkTo(start = guidline, end = parent.end)
-                width = Dimension.preferredWrapContent.atLeast(50.dp)
-            })
+    BoxWithConstraints() {
+        val constraints = if (maxWidth < maxHeight) {
+            decoupledConstraints(margin = 16.dp)
+        } else decoupledConstraints(margin = 32.dp)
+        ConstraintLayout(constraints) {
+            Button(onClick = { /*TODO*/ }, Modifier.layoutId("button")) {
+                Text(text = "Button")
+            }
+            Text(text = "Text", Modifier.layoutId("text"))
+        }
+    }
+
+
+}
+
+private fun decoupledConstraints(margin: Dp): ConstraintSet {
+    return ConstraintSet {
+        val button = createRefFor("button")
+        val text = createRefFor("text")
+        constrain(button) {
+            top.linkTo(parent.top, margin = margin)
+        }
+        constrain(text) {
+            top.linkTo(button.bottom, margin = margin)
+        }
     }
 }
+
+@Preview
+@Composable
+fun TwoText(modifier: Modifier = Modifier, textFirst: String = "First", textSecond: String = "Second") {
+    Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+        Text(text = textFirst,
+            Modifier
+                .weight(1f)
+                .padding(start = 4.dp)
+                .wrapContentWidth(Alignment.Start))
+        Divider(modifier = Modifier
+            .fillMaxHeight()
+            .width(1.dp))
+        Text(text = textSecond,
+            Modifier
+                .weight(1f)
+                .padding(end = 4.dp)
+                .wrapContentWidth(Alignment.End))
+
+    }
+}
+
