@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.constraintlayout.compose.ConstraintLayout
 import com.pet.lovefinder.ui.theme.LoveFinderTheme
 import com.pet.lovefinder.ui.theme.*
 import kotlinx.coroutines.launch
@@ -37,7 +38,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             LoveFinderTheme {
-               // MyApp()
+                // MyApp()
                 BodyContent()
             }
         }
@@ -100,7 +101,6 @@ fun MyApp() {
 
 }
 
-@Preview
 @Composable
 fun LayoutsCodelabPreview() {
     LoveFinderTheme() {
@@ -108,7 +108,6 @@ fun LayoutsCodelabPreview() {
     }
 }
 
-@Preview
 @Composable
 private fun BottomItem(
     modifier: Modifier = Modifier,
@@ -120,7 +119,6 @@ private fun BottomItem(
     }
 }
 
-@Preview(uiMode = UI_MODE_NIGHT_YES, name = "DefaultPreviewDark")
 //@Preview(uiMode = UI_MODE_NIGHT_NO, name = "DefaultPreviewLight")
 @Preview(showBackground = true, widthDp = 320, showSystemUi = true, device = "Xiaomi")
 @Composable
@@ -244,8 +242,6 @@ val topics = listOf(
     "Religion", "Social sciences", "Technology", "TV", "Writing"
 )
 
-
-@Preview
 @Composable
 fun BodyContent(modifier: Modifier = Modifier) {
     StaggeredGrid(modifier = modifier, rows = 3) {
@@ -254,7 +250,6 @@ fun BodyContent(modifier: Modifier = Modifier) {
         }
     }
 }
-
 
 @Composable
 fun Chip(modifier: Modifier = Modifier, text: String) {
@@ -274,6 +269,33 @@ fun Chip(modifier: Modifier = Modifier, text: String) {
             )
             Spacer(Modifier.width(4.dp))
             Text(text = text)
+        }
+    }
+}
+
+@Preview
+@Composable
+fun ConstraintLayoutContent() {
+    ConstraintLayout {
+        val (button, text, button2) = createRefs()
+        
+        Button(onClick = { /*TODO*/ }, modifier = Modifier.constrainAs(button) {
+            top.linkTo(parent.top, margin = 16.dp)
+        }) {
+            Text(text = "Create")
+        }
+
+        Text(text = "Text", modifier = Modifier.constrainAs(text) {
+            top.linkTo(button.bottom, margin = 16.dp)
+            centerAround(button.end)
+        })
+
+        val barier = createEndBarrier(button, text)
+        Button(onClick = { /*TODO*/ }, modifier = Modifier.constrainAs(button2) {
+            top.linkTo(parent.top, margin = 16.dp)
+            start.linkTo(barier)
+        }) {
+            Text(text = "Delete")
         }
     }
 }
