@@ -74,3 +74,44 @@ fun FirstBaseLineTopTest() {
     }
 }
 
+@Composable
+fun StaggeredGrid(
+    modifier: Modifier = Modifier,
+    rows: Int = 3,
+    content: @Composable () -> Unit
+) {
+    Layout(
+        modifier = modifier,
+        content = content
+    ) { measurables, constraints ->
+        // measure and position children given constraints logic here
+        val rowWidths = IntArray(rows){0}
+        val rowHeights = IntArray(rows) {0}
+        val plaseables = measurables.mapIndexed { index, measurable ->
+            val plaseable = measurable.measure(constraints = constraints)
+            val row = index % rows
+            rowWidths[row] += plaseable.width
+            rowHeights[row] = Math.max(rowHeights[row], plaseable.height)
+            plaseable
+        }
+
+        val width = rowWidths.maxOrNull()?.coerceIn(constraints.minWidth.rangeTo(constraints.maxWidth)) ?: constraints.minWidth
+        val height = rowHeights.sumOf { it }.coerceIn(constraints.minHeight.rangeTo(constraints.maxHeight))
+
+        val rowY = IntArray(rows){0}
+        for(i in 1 until rows){
+            rowY[i] = rowY[i-1] + rowHeights[i-1]
+        }
+
+        val rowX = IntArray(0){0}
+
+        layout(width = width, height = height){
+            plaseables.forEachIndexed { index, placeable ->
+                val row = index % rows
+               // placeable.placeRelative(rowX[row], rowY[row])
+            }
+        }
+
+    }
+}
+
