@@ -57,7 +57,7 @@ object ConnectionManager {
 
     fun initConnection(uri: String, options: IO.Options) {
         try {
-            socket = IO.socket(uri, options)
+            socket = IO.socket("ws://185.26.121.63:3000").connect()
             registratingEvents()
         } catch (error: Throwable) {
             error.printStackTrace()
@@ -68,27 +68,23 @@ object ConnectionManager {
         socket?.let { socket ->
             socket.on("on.user.authorized") {
                 println("Socket: SocketID ${socket.id()} Connected ${socket.connected()} Data $it")
-                throw RuntimeException("on.user.authorized")
             }
             socket.on(Socket.EVENT_CONNECT) {
                 println("Socket: SocketID ${socket.id()} Connected ${socket.connected()}")
-                throw RuntimeException("connect")
             }
 
             socket.on(Socket.EVENT_DISCONNECT) {
                 println("Socket: SocketID ${socket.id()} Connected ${socket.connected()}") // null
-                throw RuntimeException("disconnect")
             }
             socket.on(Socket.EVENT_CONNECT_ERROR) {
                 //options.auth.put("authorization", "bearer 1234")
                 println("Socket: SocketID ${socket.id()} Connected ${socket.connected()} Error $it")
                 socket.connect()
-                throw RuntimeException("connect error $it")
             }
         }
     }
 
     fun auth(authData: AuthData) {
-        socket?.emit("user.auth", authData)
+        socket?.emit("user.auth", arrayOf(authData.id, authData.token))
     }
 }

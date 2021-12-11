@@ -1,6 +1,5 @@
 package com.pet.lovefinder.network
 
-
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
@@ -27,8 +26,14 @@ class NetworkWorker(context: Context, workerParams: WorkerParameters) :
 
     private fun initializeConnection() {
         val uri = createHostUrl()
+        val port = if (networkHostTypeKey == NetworkHostType.WS.name.lowercase()) {
+            networkWSsocket
+        } else {
+            networkHttpSocket
+        }
         val options =
-            IO.Options.builder().setPath("/").setTransports(arrayOf("websocket", "polling")).build()
+            IO.Options.builder().setPath("/").setTransports(arrayOf("websocket", "polling"))
+                .setPort(port.toInt()).build()
         ConnectionManager.initConnection(uri, options)
 
     }
@@ -36,12 +41,7 @@ class NetworkWorker(context: Context, workerParams: WorkerParameters) :
     private fun createHostUrl(): String {
         val networkHostTypeKey = inputData.getString(networkHostTypeKey)
         val hostBuilder = StringBuilder().append(networkHostTypeKey).append("://")
-            .append(inputData.getString(networkIPKey)).append(":")
-        if (networkHostTypeKey == NetworkHostType.WS.name.lowercase()) {
-            hostBuilder.append(networkWSsocket)
-        } else {
-            hostBuilder.append(networkHttpSocket)
-        }
+            .append(inputData.getString(networkIPKey))
         return hostBuilder.toString()
     }
 }
