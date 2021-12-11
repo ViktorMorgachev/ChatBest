@@ -60,7 +60,7 @@ fun RegisteringScreen(modifier: Modifier = Modifier, value: Event) {
     Column(modifier = Modifier.padding(4.dp)) {
         TextField(value = id, onValueChange = idChange, Modifier.fillMaxWidth())
         TextField(value = token, onValueChange = tokenChange, Modifier.fillMaxWidth())
-        Button(onClick = { ConnectionManager.auth(id, token) }, Modifier.align(Alignment.CenterHorizontally)) {
+        Button(onClick = { ConnectionManager.auth(id.toInt(), token) }, Modifier.align(Alignment.CenterHorizontally)) {
             Text(text = "Register")
         }
         Text(text = "Info: $value")

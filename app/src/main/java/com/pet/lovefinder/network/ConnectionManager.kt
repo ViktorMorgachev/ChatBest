@@ -2,7 +2,6 @@ package com.pet.lovefinder.network
 
 import io.socket.client.IO
 import io.socket.client.Socket
-import io.socket.emitter.Emitter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 
@@ -38,18 +37,30 @@ object ConnectionManager {
 
     private fun registratingEvents() = runBlocking {
         socket?.let { socket ->
-            socket.on("on.user.authorized") { events.value = Event.Default(it) }
+            socket.on("on.user.authorized") {
+                println("Socket: SocketID ${socket.id()} Connected ${socket.connected()} Data $it")
+                events.value = Event.Default(it)
+                throw RuntimeException("on.user.authorized")
+            }
             socket.on(Socket.EVENT_CONNECT) {
                 println("Socket: SocketID ${socket.id()} Connected ${socket.connected()}")
+                throw RuntimeException("connect")
             }
 
             socket.on(Socket.EVENT_DISCONNECT) {
                 println("Socket: SocketID ${socket.id()} Connected ${socket.connected()}") // null
+                throw RuntimeException("disconnect")
+            }
+            socket.on(Socket.EVENT_CONNECT_ERROR) {
+                //options.auth.put("authorization", "bearer 1234")
+                println("Socket: SocketID ${socket.id()} Connected ${socket.connected()} Error $it")
+                socket.connect()
+                throw RuntimeException("connect error $it")
             }
         }
     }
 
-    fun auth(id: String, token: String) {
+    fun auth(id: Int, token: String) {
         socket?.emit("user.auth", arrayOf(id, token))
     }
 }

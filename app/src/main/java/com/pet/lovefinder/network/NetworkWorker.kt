@@ -28,7 +28,7 @@ class NetworkWorker(context: Context, workerParams: WorkerParameters) :
     private fun initializeConnection() {
         val uri = createHostUrl()
         val options =
-            IO.Options.builder().setPath("/").setTransports(arrayOf("websocket")).build()
+            IO.Options.builder().setPath("/").setTransports(arrayOf("websocket", "polling")).build()
         ConnectionManager.initConnection(uri, options)
 
     }
