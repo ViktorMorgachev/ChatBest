@@ -16,6 +16,8 @@ object Versions {
     val compose_material_icons_extended = compose_version
     val activity_compose = "1.4.0"
     val constraintlayout_compose = "1.0.0-rc01"
+    val socket_io_client = "2.0.1"
+    val work_manager = "2.7.1"
 
 }
 
@@ -28,6 +30,8 @@ object Libs {
     val compose_material_icons_extended = "androidx.compose.material:material-icons-extended:${Versions.compose_version}"
     val compose_activity ="androidx.activity:activity-compose:${Versions.activity_compose}"
     val compose_constraintlayout = "androidx.constraintlayout:constraintlayout-compose:${Versions.constraintlayout_compose}"
+    val socket_io_client = "io.socket:socket.io-client:${Versions.socket_io_client}"
+    val work_runtime_ktx = "androidx.work:work-runtime-ktx:${Versions.work_manager}"
 }
 
 object TestLibs{

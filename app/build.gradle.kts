@@ -26,7 +26,8 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro")
         }
     }
     compileOptions {
@@ -59,6 +60,10 @@ dependencies {
     implementation(Libs.compose_activity)
     implementation(Libs.compose_material_icons_extended)
     implementation(Libs.compose_constraintlayout)
+    implementation(Libs.socket_io_client){
+        exclude(group = "org.json", module = "json")
+    }
+    implementation(Libs.work_runtime_ktx)
     testImplementation(TestLibs.junit)
     androidTestImplementation(AndroidTestLibs.ext_junit)
     androidTestImplementation(AndroidTestLibs.android_test_espresso_core)
