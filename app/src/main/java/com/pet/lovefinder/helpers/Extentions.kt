@@ -3,6 +3,8 @@ package com.pet.lovefinder.helpers
 import androidx.work.Data
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import java.util.concurrent.ExecutionException
 
 fun WorkManager.isWorkScheduled(tag: String): Boolean {
@@ -36,4 +38,12 @@ fun workDataOf(vararg pairs: Pair<String, Any?>): Data {
         }
     }
     return data.build()
+}
+
+fun Any.toJsonString(): String {
+    val gson = Gson()
+    val gsonPretty = GsonBuilder().setPrettyPrinting().create()
+    val jsonString: String = gson.toJson(this)
+    print("Socket send data ${jsonString}")
+    return jsonString
 }

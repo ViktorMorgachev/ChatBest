@@ -9,12 +9,16 @@ import com.pet.lovefinder.network.data.AuthData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
-class EventViewModel : ViewModel() {
+class ChatViewModel : ViewModel() {
 
     val events = MutableStateFlow<Event>(Event.Default("FIRST"))
 
     fun login(authData: AuthData) {
         ConnectionManager.auth(authData)
+    }
+
+    fun createDialog(){
+        //ConnectionManager.createDialog()
     }
 
     init {

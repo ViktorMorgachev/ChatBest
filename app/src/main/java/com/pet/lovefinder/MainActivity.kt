@@ -14,15 +14,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.pet.lovefinder.network.ConnectionManager
 import com.pet.lovefinder.network.Event
 import com.pet.lovefinder.network.data.AuthData
-import com.pet.lovefinder.ui.EventViewModel
+import com.pet.lovefinder.ui.ChatViewModel
 import com.pet.lovefinder.ui.theme.LoveFinderTheme
 
 class MainActivity : ComponentActivity() {
 
-    val eventViewModel by viewModels<EventViewModel>()
+    val eventViewModel by viewModels<ChatViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,7 +35,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MyApp(viewModel: EventViewModel = EventViewModel()) {
+fun MyApp(viewModel: ChatViewModel = ChatViewModel()) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -52,12 +51,15 @@ fun MyApp(viewModel: EventViewModel = EventViewModel()) {
 
 @Preview
 @Composable
-fun MainScreen(modifier: Modifier = Modifier, viewModel: EventViewModel = EventViewModel()) {
+fun MainScreen(modifier: Modifier = Modifier, viewModel: ChatViewModel = ChatViewModel()) {
     val event = viewModel.events.collectAsState()
-    when (event.value) {
+    RegisteringScreen(modifier, event.value) {
+        viewModel.login(it)
+    }
+    /*when (event.value) {
         is Event.Autorization -> {
             if ((event.value as Event.Autorization).success) {
-                ShowChatsScreen(modifier)
+                ShowChatsScreen(modifier, viewModel, event.value)
             } else {
                 RegisteringScreen(modifier, event.value) {
                     viewModel.login(it)
@@ -68,14 +70,23 @@ fun MainScreen(modifier: Modifier = Modifier, viewModel: EventViewModel = EventV
             viewModel.login(it)
         }
 
-    }
+    }*/
 }
 
 @Composable
-fun ShowChatsScreen(modifier: Modifier) {
-    LazyColumn {
+fun ShowChatsScreen(modifier: Modifier, viewModel: ChatViewModel, event: Event) {
 
+    Column() {
+        LazyColumn(Modifier.padding(4.dp)) {
+            item {
+
+            }
+        }
+        Button(onClick = { viewModel.createDialog() }) {
+
+        }
     }
+
 }
 
 @Composable

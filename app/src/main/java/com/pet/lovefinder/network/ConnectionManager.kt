@@ -1,12 +1,10 @@
 package com.pet.lovefinder.network
 
-import com.pet.lovefinder.network.data.AuthData
-import com.pet.lovefinder.network.data.Dialog
-import com.pet.lovefinder.network.data.User
+import com.google.gson.Gson
+import com.pet.lovefinder.helpers.toJsonString
+import com.pet.lovefinder.network.data.*
 import io.socket.client.IO
 import io.socket.client.Socket
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.runBlocking
 
 sealed class Event {
@@ -22,11 +20,17 @@ sealed class Event {
         val text: String,
         val attachment_id: Int?,
     ) : Event()
+    data class MessageNew(
+        val chat: Chat,
+        val room: Room,
+        val message: Message,
+    ) : Event()
 
     data class ConnectionSuccess(val info: String) : Event()
     data class ConnectionError(val info: String) : Event()
     data class Disconnected(val info: String) : Event()
     data class Default(val data: Any?) : Event()
+    data class Debug(val data: Any?) : Event()
 
 }
 
@@ -67,6 +71,10 @@ object ConnectionManager {
     private fun registratingEvents() = runBlocking {
         socket?.let { socket ->
             socket.on("on.user.authorized") {
+                post(Event.Debug(data = it))
+                println("Socket: SocketID ${socket.id()} Connected ${socket.connected()} Data $it")
+            }
+            socket.on("connection") {
                 println("Socket: SocketID ${socket.id()} Connected ${socket.connected()} Data $it")
             }
             socket.on(Socket.EVENT_CONNECT) {
@@ -81,10 +89,17 @@ object ConnectionManager {
                 println("Socket: SocketID ${socket.id()} Connected ${socket.connected()} Error $it")
                 socket.connect()
             }
+            socket.on("on.message.new") {
+               // post(Event.MessageNew())
+            }
         }
     }
 
     fun auth(authData: AuthData) {
-        socket?.emit("user.auth", arrayOf(authData.id, authData.token))
+        socket?.emit("user.auth", authData.toJsonString())
+    }
+
+    fun createDialog(dialog: CreateDialog) {
+        socket?.emit("chat.start", dialog.toJsonString())
     }
 }

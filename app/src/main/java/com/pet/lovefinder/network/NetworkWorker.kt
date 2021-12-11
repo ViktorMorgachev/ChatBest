@@ -31,8 +31,7 @@ class NetworkWorker(context: Context, workerParams: WorkerParameters) :
         } else {
             networkHttpSocket
         }
-        val options =
-            IO.Options.builder().setPath("/").setTransports(arrayOf("websocket", "polling"))
+        val options = IO.Options.builder().setPath("/").setTransports(arrayOf("websocket", "polling"))
                 .setPort(port.toInt()).build()
         ConnectionManager.initConnection(uri, options)
 

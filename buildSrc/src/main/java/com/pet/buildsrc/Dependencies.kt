@@ -18,32 +18,40 @@ object Versions {
     val constraintlayout_compose = "1.0.0-rc01"
     val socket_io_client = "2.0.1"
     val work_manager = "2.7.1"
+    val google_code_gson = "2.8.5"
 
 }
 
 object Libs {
     val compose_ui = "androidx.compose.ui:ui:${Versions.compose_version}"
     val compose_material = "androidx.compose.material:material:${Versions.compose_version}"
-    val compose_ui_tooling_preview = "androidx.compose.ui:ui-tooling-preview:${Versions.compose_version}"
+    val compose_ui_tooling_preview =
+        "androidx.compose.ui:ui-tooling-preview:${Versions.compose_version}"
     val androidx_core_ktx = "androidx.core:core-ktx:${Versions.androidx_core_ktx}"
-    val androidx_lifecycle_runtime_ktx = "androidx.lifecycle:lifecycle-runtime-ktx:${Versions.androidx_lifecycle_runtime}"
-    val compose_material_icons_extended = "androidx.compose.material:material-icons-extended:${Versions.compose_version}"
-    val compose_activity ="androidx.activity:activity-compose:${Versions.activity_compose}"
-    val compose_constraintlayout = "androidx.constraintlayout:constraintlayout-compose:${Versions.constraintlayout_compose}"
+    val androidx_lifecycle_runtime_ktx =
+        "androidx.lifecycle:lifecycle-runtime-ktx:${Versions.androidx_lifecycle_runtime}"
+    val compose_material_icons_extended =
+        "androidx.compose.material:material-icons-extended:${Versions.compose_version}"
+    val compose_activity = "androidx.activity:activity-compose:${Versions.activity_compose}"
+    val compose_constraintlayout =
+        "androidx.constraintlayout:constraintlayout-compose:${Versions.constraintlayout_compose}"
     val socket_io_client = "io.socket:socket.io-client:${Versions.socket_io_client}"
     val work_runtime_ktx = "androidx.work:work-runtime-ktx:${Versions.work_manager}"
+    val google_code_gson = "com.google.code.gson:gson:${Versions.google_code_gson}"
 }
 
-object TestLibs{
+object TestLibs {
     val junit = "androidx.test.ext:junit:${Versions.junit}"
 }
 
-object DebugLibs{
-   val  compose_ui_tooling = "androidx.compose.ui:ui-tooling:${Versions.compose_version}"
+object DebugLibs {
+    val compose_ui_tooling = "androidx.compose.ui:ui-tooling:${Versions.compose_version}"
 }
 
-object AndroidTestLibs{
+object AndroidTestLibs {
     val ext_junit = "androidx.test.ext:junit:${Versions.ext_junit}"
-    val android_test_espresso_core = "androidx.test.espresso:espresso-core:${Versions.android_test_espresso_core}"
-    val androidx_compose_ui_test_junit4 = "androidx.compose.ui:ui-test-junit4:${Versions.androidx_compose_ui_test_junit4}"
+    val android_test_espresso_core =
+        "androidx.test.espresso:espresso-core:${Versions.android_test_espresso_core}"
+    val androidx_compose_ui_test_junit4 =
+        "androidx.compose.ui:ui-test-junit4:${Versions.androidx_compose_ui_test_junit4}"
 }
