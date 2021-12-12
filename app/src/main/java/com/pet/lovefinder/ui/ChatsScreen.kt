@@ -1,8 +1,6 @@
 package com.pet.lovefinder.ui
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
@@ -12,10 +10,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.pet.lovefinder.R
 import com.pet.lovefinder.network.EventFromServer
 import com.pet.lovefinder.network.data.base.ChatDetails
+import com.pet.lovefinder.network.data.send.ChatDelete
 import com.pet.lovefinder.network.data.send.ChatHistory
 import com.pet.lovefinder.storage.LocalStorage
 import com.pet.lovefinder.ui.theme.Shapes
@@ -24,7 +24,7 @@ import com.pet.lovefinder.ui.theme.Shapes
 fun ChatsScreen(
     modifier: Modifier = Modifier,
     value: EventFromServer,
-    deleteChat: () -> Unit,
+    deleteChat: (ChatDelete) -> Unit,
     openChat: (ChatHistory) -> Unit,
     navController: NavController,
 ) {
@@ -33,7 +33,7 @@ fun ChatsScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(text = stringResource(id = R.string.app_name))
+                    Text(text = stringResource(id = R.string.chats))
                 }
             )
         },
@@ -46,7 +46,9 @@ fun ChatsScreen(
     ) { innerPadding ->
         LazyColumn(modifier = modifier.fillMaxWidth()) {
             items(chats.value) { item ->
-                ChatItem(chatDetails = item, OpenChat = { openChat(it) })
+                ChatItem(chatDetails = item,
+                    OpenChat = { openChat(it) },
+                    deleteChat = { deleteChat(it) })
             }
         }
     }
@@ -58,6 +60,7 @@ fun ChatsScreen(
 fun ChatItem(
     modifier: Modifier = Modifier,
     chatDetails: ChatDetails,
+    deleteChat: (ChatDelete) -> Unit,
     OpenChat: (ChatHistory) -> Unit,
 ) {
     Card(shape = Shapes.medium,
@@ -65,15 +68,18 @@ fun ChatItem(
             OpenChat(ChatHistory(lastId = null,
                 limit = 10,
                 roomId = chatDetails.roomID))
-        }) {
+        }, modifier = Modifier
+            .fillMaxSize()
+            .padding(8.dp)) {
         Column() {
             Row() {
-                Text(text = "RoomID: ${chatDetails.roomID}")
-                Button(onClick = { /*TODO*/ }) {
-                    Text(text = "Delete")
+                Text(text = "RoomID: ${chatDetails.roomID}", modifier = Modifier.weight(1f))
+                Button(onClick = { deleteChat(ChatDelete(roomId = chatDetails.roomID)) },
+                    modifier = Modifier.padding(4.dp)) {
+                    Text(text = "Удалить")
                 }
             }
-            Text(text = "Users: ssdfsdf asdasdasd asdasd")
+            Text(text = "Пользователи: ${chatDetails.users}")
         }
     }
 }

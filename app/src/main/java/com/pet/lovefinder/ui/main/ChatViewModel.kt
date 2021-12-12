@@ -8,9 +8,7 @@ import com.pet.lovefinder.network.EventFromServer
 import com.pet.lovefinder.network.Subscriber
 import com.pet.lovefinder.network.data.Chat
 import com.pet.lovefinder.network.data.Room
-import com.pet.lovefinder.network.data.send.UserAuth
-import com.pet.lovefinder.network.data.send.ChatHistory
-import com.pet.lovefinder.network.data.send.ChatStart
+import com.pet.lovefinder.network.data.send.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
@@ -30,6 +28,14 @@ class ChatViewModel : ViewModel() {
 
     fun getChatHistory(chatHistory: ChatHistory){
         ConnectionManager.getChatHistory(chatHistory)
+    }
+
+    fun deleteChat(chatDelete: ChatDelete){
+        ConnectionManager.deleteChat(chatDelete)
+    }
+
+    fun sendMesage(sendMessage: SendMessage){
+        ConnectionManager.sendMesages(sendMessage = sendMessage)
     }
 
     init {

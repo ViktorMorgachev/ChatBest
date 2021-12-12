@@ -6,10 +6,10 @@ data class UserAutorized(
     var dialogs: List<Dialog>,
     var success: Boolean?,
     var token: String?,
-    var user: User?
+    var user: User
 ) {
     data class User(
         var email: String?,
-        var id: Int?
+        var id: Int
     )
 }

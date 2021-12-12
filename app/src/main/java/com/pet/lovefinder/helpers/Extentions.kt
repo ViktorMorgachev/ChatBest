@@ -7,7 +7,10 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonSyntaxException
 import com.google.gson.internal.Primitives
+import com.pet.lovefinder.App
+import com.pet.lovefinder.network.data.Message
 import com.pet.lovefinder.network.data.receive.UserAutorized
+import com.pet.lovefinder.storage.Prefs
 import org.json.JSONObject
 import java.lang.reflect.Type
 import java.util.concurrent.ExecutionException
@@ -57,6 +60,11 @@ fun String.toJsonObject(): JSONObject {
     return JSONObject(this)
 }
 
-fun Any.toJSONObject(): JSONObject {
+fun Any.toSocketData(): JSONObject {
     return this.toJsonString().toJsonObject()
+}
+
+fun Message.isOwn(): Boolean {
+    return App.prefs?.userID == this.user_id
+
 }

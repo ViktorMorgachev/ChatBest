@@ -5,15 +5,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import androidx.navigation.compose.*
+import com.pet.lovefinder.App
 import com.pet.lovefinder.network.EventFromServer
 import com.pet.lovefinder.network.data.base.ChatDetails
 import com.pet.lovefinder.network.data.base.Messages
 import com.pet.lovefinder.storage.LocalStorage
-import com.pet.lovefinder.ui.AutorizationScreen
-import com.pet.lovefinder.ui.ChatsScreen
-import com.pet.lovefinder.ui.CreateChatScreen
-import com.pet.lovefinder.ui.Screen
+import com.pet.lovefinder.ui.*
 import com.pet.lovefinder.ui.theme.LoveFinderTheme
 
 class MainActivity : ComponentActivity() {
@@ -37,16 +36,17 @@ fun MyApp(viewModel: ChatViewModel = ChatViewModel()) {
     val navController = rememberNavController()
     val event = viewModel.events.collectAsState()
 
+    // TODO рефакторить надо постеменно, убрать это и переписать, плохо
     when (event.value) {
         is EventFromServer.Autorization -> {
             if ((event.value as EventFromServer.Autorization).data.success == true) {
-                val data = (event.value as EventFromServer.Autorization).data.dialogs
-                data.forEach { dialog ->
-                    LocalStorage.updateChats(ChatDetails(chat = dialog.chat,
-                        roomID = dialog.room.id.toInt(),
-                        users = dialog.room.users))
-                }
-
+                val data = (event.value as EventFromServer.Autorization).data
+                App.prefs?.userID = data.user.id
+                LocalStorage.updateChats(data.dialogs.map {
+                    ChatDetails(chat = it.chat,
+                        roomID = it.room.id.toInt(),
+                        users = it.room.users)
+                })
                 navController.navigate("Chats")
             }
         }
@@ -55,14 +55,19 @@ fun MyApp(viewModel: ChatViewModel = ChatViewModel()) {
             LocalStorage.updateChats(ChatDetails(chat = data.chat,
                 roomID = data.room.id.toInt(),
                 users = data.room.users))
-            LocalStorage.updateMessages(listOf(Messages(messages = listOf(data.message),
-                roomID = data.room.id.toInt())))
+            LocalStorage.updateMessages(listOf(data.message))
         }
         is EventFromServer.ChatHistoryEvent -> {
-            // TODO нужно в будущем конвертацию вынести, пока пойдёт
             val data = (event.value as EventFromServer.ChatHistoryEvent).data
-            LocalStorage.updateMessages(listOf(Messages(messages = data.messages,
-                roomID = data.room.id.toInt())))
+            LocalStorage.updateMessages(data.messages)
+            // TODO Тут же передавать айди комнаты
+            navController.navigate("Room")
+        }
+        is EventFromServer.ChatDelete -> {
+            val data = (event.value as EventFromServer.ChatDelete).data
+            LocalStorage.deleteChat(ChatDetails(chat = data.chat,
+                roomID = data.room.id.toInt(),
+                users = data.room.users))
         }
     }
     NavHost(navController = navController, startDestination = Screen.Autorization.route) {
@@ -74,13 +79,17 @@ fun MyApp(viewModel: ChatViewModel = ChatViewModel()) {
         composable(Screen.Chats.route) {
             ChatsScreen(value = event.value,
                 navController = navController,
-                deleteChat = {},
+                deleteChat = { viewModel.deleteChat(it) },
                 openChat = { viewModel.getChatHistory(it) })
         }
         composable(Screen.CreateChat.route) {
             CreateChatScreen(value = event.value,
                 createChat = { viewModel.createChat(it) },
                 navController = navController)
+        }
+        // TODO думаю хорошая идея будет пробросить именно event в composables и в них уже слушать события если что
+        composable(Screen.Room.route) {
+            RoomChat(sendMessage = { viewModel.sendMesage(it) }, navController = navController)
         }
     }
 }
