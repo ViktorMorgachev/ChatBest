@@ -4,6 +4,7 @@ import com.pet.lovefinder.network.data.Message
 import com.pet.lovefinder.network.data.base.ChatDetails
 import com.pet.lovefinder.network.data.base.Messages
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 
 // TODO После настроить структуру для комнаты с привязкой id
@@ -26,7 +27,12 @@ object LocalStorage {
     }
 
     fun updateMessages(newMessages: List<Message>) = runBlocking {
-        messages.value = arrayListOf()
-        messages.emit(messages.value.plus(newMessages))
+        val newList = newMessages.toMutableList()
+        newMessages.forEach {
+            if (!messages.value.contains(it)) {
+                newList.add(it)
+            }
+        }
+        messages.emit(messages.value.plus(newList))
     }
 }
