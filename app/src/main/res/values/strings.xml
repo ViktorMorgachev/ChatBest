@@ -6,4 +6,7 @@
     <string name="notification_title">Working Service</string>
     <string name="cancel_download">Dismiss Service</string>
     <string name="notification_channel_id">notification_channel_id</string>
+    <string name="autorization">Autorization</string>
+    <string name="chats">Chats</string>
+    <string name="createChat">CreateChat</string>
 </resources>

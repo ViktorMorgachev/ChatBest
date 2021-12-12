@@ -5,6 +5,11 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.google.gson.JsonSyntaxException
+import com.google.gson.internal.Primitives
+import com.pet.lovefinder.network.data.receive.UserAutorized
+import org.json.JSONObject
+import java.lang.reflect.Type
 import java.util.concurrent.ExecutionException
 
 fun WorkManager.isWorkScheduled(tag: String): Boolean {
@@ -46,4 +51,12 @@ fun Any.toJsonString(): String {
     val jsonString: String = gson.toJson(this)
     print("Socket send data ${jsonString}")
     return jsonString
+}
+
+fun String.toJsonObject(): JSONObject {
+    return JSONObject(this)
+}
+
+fun Any.toJSONObject(): JSONObject {
+    return this.toJsonString().toJsonObject()
 }

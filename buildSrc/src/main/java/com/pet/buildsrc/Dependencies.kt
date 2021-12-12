@@ -19,6 +19,7 @@ object Versions {
     val socket_io_client = "2.0.1"
     val work_manager = "2.7.1"
     val google_code_gson = "2.8.5"
+    val compose_navigation = "2.4.0-beta02"
 
 }
 
@@ -38,6 +39,7 @@ object Libs {
     val socket_io_client = "io.socket:socket.io-client:${Versions.socket_io_client}"
     val work_runtime_ktx = "androidx.work:work-runtime-ktx:${Versions.work_manager}"
     val google_code_gson = "com.google.code.gson:gson:${Versions.google_code_gson}"
+    val compose_navigation = "androidx.navigation:navigation-compose:${Versions.compose_navigation}"
 }
 
 object TestLibs {

@@ -59,9 +59,10 @@ dependencies {
     implementation(Libs.compose_activity)
     implementation(Libs.compose_material_icons_extended)
     implementation(Libs.compose_constraintlayout)
-    implementation(Libs.socket_io_client){
+    implementation(Libs.socket_io_client) {
         exclude(group = "org.json", module = "json")
     }
+    implementation(Libs.compose_navigation)
     implementation(Libs.work_runtime_ktx)
     implementation(Libs.google_code_gson)
     testImplementation(TestLibs.junit)

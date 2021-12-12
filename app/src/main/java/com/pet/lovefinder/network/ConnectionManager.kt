@@ -1,41 +1,38 @@
 package com.pet.lovefinder.network
 
 import com.google.gson.Gson
-import com.pet.lovefinder.helpers.toJsonString
-import com.pet.lovefinder.network.data.*
+import com.pet.lovefinder.helpers.toJSONObject
+import com.pet.lovefinder.network.data.receive.MessageNew
+import com.pet.lovefinder.network.data.receive.UserAutorized
+import com.pet.lovefinder.network.data.send.UserAuth
+import com.pet.lovefinder.network.data.send.ChatHistory
+import com.pet.lovefinder.network.data.receive.ChatHistory as ChatHistoryReceive
+import com.pet.lovefinder.network.data.send.ChatStart
 import io.socket.client.IO
 import io.socket.client.Socket
 import kotlinx.coroutines.runBlocking
 
-sealed class Event {
-    data class DeleteMessage(val messageID: String) : Event()
-    data class Autorization(
-        val success: Boolean,
-        val dialogs: List<Dialog>,
-        val user: User? = null,
-    ) : Event()
+sealed class EventFromServer {
+    data class Autorization(val data: UserAutorized) : EventFromServer()
+    data class MessageNewEvent(val data: MessageNew) : EventFromServer()
+    data class ChatHistoryEvent(val data: ChatHistoryReceive) : EventFromServer()
 
     data class MessageSend(
         val room_id: Number,
         val text: String,
         val attachment_id: Int?,
-    ) : Event()
-    data class MessageNew(
-        val chat: Chat,
-        val room: Room,
-        val message: Message,
-    ) : Event()
+    ) : EventFromServer()
 
-    data class ConnectionSuccess(val info: String) : Event()
-    data class ConnectionError(val info: String) : Event()
-    data class Disconnected(val info: String) : Event()
-    data class Default(val data: Any?) : Event()
-    data class Debug(val data: Any?) : Event()
+    data class ConnectionSuccess(val info: String) : EventFromServer()
+    data class ConnectionError(val info: String) : EventFromServer()
+    data class Disconnected(val info: String) : EventFromServer()
+    data class Default(val data: Any?) : EventFromServer()
+    data class Debug(val data: Any?) : EventFromServer()
 
 }
 
 interface Subscriber {
-    fun post(event: Event)
+    fun post(eventFromServer: EventFromServer)
 }
 
 object ConnectionManager {
@@ -53,9 +50,9 @@ object ConnectionManager {
         }
     }
 
-    private fun post(data: Event) {
+    private fun post(data: EventFromServer) {
         subscribers.forEach {
-            it.post(event = data)
+            it.post(eventFromServer = data)
         }
     }
 
@@ -71,8 +68,8 @@ object ConnectionManager {
     private fun registratingEvents() = runBlocking {
         socket?.let { socket ->
             socket.on("on.user.authorized") {
-                post(Event.Debug(data = it))
-                println("Socket: SocketID ${socket.id()} Connected ${socket.connected()} Data $it")
+                val data = Gson().fromJson("${it[0]}", UserAutorized::class.java)
+                post(EventFromServer.Autorization(data = data))
             }
             socket.on("connection") {
                 println("Socket: SocketID ${socket.id()} Connected ${socket.connected()} Data $it")
@@ -90,16 +87,25 @@ object ConnectionManager {
                 socket.connect()
             }
             socket.on("on.message.new") {
-               // post(Event.MessageNew())
+                val data = Gson().fromJson("${it[0]}", MessageNew::class.java)
+                post(EventFromServer.MessageNewEvent(data = data))
+            }
+            socket.on("on.chat.history") {
+                val data = Gson().fromJson("${it[0]}", ChatHistoryReceive::class.java)
+                post(EventFromServer.ChatHistoryEvent(data = data))
             }
         }
     }
 
-    fun auth(authData: AuthData) {
-        socket?.emit("user.auth", authData.toJsonString())
+    fun auth(userAuth: UserAuth) {
+        socket?.emit("user.auth", userAuth.toJSONObject())
     }
 
-    fun createDialog(dialog: CreateDialog) {
-        socket?.emit("chat.start", dialog.toJsonString())
+    fun createChat(chat: ChatStart) {
+        socket?.emit("chat.start", chat.toJSONObject())
+    }
+
+    fun getChatHistory(chatHistory: ChatHistory) {
+        socket?.emit("chat.history", chatHistory.toJSONObject())
     }
 }
