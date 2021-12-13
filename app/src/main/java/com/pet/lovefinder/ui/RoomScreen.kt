@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -18,22 +19,56 @@ import com.pet.lovefinder.helpers.isOwn
 import com.pet.lovefinder.network.data.Message
 import com.pet.lovefinder.network.data.send.SendMessage
 import com.pet.lovefinder.storage.LocalStorage
-import com.pet.lovefinder.storage.Prefs
 import com.pet.lovefinder.ui.theme.LoveFinderTheme
 
+data class RoomMessage(
+    val userID: String,
+    val date: String,
+    val text: String,
+    val isOwn: Boolean = false,
+)
+
+fun Message.toRoomMessage(): RoomMessage {
+    return RoomMessage(userID = user_id.toString(),
+        date = created_at.toString(),
+        text = text,
+        isOwn = App.prefs?.userID == user_id)
+}
+
+val mockAliceMessage =
+    RoomMessage(userID = "Alice", date = "12.12.2021", text = "From Alice", isOwn = false)
+val mockBobMessage =
+    RoomMessage(userID = "Bob", date = "12.12.2021", text = "From Bob", isOwn = true)
+
+val mockData: List<RoomMessage> = listOf(mockAliceMessage.copy(text = "Hi Bob"),
+    mockAliceMessage.copy(text = "Hi Alice"),
+    mockAliceMessage.copy(text = "How are you?"),
+    mockBobMessage.copy("I.m fine"),
+    mockBobMessage,
+    mockBobMessage,
+    mockAliceMessage,
+    mockBobMessage,
+    mockAliceMessage)
+
+@Preview(widthDp = 400, showSystemUi = true)
 @Composable
-fun RoomChat(
+fun ChatListPrewiew() {
+    LoveFinderTheme {
+        ChatList(sendMessage = {}, messages = mockData)
+    }
+}
+
+@Composable
+fun ChatList(
     modifier: Modifier = Modifier,
     sendMessage: (SendMessage) -> Unit,
-    navController: NavController,
+    messages: List<RoomMessage>,
 ) {
-    val messages = LocalStorage.messages.collectAsState()
-    val roomID by rememberSaveable { mutableStateOf(2) }
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(text = "RoomID ${roomID}")
+                    Text(text = "Chat")
                 }
             )
         }
@@ -41,65 +76,68 @@ fun RoomChat(
         LoveFinderTheme {
             val (message, messageChange) = rememberSaveable { mutableStateOf("") }
             Column() {
-                LazyColumn(modifier = Modifier.padding(vertical = 4.dp)) {
-                    items(messages.value) { item ->
-                        RoomMessage(modifier = Modifier
-                            .padding(all = 8.dp), message = item)
+                LazyColumn(modifier = modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(horizontal = 8.dp)
+                    .padding(innerPadding)) {
+                    items(messages) { data ->
+                        MessageItem(modifier = Modifier.padding(all = 4.dp), message = data)
                     }
                 }
-                Spacer(modifier = modifier.weight(1f))
-                TextField(modifier = Modifier.fillMaxWidth(),
-                    value = message,
-                    onValueChange = messageChange,
-                    trailingIcon = { Icon(Icons.Filled.Send, contentDescription = "Отправить") })
-                Button(onClick = {
-                    sendMessage(SendMessage(roomId = roomID,
-                        text = message,
-                        attachmentId = null))
-                }, modifier = modifier.fillMaxWidth()) {
-                    Text(text = "Отправить")
+                Column(modifier = Modifier.padding(all = 4.dp)) {
+                    TextField(modifier = Modifier.fillMaxWidth(),
+                        value = message,
+                        onValueChange = messageChange,
+                        trailingIcon = { Icon(Icons.Filled.Send, contentDescription = "Отправить") })
+                    Button(onClick = {
+                        sendMessage(SendMessage(roomId = 32,
+                            text = message,
+                            attachmentId = null))
+                    }, modifier = modifier.fillMaxWidth()) {
+                        Text(text = "Отправить")
+                    }
                 }
+
             }
 
         }
     }
-
 
 }
 
 @Composable
-fun RoomMessage(modifier: Modifier = Modifier, message: Message) {
-    if (message.isOwn()){
-        Row() {
-            Card(modifier = Modifier.fillMaxWidth(0.5f)) {
-                Column() {
-                    Text(text = message.text, Modifier.padding(4.dp))
-                    Row() {
-                        Spacer(modifier = modifier.weight(1f))
-                        Text(text = message.updated_at ?: "", style = TextStyle.Default)
-                    }
-
-                }
-            }
+fun MessageItem(modifier: Modifier = Modifier, message: RoomMessage) {
+    val isMe = message.isOwn
+    Row(horizontalArrangement = Arrangement.SpaceEvenly) {
+        if (isMe) {
             Spacer(modifier = Modifier.weight(1f))
         }
-    } else {
-        Row() {
-            Spacer(modifier = Modifier.weight(1f))
-            Card(modifier = Modifier.fillMaxWidth(0.5f)) {
-                Column() {
-                    Text(text = message.text, Modifier.padding(4.dp))
-                    Row() {
-                        Spacer(modifier = modifier.weight(1f))
-                        Text(text = message.updated_at ?: "", style = TextStyle.Default)
+        Card(modifier = modifier.fillMaxSize(0.5f)) {
+            Column() {
+                Row {
+                    if (isMe) {
+                        Spacer(modifier = Modifier.weight(1f))
                     }
-
+                    Text(text = message.userID, Modifier.padding(4.dp))
                 }
-            }
+                Text(text = message.text,
+                    style = TextStyle.Default,
+                    modifier = modifier
+                        .padding(horizontal = 4.dp)
+                        .align(Alignment.CenterHorizontally))
+                Row {
+                    if (isMe) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                    Text(text = message.date,
+                        style = TextStyle.Default,
+                        modifier = modifier.padding(horizontal = 4.dp))
+                }
 
+            }
         }
     }
-
 
 }
 

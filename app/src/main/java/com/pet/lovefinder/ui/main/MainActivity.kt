@@ -5,12 +5,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
 import androidx.navigation.compose.*
 import com.pet.lovefinder.App
 import com.pet.lovefinder.network.EventFromServer
 import com.pet.lovefinder.network.data.base.ChatDetails
-import com.pet.lovefinder.network.data.base.Messages
 import com.pet.lovefinder.storage.LocalStorage
 import com.pet.lovefinder.ui.*
 import com.pet.lovefinder.ui.theme.LoveFinderTheme
@@ -35,6 +33,7 @@ class MainActivity : ComponentActivity() {
 fun MyApp(viewModel: ChatViewModel = ChatViewModel()) {
     val navController = rememberNavController()
     val event = viewModel.events.collectAsState()
+    val messages = LocalStorage.messages.collectAsState()
 
     // TODO рефакторить надо постеменно, убрать это и переписать, плохо
     when (event.value) {
@@ -55,11 +54,11 @@ fun MyApp(viewModel: ChatViewModel = ChatViewModel()) {
             LocalStorage.updateChats(ChatDetails(chat = data.chat,
                 roomID = data.room.id.toInt(),
                 users = data.room.users))
-            LocalStorage.updateMessages(listOf(data.message))
+            LocalStorage.updateMessages(listOf(data.message.toRoomMessage()))
         }
         is EventFromServer.ChatHistoryEvent -> {
             val data = (event.value as EventFromServer.ChatHistoryEvent).data
-            LocalStorage.updateMessages(data.messages)
+            LocalStorage.updateMessages(data.messages.map { it.toRoomMessage() })
             // TODO Тут же передавать айди комнаты
             navController.navigate("Room")
         }
@@ -89,7 +88,7 @@ fun MyApp(viewModel: ChatViewModel = ChatViewModel()) {
         }
         // TODO думаю хорошая идея будет пробросить именно event в composables и в них уже слушать события если что
         composable(Screen.Room.route) {
-            RoomChat(sendMessage = { viewModel.sendMesage(it) }, navController = navController)
+            ChatList(sendMessage = { viewModel.sendMesage(it) }, messages = messages.value)
         }
     }
 }
