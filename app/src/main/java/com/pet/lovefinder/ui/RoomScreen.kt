@@ -53,7 +53,7 @@ val mockData: List<RoomMessage> = listOf(mockAliceMessage.copy(text = "Hi Bob"),
 @Composable
 fun ChatListPrewiew() {
     LoveFinderTheme {
-        Chat(sendMessage = {}, messages = mockData, navController = null)
+        Chat(sendMessage = {}, messages = mockData, navController = null, roomID = -1)
     }
 }
 
@@ -61,7 +61,7 @@ fun ChatListPrewiew() {
 fun Chat(
     modifier: Modifier = Modifier,
     sendMessage: (SendMessage) -> Unit,
-    roomID: Int = -1,
+    roomID: Int,
     messages: List<RoomMessage>,
     navController: NavController?,
 ) {
@@ -69,7 +69,7 @@ fun Chat(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(text = "Room")
+                    Text(text = "Room $roomID")
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController?.navigateUp() }) {
@@ -80,7 +80,7 @@ fun Chat(
         }
     ) { innerPadding ->
         LoveFinderTheme {
-            val (message, messageChange) = rememberSaveable { mutableStateOf("") }
+            var (message, messageChange) = rememberSaveable { mutableStateOf("") }
             Column() {
                 LazyColumn(modifier = modifier
                     .fillMaxWidth()
@@ -100,7 +100,8 @@ fun Chat(
                                 contentDescription = "Отправить")
                         })
                     Button(onClick = {
-                        sendMessage(SendMessage(roomId = 32,
+                        message = ""
+                        sendMessage(SendMessage(roomId = roomID,
                             text = message,
                             attachmentId = null))
                     }, modifier = modifier.fillMaxWidth()) {

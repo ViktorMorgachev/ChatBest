@@ -94,7 +94,6 @@ fun ChatsScreen(
                 ChatsItem(chatDetails = item,
                     OpenChat = {
                         openChat(it)
-                        navController?.navigate("Room")
                     },
                     deleteChat = { deleteChat(it) })
             }

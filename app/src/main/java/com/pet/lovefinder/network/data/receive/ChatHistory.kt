@@ -6,6 +6,6 @@ import com.pet.lovefinder.network.data.Room
 
 data class ChatHistory(
     val messages: ArrayList<Message>,
-    val chat: Chat,
-    val room: Room,
+    val chat: Chat?,
+    val room: Room?,
 )

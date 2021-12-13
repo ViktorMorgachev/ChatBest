@@ -11,6 +11,7 @@ import com.pet.lovefinder.network.EventFromServer
 import com.pet.lovefinder.network.data.base.ChatDetails
 import com.pet.lovefinder.network.data.receive.ChatDelete
 import com.pet.lovefinder.network.data.send.UserAuth
+import com.pet.lovefinder.network.data.toChatItemInfo
 import com.pet.lovefinder.ui.ViewDataStorage
 import com.pet.lovefinder.ui.*
 import com.pet.lovefinder.ui.theme.LoveFinderTheme
@@ -50,8 +51,7 @@ fun MyApp(viewModel: ChatViewModel) {
                 deleteChat = { viewModel.deleteChat(it) },
                 openChat = {
                     viewModel.getChatHistory(it)
-                    // TODO передать агрумент комнаты
-                    //  navController.navigate("Room")
+                    navController.navigate(Screen.Room.createRoute(it.roomId.toString()))
                 }, chats = chats.value)
         }
         composable(Screen.CreateChat.route) {
@@ -59,18 +59,25 @@ fun MyApp(viewModel: ChatViewModel) {
                 createChat = { viewModel.createChat(it) },
                 navController = navController)
         }
-        /*composable(Screen.Room.route) {
-            Chat(sendMessage = { viewModel.sendMesage(it) },
-                messages = chats.value.,
-                navController = navController)
-        }*/
+        composable(Screen.Room.route) { backStackEntry ->
+            val roomID = backStackEntry.arguments?.getString("roomID")
+            requireNotNull(roomID) { "roomID parameter wasn't found. Please make sure it's set!" }
+            chats.value.firstOrNull { it.roomID == roomID.toInt() }?.let {
+                val messages = it.roomMessages
+                Chat(sendMessage = { viewModel.sendMesage(it) },
+                    messages = messages,
+                    roomID = roomID.toInt(),
+                    navController = navController)
+            }
+
+        }
     }
 
-   /* if (App.prefs!!.userID > 1) {
-        val authData = UserAuth(id = App.prefs!!.userID, token = App.prefs!!.userToken!!)
-        viewModel.login(authData)
-        navController.navigate("Chats")
-    }*/
+    /* if (App.prefs!!.userID > 1) {
+         val authData = UserAuth(id = App.prefs!!.userID, token = App.prefs!!.userToken!!)
+         viewModel.login(authData)
+         navController.navigate("Chats")
+     }*/
 
 }
 
@@ -88,14 +95,10 @@ fun observe(event: State<EventFromServer>) {
         }
         is EventFromServer.ChatHistoryEvent -> {
             val data = (event.value as EventFromServer.ChatHistoryEvent).data
-            val usersIds = mutableListOf<Int>()
-            data.room.users.forEach {
-                usersIds.add(it.id.toInt())
+            data.toChatItemInfo()?.let { chatItemInfo ->
+                ViewDataStorage.updateChat(chatItemInfo)
             }
-            ViewDataStorage.updateChat(ChatItemInfo(roomID = data.room.id.toInt(),
-                usersIDs = usersIds,
-                unreadCount = data.chat.unread_count.toInt(),
-                roomMessages = data.messages.map { it.toRoomMessage() }))
+
         }
         is EventFromServer.ChatDelete -> {
             val data = (event.value as EventFromServer.ChatDelete).data
