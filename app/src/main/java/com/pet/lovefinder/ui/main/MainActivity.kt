@@ -65,7 +65,7 @@ fun MyApp(viewModel: ChatViewModel) {
             chats.value.firstOrNull { it.roomID == roomID.toInt() }?.let {
                 val messages = it.roomMessages
                 Chat(sendMessage = { viewModel.sendMesage(it) },
-                    messages = messages,
+                    messages = messages.toList(),
                     roomID = roomID.toInt(),
                     navController = navController)
             }

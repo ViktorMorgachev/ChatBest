@@ -21,6 +21,7 @@ import com.pet.lovefinder.network.data.send.SendMessage
 import com.pet.lovefinder.ui.theme.LoveFinderTheme
 
 data class RoomMessage(
+    val messageID: Int,
     val userID: String,
     val date: String,
     val text: String,
@@ -31,18 +32,26 @@ fun Message.toRoomMessage(): RoomMessage {
     return RoomMessage(userID = user_id.toString(),
         date = created_at.toString(),
         text = text,
-        isOwn = App.prefs?.userID == user_id)
+        isOwn = App.prefs?.userID == user_id.toInt(), messageID = this.id.toInt())
 }
 
 val mockAliceMessage =
-    RoomMessage(userID = "Alice", date = "12.12.2021", text = "From Alice", isOwn = false)
+    RoomMessage(userID = "Alice",
+        date = "12.12.2021",
+        text = "From Alice",
+        isOwn = false,
+        messageID = -1)
 val mockBobMessage =
-    RoomMessage(userID = "Bob", date = "12.12.2021", text = "From Bob", isOwn = true)
+    RoomMessage(userID = "Bob",
+        date = "12.12.2021",
+        text = "From Bob",
+        isOwn = true,
+        messageID = -1)
 
 val mockData: List<RoomMessage> = listOf(mockAliceMessage.copy(text = "Hi Bob"),
     mockAliceMessage.copy(text = "Hi Alice"),
     mockAliceMessage.copy(text = "How are you?"),
-    mockBobMessage.copy("I.m fine"),
+    mockBobMessage.copy(text = "I.m fine"),
     mockBobMessage,
     mockBobMessage,
     mockAliceMessage,
@@ -100,10 +109,10 @@ fun Chat(
                                 contentDescription = "Отправить")
                         })
                     Button(onClick = {
-                        message = ""
                         sendMessage(SendMessage(roomId = roomID,
                             text = message,
                             attachmentId = null))
+                        messageChange("")
                     }, modifier = modifier.fillMaxWidth()) {
                         Text(text = "Отправить")
                     }

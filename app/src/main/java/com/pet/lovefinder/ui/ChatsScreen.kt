@@ -29,7 +29,7 @@ data class ChatItemInfo(
     val roomID: Int,
     val usersIDs: List<Int>,
     val unreadCount: Int,
-    val roomMessages: List<RoomMessage> = listOf(),
+    var roomMessages: List<RoomMessage> = listOf(),
 )
 
 fun Dialog.toChatItemInfo(): ChatItemInfo {
@@ -37,9 +37,11 @@ fun Dialog.toChatItemInfo(): ChatItemInfo {
     this.room.users.forEach {
         usersIDs.add(it.id.toInt())
     }
+    val messages = if (this.message != null) listOf(this.message.toRoomMessage()) else listOf()
     return ChatItemInfo(roomID = this.room.id.toInt(),
         usersIDs = usersIDs,
-        unreadCount = this.chat.unread_count.toInt())
+        unreadCount = this.chat.unread_count.toInt(),
+        roomMessages = messages)
 }
 
 fun MessageNew.toChatItemInfo(): ChatItemInfo {
@@ -49,7 +51,8 @@ fun MessageNew.toChatItemInfo(): ChatItemInfo {
     }
     return ChatItemInfo(roomID = this.room.id.toInt(),
         usersIDs = usersIDs,
-        unreadCount = this.chat.unread_count.toInt())
+        unreadCount = this.chat.unread_count.toInt(),
+        roomMessages = listOf(this.message.toRoomMessage()))
 }
 
 val mockRoomChat = ChatItemInfo(roomID = 122,
@@ -110,14 +113,17 @@ fun ChatsItem(
     deleteChat: (ChatDelete) -> Unit,
     OpenChat: (ChatHistory) -> Unit,
 ) {
-    Card(shape = Shapes.medium, onClick = { OpenChat(ChatHistory(lastId = null, limit = 10, roomId = chatDetails.roomID)) }, modifier = Modifier
-        .padding(8.dp)
-        .fillMaxSize()
+    Card(shape = Shapes.medium,
+        onClick = { OpenChat(ChatHistory(lastId = null, limit = 10, roomId = chatDetails.roomID)) },
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxSize()
     ) {
         Row {
             Column(modifier = Modifier.padding(8.dp)) {
                 Text(text = "RoomID: ${chatDetails.roomID}")
-                Text (text = "Пользователи: ${chatDetails.usersIDs.joinToString()}", modifier = Modifier.padding())
+                Text(text = "Пользователи: ${chatDetails.usersIDs.joinToString()}",
+                    modifier = Modifier.padding())
                 Text(text = "Количество не прочитаных сообщений: ${chatDetails.roomID}")
             }
             Spacer(modifier = Modifier.weight(1f))

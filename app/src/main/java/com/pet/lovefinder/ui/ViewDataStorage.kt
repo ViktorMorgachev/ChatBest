@@ -10,13 +10,12 @@ object ViewDataStorage {
     val chats = MutableStateFlow<MutableList<ChatItemInfo>>(mutableListOf())
 
     fun updateChat(chatDetails: ChatItemInfo) = runBlocking {
-        if (chats.value.contains(chatDetails)) {
-            chats.value.firstOrNull { it.roomID == chatDetails.roomID }?.let {
-                it.roomMessages.plus(chatDetails)
-            }
-        } else {
-            chats.value.add(chatDetails)
-        }
+        val lastListMessagesInfo = chats.value.find { it.roomID == chatDetails.roomID }
+        if (lastListMessagesInfo != null) {
+            val newList = lastListMessagesInfo.roomMessages.plus(chatDetails.roomMessages)
+            lastListMessagesInfo.roomMessages = newList
+        } else chats.value.add(chatDetails)
+        chats.emit(chats.value)
     }
 
     // TODO обязательно
@@ -26,13 +25,11 @@ object ViewDataStorage {
 
     fun updateChat(chatsDetails: List<ChatItemInfo>) = runBlocking {
         chatsDetails.forEach { chatDetail ->
-            if (chats.value.contains(chatDetail)) {
-                chats.value.firstOrNull { it.roomID == chatDetail.roomID }?.let {
-                    it.roomMessages.plus(chatDetail)
-                }
-            } else {
-                chats.value.add(chatDetail)
-            }
+            val lastListMessagesInfo = chats.value.find { it.roomID == chatDetail.roomID }
+            if (lastListMessagesInfo != null) {
+                val newList = lastListMessagesInfo.roomMessages.plus(chatDetail.roomMessages)
+                lastListMessagesInfo.roomMessages = newList
+            } else chats.value.add(chatDetail)
         }
         chats.emit(chats.value)
     }
