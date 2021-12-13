@@ -1,11 +1,12 @@
 package com.pet.lovefinder.ui
 
 import com.pet.lovefinder.network.data.base.ChatDetails
+import com.pet.lovefinder.network.data.receive.ChatClear
 import com.pet.lovefinder.network.data.receive.ChatDelete
+import com.pet.lovefinder.network.data.receive.MessageDelete
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 
-// TODO После настроить структуру для комнаты с привязкой id
 object ViewDataStorage {
     val chats = MutableStateFlow<MutableList<ChatItemInfo>>(mutableListOf())
 
@@ -18,9 +19,18 @@ object ViewDataStorage {
         chats.emit(chats.value)
     }
 
-    // TODO обязательно
-    fun deleteMessage() {
+    fun deleteMessage(messageDelete: MessageDelete) = runBlocking{
+        chats.value.find { messageDelete.room.id.toInt() == it.roomID }?.roomMessages?.let {
+            it.toMutableList().remove(it.find { it.messageID == it.messageID })
+            chats.emit(chats.value)
+        }
+    }
 
+    fun clearChat(chatClear: ChatClear) = runBlocking {
+        chats.value.find { it.roomID == chatClear.room.id.toInt() }?.let {
+            chats.value.remove(it)
+            chats.emit(chats.value)
+        }
     }
 
     fun updateChat(chatsDetails: List<ChatItemInfo>) = runBlocking {
@@ -34,7 +44,6 @@ object ViewDataStorage {
         chats.emit(chats.value)
     }
 
-    // Готово
     fun deleteChat(chatDetails: ChatDelete) = runBlocking {
         chats.value.firstOrNull { it.roomID == chatDetails.room.id.toInt() }?.let {
             chats.value.remove(it)

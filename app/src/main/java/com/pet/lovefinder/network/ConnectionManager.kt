@@ -2,6 +2,8 @@ package com.pet.lovefinder.network
 
 import com.google.gson.Gson
 import com.pet.lovefinder.helpers.toSocketData
+import com.pet.lovefinder.network.data.receive.ChatClear
+import com.pet.lovefinder.network.data.receive.MessageDelete
 import com.pet.lovefinder.network.data.receive.MessageNew
 import com.pet.lovefinder.network.data.receive.UserAutorized
 import com.pet.lovefinder.network.data.send.*
@@ -12,10 +14,12 @@ import io.socket.client.Socket
 import kotlinx.coroutines.runBlocking
 
 sealed class EventFromServer {
-    data class Autorization(val data: UserAutorized) : EventFromServer()
+    data class AutorizationEvent(val data: UserAutorized) : EventFromServer()
     data class MessageNewEvent(val data: MessageNew) : EventFromServer()
     data class ChatHistoryEvent(val data: ChatHistoryReceive) : EventFromServer()
-    data class ChatDelete(val data: ChatDeleteReceive) : EventFromServer()
+    data class ChatDeleteEvent(val data: ChatDeleteReceive) : EventFromServer()
+    data class ChatClearEvent(val data: ChatClear) : EventFromServer()
+    data class MessageDeleteEvent(val data: MessageDelete) : EventFromServer()
 
     data class MessageSend(
         val room_id: Number,
@@ -69,7 +73,7 @@ object ConnectionManager {
         socket?.let { socket ->
             socket.on("on.user.authorized") {
                 val data = Gson().fromJson("${it[0]}", UserAutorized::class.java)
-                post(EventFromServer.Autorization(data = data))
+                post(EventFromServer.AutorizationEvent(data = data))
             }
             socket.on("connection") {
                 println("Socket: SocketID ${socket.id()} Connected ${socket.connected()} Data $it")
@@ -96,7 +100,15 @@ object ConnectionManager {
             }
             socket.on("on.chat.delete") {
                 val data = Gson().fromJson("${it[0]}", ChatDeleteReceive::class.java)
-                post(EventFromServer.ChatDelete(data = data))
+                post(EventFromServer.ChatDeleteEvent(data = data))
+            }
+            socket.on("on.chat.clear") {
+                val data = Gson().fromJson("${it[0]}", ChatClear::class.java)
+                post(EventFromServer.ChatClearEvent(data = data))
+            }
+            socket.on("on.message.delete") {
+                val data = Gson().fromJson("${it[0]}", MessageDelete::class.java)
+                post(EventFromServer.MessageDeleteEvent(data = data))
             }
         }
     }
@@ -109,7 +121,7 @@ object ConnectionManager {
         socket?.emit("chat.start", chat.toSocketData())
     }
 
-    fun sendMesages(sendMessage: SendMessage){
+    fun sendMesages(sendMessage: SendMessage) {
         socket?.emit("message.send", sendMessage.toSocketData())
     }
 
@@ -119,5 +131,13 @@ object ConnectionManager {
 
     fun deleteChat(chatDelete: ChatDelete) {
         socket?.emit("chat.delete", chatDelete.toSocketData())
+    }
+
+    fun clearChat(roomID: Int) {
+        socket?.emit("chat.clear", ClearChat(roomID = roomID).toSocketData())
+    }
+
+    fun deleteMessage(deleteMessage: DeleteMessage) {
+        socket?.emit("message.delete", deleteMessage.toSocketData())
     }
 }

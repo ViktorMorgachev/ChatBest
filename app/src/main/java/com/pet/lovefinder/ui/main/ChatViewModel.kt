@@ -23,20 +23,28 @@ class ChatViewModel : ViewModel() {
         App.prefs?.saveUser(userAuth)
     }
 
-    fun createChat(chatStart: ChatStart){
+    fun createChat(chatStart: ChatStart) {
         ConnectionManager.createChat(chatStart)
     }
 
-    fun getChatHistory(chatHistory: ChatHistory){
+    fun getChatHistory(chatHistory: ChatHistory) {
         ConnectionManager.getChatHistory(chatHistory)
     }
 
-    fun deleteChat(chatDelete: ChatDelete){
+    fun deleteChat(chatDelete: ChatDelete) {
         ConnectionManager.deleteChat(chatDelete)
     }
 
-    fun sendMesage(sendMessage: SendMessage){
+    fun sendMesage(sendMessage: SendMessage) {
         ConnectionManager.sendMesages(sendMessage = sendMessage)
+    }
+
+    fun clearChat(roomID: Int) {
+        ConnectionManager.clearChat(roomID = roomID)
+    }
+
+    fun deleteMessage(deleteMessage: DeleteMessage) {
+        ConnectionManager.deleteMessage(deleteMessage = deleteMessage)
     }
 
     init {
