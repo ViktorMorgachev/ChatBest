@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -15,10 +16,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.pet.lovefinder.App
-import com.pet.lovefinder.helpers.isOwn
 import com.pet.lovefinder.network.data.Message
 import com.pet.lovefinder.network.data.send.SendMessage
-import com.pet.lovefinder.storage.LocalStorage
 import com.pet.lovefinder.ui.theme.LoveFinderTheme
 
 data class RoomMessage(
@@ -54,21 +53,28 @@ val mockData: List<RoomMessage> = listOf(mockAliceMessage.copy(text = "Hi Bob"),
 @Composable
 fun ChatListPrewiew() {
     LoveFinderTheme {
-        ChatList(sendMessage = {}, messages = mockData)
+        Chat(sendMessage = {}, messages = mockData, navController = null)
     }
 }
 
 @Composable
-fun ChatList(
+fun Chat(
     modifier: Modifier = Modifier,
     sendMessage: (SendMessage) -> Unit,
+    roomID: Int = -1,
     messages: List<RoomMessage>,
+    navController: NavController?,
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(text = "Chat")
+                    Text(text = "Room")
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController?.navigateUp() }) {
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                    }
                 }
             )
         }
@@ -89,7 +95,10 @@ fun ChatList(
                     TextField(modifier = Modifier.fillMaxWidth(),
                         value = message,
                         onValueChange = messageChange,
-                        trailingIcon = { Icon(Icons.Filled.Send, contentDescription = "Отправить") })
+                        trailingIcon = {
+                            Icon(Icons.Filled.Send,
+                                contentDescription = "Отправить")
+                        })
                     Button(onClick = {
                         sendMessage(SendMessage(roomId = 32,
                             text = message,

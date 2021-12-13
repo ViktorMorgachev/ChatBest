@@ -9,7 +9,9 @@ import androidx.navigation.compose.*
 import com.pet.lovefinder.App
 import com.pet.lovefinder.network.EventFromServer
 import com.pet.lovefinder.network.data.base.ChatDetails
-import com.pet.lovefinder.storage.LocalStorage
+import com.pet.lovefinder.network.data.receive.ChatDelete
+import com.pet.lovefinder.network.data.send.UserAuth
+import com.pet.lovefinder.ui.ViewDataStorage
 import com.pet.lovefinder.ui.*
 import com.pet.lovefinder.ui.theme.LoveFinderTheme
 
@@ -30,68 +32,78 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MyApp(viewModel: ChatViewModel = ChatViewModel()) {
+fun MyApp(viewModel: ChatViewModel) {
     val navController = rememberNavController()
     val event = viewModel.events.collectAsState()
-    val messages = LocalStorage.messages.collectAsState()
+    val chats = ViewDataStorage.chats.collectAsState()
 
-    // TODO рефакторить надо постеменно, убрать это и переписать, плохо
-    when (event.value) {
-        is EventFromServer.Autorization -> {
-            if ((event.value as EventFromServer.Autorization).data.success == true) {
-                val data = (event.value as EventFromServer.Autorization).data
-                App.prefs?.userID = data.user.id
-                LocalStorage.updateChats(data.dialogs.map {
-                    ChatDetails(chat = it.chat,
-                        roomID = it.room.id.toInt(),
-                        users = it.room.users)
-                })
-                navController.navigate("Chats")
-            }
-        }
-        is EventFromServer.MessageNewEvent -> {
-            val data = (event.value as EventFromServer.MessageNewEvent).data
-            LocalStorage.updateChats(ChatDetails(chat = data.chat,
-                roomID = data.room.id.toInt(),
-                users = data.room.users))
-            LocalStorage.updateMessages(listOf(data.message.toRoomMessage()))
-        }
-        is EventFromServer.ChatHistoryEvent -> {
-            val data = (event.value as EventFromServer.ChatHistoryEvent).data
-            LocalStorage.updateMessages(data.messages.map { it.toRoomMessage() })
-            // TODO Тут же передавать айди комнаты
-            navController.navigate("Room")
-        }
-        is EventFromServer.ChatDelete -> {
-            val data = (event.value as EventFromServer.ChatDelete).data
-            LocalStorage.deleteChat(ChatDetails(chat = data.chat,
-                roomID = data.room.id.toInt(),
-                users = data.room.users))
-        }
-    }
+    observe(event)
+
     NavHost(navController = navController, startDestination = Screen.Autorization.route) {
         composable(Screen.Autorization.route) {
-            AutorizationScreen(value = event.value,
-                onAuthEvent = { viewModel.login(it) },
+            AutorizationScreen(onAuthEvent = { viewModel.login(it) },
                 navController = navController)
         }
         composable(Screen.Chats.route) {
-            ChatsScreen(value = event.value,
+            ChatsScreen(
                 navController = navController,
                 deleteChat = { viewModel.deleteChat(it) },
-                openChat = { viewModel.getChatHistory(it) })
+                openChat = {
+                    viewModel.getChatHistory(it)
+                    // TODO передать агрумент комнаты
+                    //  navController.navigate("Room")
+                }, chats = chats.value)
         }
         composable(Screen.CreateChat.route) {
             CreateChatScreen(value = event.value,
                 createChat = { viewModel.createChat(it) },
                 navController = navController)
         }
-        // TODO думаю хорошая идея будет пробросить именно event в composables и в них уже слушать события если что
-        composable(Screen.Room.route) {
-            ChatList(sendMessage = { viewModel.sendMesage(it) }, messages = messages.value)
+        /*composable(Screen.Room.route) {
+            Chat(sendMessage = { viewModel.sendMesage(it) },
+                messages = chats.value.,
+                navController = navController)
+        }*/
+    }
+
+   /* if (App.prefs!!.userID > 1) {
+        val authData = UserAuth(id = App.prefs!!.userID, token = App.prefs!!.userToken!!)
+        viewModel.login(authData)
+        navController.navigate("Chats")
+    }*/
+
+}
+
+fun observe(event: State<EventFromServer>) {
+    when (event.value) {
+        is EventFromServer.Autorization -> {
+            if ((event.value as EventFromServer.Autorization).data.success == true) {
+                val data = (event.value as EventFromServer.Autorization).data
+                ViewDataStorage.updateChat(data.dialogs.map { it.toChatItemInfo() })
+            }
+        }
+        is EventFromServer.MessageNewEvent -> {
+            val data = (event.value as EventFromServer.MessageNewEvent).data
+            ViewDataStorage.updateChat(data.toChatItemInfo())
+        }
+        is EventFromServer.ChatHistoryEvent -> {
+            val data = (event.value as EventFromServer.ChatHistoryEvent).data
+            val usersIds = mutableListOf<Int>()
+            data.room.users.forEach {
+                usersIds.add(it.id.toInt())
+            }
+            ViewDataStorage.updateChat(ChatItemInfo(roomID = data.room.id.toInt(),
+                usersIDs = usersIds,
+                unreadCount = data.chat.unread_count.toInt(),
+                roomMessages = data.messages.map { it.toRoomMessage() }))
+        }
+        is EventFromServer.ChatDelete -> {
+            val data = (event.value as EventFromServer.ChatDelete).data
+            ViewDataStorage.deleteChat(ChatDelete(chat = data.chat, room = data.room))
         }
     }
 }
+
 
 
 

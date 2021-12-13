@@ -10,4 +10,5 @@
     <string name="chats">Chats</string>
     <string name="createChat">CreateChat</string>
     <string name="room">Room</string>
+    <string name="auth">Autorization</string>
 </resources>
