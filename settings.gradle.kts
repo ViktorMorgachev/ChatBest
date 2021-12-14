@@ -10,7 +10,14 @@ pluginManagement {
         id("org.jetbrains.kotlin.android") version ("1.5.10")
         id("org.jetbrains.kotlin.jvm") version ("1.5.10")
         id("org.jetbrains.kotlin.kapt") version ("1.5.10")
-        id("dagger.hilt.android.plugin") version ("2.38.1")
+        id("dagger.hilt.android.plugin") version ("2.39.1")
+    }
+    resolutionStrategy {
+        eachPlugin {
+            if( requested.id.id == "dagger.hilt.android.plugin") {
+                useModule("com.google.dagger:hilt-android-gradle-plugin:2.39.1")
+            }
+        }
     }
 }
 
