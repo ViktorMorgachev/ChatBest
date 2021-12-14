@@ -3,6 +3,7 @@ import com.pet.buildsrc.*
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.kapt")
 }
 
 
@@ -50,6 +51,11 @@ android {
     }
 }
 
+kapt {
+    useBuildCache = false
+    correctErrorTypes = true
+}
+
 dependencies {
     implementation(Libs.androidx_core_ktx)
     implementation(Libs.compose_ui)
@@ -62,6 +68,8 @@ dependencies {
     implementation(Libs.socket_io_client) {
         exclude(group = "org.json", module = "json")
     }
+    implementation(Libs.com_google_dagger_hilt)
+    kapt(Libs.kapt_com_google_dagger_hilt)
     implementation(Libs.compose_navigation)
     implementation(Libs.work_runtime_ktx)
     implementation(Libs.google_code_gson)

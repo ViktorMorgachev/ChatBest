@@ -7,7 +7,9 @@ import androidx.work.workDataOf
 import com.pet.lovefinder.helpers.*
 import com.pet.lovefinder.network.NetworkWorker
 import com.pet.lovefinder.storage.Prefs
+import dagger.hilt.android.HiltAndroidApp
 
+@HiltAndroidApp
 class App : Application() {
 
     companion object {

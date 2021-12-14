@@ -20,6 +20,7 @@ object Versions {
     val work_manager = "2.7.1"
     val google_code_gson = "2.8.5"
     val compose_navigation = "2.4.0-beta02"
+    val dagger_hilt_android = "2.38.1"
 
 }
 
@@ -40,6 +41,8 @@ object Libs {
     val work_runtime_ktx = "androidx.work:work-runtime-ktx:${Versions.work_manager}"
     val google_code_gson = "com.google.code.gson:gson:${Versions.google_code_gson}"
     val compose_navigation = "androidx.navigation:navigation-compose:${Versions.compose_navigation}"
+    val com_google_dagger_hilt = "com.google.dagger:hilt-android:${Versions.dagger_hilt_android}"
+    val kapt_com_google_dagger_hilt = "com.google.dagger:hilt-android-compiler:${Versions.dagger_hilt_android}"
 }
 
 object TestLibs {
