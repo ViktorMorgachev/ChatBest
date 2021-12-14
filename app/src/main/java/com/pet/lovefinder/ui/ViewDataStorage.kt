@@ -1,6 +1,5 @@
 package com.pet.lovefinder.ui
 
-import com.pet.lovefinder.network.data.base.ChatDetails
 import com.pet.lovefinder.network.data.receive.ChatClear
 import com.pet.lovefinder.network.data.receive.ChatDelete
 import com.pet.lovefinder.network.data.receive.MessageDelete
@@ -14,16 +13,18 @@ object ViewDataStorage {
         val lastListMessagesInfo = chats.value.find { it.roomID == chatDetails.roomID }
         if (lastListMessagesInfo != null) {
             val newList = lastListMessagesInfo.roomMessages.plus(chatDetails.roomMessages)
-            lastListMessagesInfo.roomMessages = newList
+            lastListMessagesInfo.roomMessages = newList.toMutableList()
         } else chats.value.add(chatDetails)
         chats.emit(chats.value)
     }
 
-    fun deleteMessage(messageDelete: MessageDelete) = runBlocking{
-        chats.value.find { messageDelete.room.id.toInt() == it.roomID }?.roomMessages?.let {
-            it.toMutableList().remove(it.find { it.messageID == it.messageID })
-            chats.emit(chats.value)
+    fun deleteMessage(messageDelete: MessageDelete) = runBlocking {
+        val currentChat = chats.value.first { messageDelete.room.id.toInt() == it.roomID }
+        val messages = currentChat.roomMessages
+        messages.firstOrNull { it.messageID == messageDelete.message.id.toInt() }?.let {
+            messages.remove(it)
         }
+        chats.emit(chats.value)
     }
 
     fun clearChat(chatClear: ChatClear) = runBlocking {
@@ -38,7 +39,7 @@ object ViewDataStorage {
             val lastListMessagesInfo = chats.value.find { it.roomID == chatDetail.roomID }
             if (lastListMessagesInfo != null) {
                 val newList = lastListMessagesInfo.roomMessages.plus(chatDetail.roomMessages)
-                lastListMessagesInfo.roomMessages = newList
+                lastListMessagesInfo.roomMessages = newList.toMutableList()
             } else chats.value.add(chatDetail)
         }
         chats.emit(chats.value)

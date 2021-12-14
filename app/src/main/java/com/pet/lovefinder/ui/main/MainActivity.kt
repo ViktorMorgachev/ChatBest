@@ -15,6 +15,7 @@ import com.pet.lovefinder.network.data.toChatItemInfo
 import com.pet.lovefinder.ui.ViewDataStorage
 import com.pet.lovefinder.ui.*
 import com.pet.lovefinder.ui.theme.LoveFinderTheme
+import kotlin.math.log
 
 class MainActivity : ComponentActivity() {
 
@@ -80,6 +81,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun observe(event: State<EventFromServer>) {
         try {
+            print("EventFromServer: ${event.value}")
             when (event.value) {
                 is EventFromServer.AutorizationEvent -> {
                     if ((event.value as EventFromServer.AutorizationEvent).data.success == true) {
@@ -106,7 +108,7 @@ class MainActivity : ComponentActivity() {
                     val data = (event.value as EventFromServer.ChatClearEvent).data
                     ViewDataStorage.clearChat(data)
                 }
-                is EventFromServer.MessageDeleteEvent ->{
+                is EventFromServer.MessageDeleteEvent -> {
                     val data = (event.value as EventFromServer.MessageDeleteEvent).data
                     ViewDataStorage.deleteMessage(data)
                 }

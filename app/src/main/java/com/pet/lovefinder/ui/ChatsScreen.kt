@@ -29,7 +29,7 @@ data class ChatItemInfo(
     val roomID: Int,
     val usersIDs: List<Int>,
     val unreadCount: Int,
-    var roomMessages: List<RoomMessage> = listOf(),
+    var roomMessages: MutableList<RoomMessage> = mutableListOf(),
 )
 
 fun Dialog.toChatItemInfo(): ChatItemInfo {
@@ -41,7 +41,7 @@ fun Dialog.toChatItemInfo(): ChatItemInfo {
     return ChatItemInfo(roomID = this.room.id.toInt(),
         usersIDs = usersIDs,
         unreadCount = this.chat.unread_count.toInt(),
-        roomMessages = messages)
+        roomMessages = messages.toMutableList())
 }
 
 fun MessageNew.toChatItemInfo(): ChatItemInfo {
@@ -52,15 +52,15 @@ fun MessageNew.toChatItemInfo(): ChatItemInfo {
     return ChatItemInfo(roomID = this.room.id.toInt(),
         usersIDs = usersIDs,
         unreadCount = this.chat.unread_count.toInt(),
-        roomMessages = listOf(this.message.toRoomMessage()))
+        roomMessages = mutableListOf(this.message.toRoomMessage()))
 }
 
 val mockRoomChat = ChatItemInfo(roomID = 122,
     usersIDs = listOf(145, 176),
     unreadCount = 7,
-    roomMessages = listOf())
+    roomMessages = mutableListOf())
 
-val mockRoomChats = listOf<ChatItemInfo>(
+val mockRoomChats = listOf(
     mockRoomChat,
     mockRoomChat.copy(roomID = 123, unreadCount = 2, usersIDs = listOf(145, 164))
 )

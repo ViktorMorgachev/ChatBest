@@ -87,10 +87,6 @@ fun Chat(
     navController: NavController?,
     deleteMessage: (DeleteMessage) -> Unit,
 ) {
-    if (event is EventFromServer.ChatDeleteEvent) {
-        navController?.navigateUp()
-        return
-    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -139,7 +135,7 @@ fun Chat(
                                 Icon(Icons.Filled.Send, contentDescription = "Send")
                             }
                         })
-                    Button(onClick = { sendAction() }, modifier = modifier.fillMaxWidth()) {
+                    Button(onClick = { sendAction() }, modifier = modifier.fillMaxWidth(), enabled = message.isNotEmpty()) {
                         Text(text = "Отправить")
                     }
                 }

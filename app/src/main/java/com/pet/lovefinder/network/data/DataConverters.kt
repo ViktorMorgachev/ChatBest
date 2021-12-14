@@ -15,7 +15,7 @@ fun ChatHistory.toChatItemInfo(): ChatItemInfo? {
         ChatItemInfo(roomID = roomID.toInt(),
             usersIDs = userIds,
             unreadCount = unreadCount.toInt(),
-            roomMessages = this.messages.map { it.toRoomMessage() })
+            roomMessages = this.messages.map { it.toRoomMessage() }.toMutableList())
     } else null
 
 
