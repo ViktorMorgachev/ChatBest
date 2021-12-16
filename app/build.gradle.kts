@@ -2,11 +2,14 @@ import com.pet.buildsrc.*
 
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("org.jetbrains.kotlin.kapt")
-        // id("dagger.hilt.android.plugin")
+    kotlin("android")
+    kotlin("android.extensions")
+    kotlin("kapt")
+    /*id("com.android.application")
+    id("org.jetbrains.kotlin.android")*/
+   // id("org.jetbrains.kotlin.kapt")
+    //id("dagger.hilt.android.plugin")
 }
-
 
 
 android {
