@@ -21,6 +21,7 @@ object Versions {
     val dagger_hilt_android = "2.39.1"
     val squareup_retrofit = "2.9.0"
     val gson_converter = "2.9.0"
+    val dexter = "6.2.3"
 
 }
 
@@ -45,6 +46,7 @@ object Libs {
     val retrofit2 = "com.squareup.retrofit2:retrofit:${Versions.squareup_retrofit}"
     val gson_converter_factory = "com.squareup.retrofit2:converter-gson:{${Versions.gson_converter}}"
     val kapt_com_google_dagger_hilt = "com.google.dagger:hilt-android-compiler:${Versions.dagger_hilt_android}"
+    val dexter_permission = "com.karumi:dexter:{${Versions.dexter}}"
 
 }
 

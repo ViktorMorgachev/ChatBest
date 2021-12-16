@@ -71,6 +71,7 @@ dependencies {
 
     implementation(Libs.com_google_dagger_hilt)
     implementation(Libs.retrofit2)
+    implementation(Libs.dexter_permission)
     implementation(Libs.compose_navigation)
     implementation(Libs.work_runtime_ktx)
     implementation(Libs.google_code_gson)

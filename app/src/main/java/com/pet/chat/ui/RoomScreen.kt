@@ -1,6 +1,5 @@
 package com.pet.chat.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,11 +9,13 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Camera
+import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,7 +33,12 @@ import com.pet.chat.network.data.send.SendMessage
 import com.pet.chat.ui.theme.LoveFinderTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import java.io.File
+
+data class BottomActionData(
+    val image: ImageVector,
+    val itemDescribe: String,
+    val onClickAction: () -> Unit,
+)
 
 data class RoomMessage(
     val messageID: Int,
@@ -85,7 +91,8 @@ fun ChatListPrewiew() {
             deleteMessage = { },
             eventChatRead = {},
             loadFileAction = {},
-            scope = rememberCoroutineScope())
+            scope = rememberCoroutineScope(),
+            bottomSheetActions = mockDataBottomSheetItems)
     }
 }
 
@@ -102,11 +109,13 @@ fun Chat(
     deleteMessage: (DeleteMessage) -> Unit,
     eventChatRead: (ChatRead) -> Unit,
     loadFileAction: (Attachment) -> Unit,
-    scope: CoroutineScope
+    scope: CoroutineScope,
+    bottomSheetActions: List<BottomActionData>,
 ) {
     val modalBottomSheetState = rememberModalBottomSheetState(
-        initialValue =ModalBottomSheetValue.Hidden
+        initialValue = ModalBottomSheetValue.Hidden
     )
+
 
     Scaffold(
         topBar = {
@@ -130,10 +139,12 @@ fun Chat(
         LoveFinderTheme {
             ModalBottomSheetLayout(
                 sheetContent = {
-                LazyRow() {
-
-                }
-            }, sheetState = modalBottomSheetState) {
+                    LazyRow() {
+                        items(bottomSheetActions) { item ->
+                            BottomSheetItem(itemData = item)
+                        }
+                    }
+                }, sheetState = modalBottomSheetState) {
                 val (message, messageChange) = rememberSaveable { mutableStateOf("") }
                 val listState = rememberLazyListState()
 
@@ -167,10 +178,10 @@ fun Chat(
                                 Icon(Icons.Filled.Send, contentDescription = "Send")
                             }
                             IconButton(onClick = {
-                                scope.launch{
+                                scope.launch {
                                     if (!modalBottomSheetState.isVisible)
-                                    modalBottomSheetState.show()
-                                    else  modalBottomSheetState.hide()
+                                        modalBottomSheetState.show()
+                                    else modalBottomSheetState.hide()
                                 }
                             }) {
                                 Icon(Icons.Filled.Attachment, contentDescription = "AttachFile")
@@ -188,18 +199,9 @@ fun Chat(
                 }
             }
 
-
         }
     }
 
-}
-
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-fun bottomSheetContent() {
-    val modalBottomSheetState = rememberModalBottomSheetState(
-        initialValue =ModalBottomSheetValue.Hidden
-    )
 }
 
 @Composable
@@ -253,11 +255,39 @@ fun MessageItem(
                         style = TextStyle.Default,
                         modifier = modifier.padding(horizontal = 4.dp))
                 }
-
             }
         }
     }
 
+}
+
+val mockDataBottomSheetItem = BottomActionData(image = Icons.Outlined.Camera, "Camera", {})
+
+val mockDataBottomSheetItems = listOf(mockDataBottomSheetItem,
+    BottomActionData(image = Icons.Outlined.FileUpload, itemDescribe = "FileSystem", {}))
+
+@Preview
+@Composable
+fun BottomSheetItemPreview() {
+    LoveFinderTheme {
+        LazyRow() {
+            items(mockDataBottomSheetItems) { item ->
+                BottomSheetItem(itemData = item)
+            }
+        }
+    }
+}
+
+@Composable
+fun BottomSheetItem(itemData: BottomActionData) {
+    Column(modifier = Modifier.padding(4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Icon(imageVector = itemData.image,
+            modifier = Modifier
+                .height(32.dp)
+                .width(32.dp),
+            contentDescription = itemData.itemDescribe)
+        Text(text = itemData.itemDescribe)
+    }
 }
 
 

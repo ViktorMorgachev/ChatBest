@@ -27,7 +27,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 
         setContent {
@@ -84,7 +83,8 @@ class MainActivity : ComponentActivity() {
                         },
                         eventChatRead = { viewModel.postEventToServer(EventToServer.ChatReadEvent(it)) },
                         loadFileAction = {},
-                        scope = rememberCoroutineScope())
+                        scope = rememberCoroutineScope(),
+                        bottomSheetActions = mockDataBottomSheetItems)
                 }
 
             }
