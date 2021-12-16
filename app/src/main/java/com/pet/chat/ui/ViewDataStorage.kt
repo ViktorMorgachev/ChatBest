@@ -1,19 +1,19 @@
 package com.pet.chat.ui
 
-import com.pet.chat.network.data.receive.ChatClear
-import com.pet.chat.network.data.receive.ChatDelete
-import com.pet.chat.network.data.receive.MessageDelete
+import com.pet.chat.network.data.User
+import com.pet.chat.network.data.receive.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 
 object ViewDataStorage {
     val chats = MutableStateFlow<MutableList<ChatItemInfo>>(mutableListOf())
+    val users = MutableStateFlow<MutableList<User>>(mutableListOf())
 
     fun updateChat(chatDetails: ChatItemInfo) = runBlocking {
-        val lastListMessagesInfo = chats.value.find { it.roomID == chatDetails.roomID }
-        if (lastListMessagesInfo != null) {
-            val newList = lastListMessagesInfo.roomMessages.plus(chatDetails.roomMessages)
-            lastListMessagesInfo.roomMessages = newList.toMutableList()
+        val actualChat = chats.value.find { it.roomID == chatDetails.roomID }
+        if (actualChat != null) {
+            val newList = actualChat.roomMessages.plus(chatDetails.roomMessages)
+            actualChat.roomMessages = newList.toMutableList()
         } else chats.value.add(chatDetails)
         chats.emit(chats.value)
     }
@@ -50,5 +50,16 @@ object ViewDataStorage {
             chats.value.remove(it)
         }
         chats.emit(chats.value)
+    }
+
+    fun updateChatState(data: ChatRead) = runBlocking {
+        chats.value.find { it.roomID == data.room.id.toInt() }?.let {
+            it.unreadCount = 0
+        }
+        chats.emit(chats.value)
+    }
+
+    fun updateUserStatus(data: UserOnline) {
+
     }
 }

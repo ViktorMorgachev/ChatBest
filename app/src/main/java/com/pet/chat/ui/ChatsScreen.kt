@@ -24,7 +24,7 @@ import com.pet.chat.ui.theme.Shapes
 data class ChatItemInfo(
     val roomID: Int,
     val usersIDs: List<Int>,
-    val unreadCount: Int,
+    var unreadCount: Int,
     var roomMessages: MutableList<RoomMessage> = mutableListOf(),
 )
 

@@ -13,5 +13,6 @@
     <string name="room">Чат</string>
     <string name="auth">Авторизация</string>
     <string name="something_went_wrong">Что то пошло не так</string>
+    <string name="not_implemented_functional">"Это функционал скоро будет"</string>
     <string name="delete">Удалить</string>
 </resources>

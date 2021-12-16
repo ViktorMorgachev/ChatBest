@@ -67,19 +67,21 @@ class MainActivity : ComponentActivity() {
             composable(Screen.Room.route) { backStackEntry ->
                 val roomID = backStackEntry.arguments?.getString("roomID")
                 requireNotNull(roomID) { "roomID parameter wasn't found. Please make sure it's set!" }
-                chats.value.firstOrNull { it.roomID == roomID.toInt() }?.let {
-                    val messages = it.roomMessages
-                    Chat(sendMessage = {
-                        viewModel.postEventToServer(EventToServer.SendMessageEvent(it))
-                    },
+                chats.value.firstOrNull { it.roomID == roomID.toInt() }?.let { chatItemInfo->
+                    val messages = chatItemInfo.roomMessages
+                    Chat(sendMessage = { viewModel.postEventToServer(EventToServer.SendMessageEvent(it)) },
                         messages = messages.toList(),
                         roomID = roomID.toInt(),
                         navController = navController,
                         clearChat = {
-                            viewModel.postEventToServer(EventToServer.ClearChatEvent(ClearChat(roomID.toInt())))
+                            viewModel.postEventToServer(EventToServer.ClearChatEvent(ClearChat(
+                                roomID.toInt())))
                         },
                         event = event.value,
-                        deleteMessage = { viewModel.postEventToServer(EventToServer.DeleteMessageEvent(it)) })
+                        deleteMessage = {
+                            viewModel.postEventToServer(EventToServer.DeleteMessageEvent(it))
+                        },
+                        eventChatRead = { viewModel.postEventToServer(EventToServer.ChatReadEvent(it)) })
                 }
 
             }
@@ -121,6 +123,15 @@ class MainActivity : ComponentActivity() {
                     val data = (event.value as EventFromServer.MessageDeleteEvent).data
                     ViewDataStorage.deleteMessage(data)
                 }
+                is EventFromServer.ChatReadEvent -> {
+                    val data = (event.value as EventFromServer.ChatReadEvent).data
+                    ViewDataStorage.updateChatState(data)
+                }
+                is EventFromServer.UserOnlineEvent ->{
+                    val data = (event.value as EventFromServer.UserOnlineEvent).data
+                    ViewDataStorage.updateUserStatus(data)
+                }
+                else -> {}
             }
         } catch (e: Throwable) {
             e.printStackTrace()

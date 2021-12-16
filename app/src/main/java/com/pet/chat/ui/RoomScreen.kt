@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -21,6 +22,7 @@ import com.pet.chat.App
 import com.pet.chat.R
 import com.pet.chat.network.EventFromServer
 import com.pet.chat.network.data.Message
+import com.pet.chat.network.data.send.ChatRead
 import com.pet.chat.network.data.send.DeleteMessage
 import com.pet.chat.network.data.send.SendMessage
 import com.pet.chat.ui.theme.LoveFinderTheme
@@ -71,7 +73,7 @@ fun ChatListPrewiew() {
             messages = mockData,
             navController = null,
             roomID = -1,
-            clearChat = {}, event = null, deleteMessage = { })
+            clearChat = {}, event = null, deleteMessage = { }, eventChatRead = {})
     }
 }
 
@@ -85,6 +87,7 @@ fun Chat(
     messages: List<RoomMessage>,
     navController: NavController?,
     deleteMessage: (DeleteMessage) -> Unit,
+    eventChatRead: (ChatRead) -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -107,6 +110,10 @@ fun Chat(
     ) { innerPadding ->
         LoveFinderTheme {
             val (message, messageChange) = rememberSaveable { mutableStateOf("") }
+            val listState = rememberLazyListState()
+            if (listState.firstVisibleItemIndex >= messages.size - 1) {
+                eventChatRead(ChatRead(roomId = roomID))
+            }
             val sendAction = {
                 sendMessage(SendMessage(roomId = roomID,
                     text = message,
@@ -118,7 +125,7 @@ fun Chat(
                     .fillMaxWidth()
                     .weight(1f)
                     .padding(horizontal = 8.dp)
-                    .padding(innerPadding)) {
+                    .padding(innerPadding), state = listState) {
                     items(messages) { data ->
                         MessageItem(modifier = Modifier.padding(all = 4.dp),
                             message = data,
@@ -134,7 +141,9 @@ fun Chat(
                                 Icon(Icons.Filled.Send, contentDescription = "Send")
                             }
                         })
-                    Button(onClick = { sendAction() }, modifier = modifier.fillMaxWidth(), enabled = message.isNotEmpty()) {
+                    Button(onClick = { sendAction() },
+                        modifier = modifier.fillMaxWidth(),
+                        enabled = message.isNotEmpty()) {
                         Text(text = "Отправить")
                     }
                 }
@@ -170,11 +179,13 @@ fun MessageItem(
                             expanded = expandedMenu,
                             onDismissRequest = { expandedMenu = false }
                         ) {
-                            Text(text = stringResource(id = R.string.delete), fontSize = 14.sp, modifier = Modifier
-                                .clickable(onClick = {
-                                    deleteMessage(DeleteMessage(message.messageID))
-                                    expandedMenu = false
-                                }))
+                            Text(text = stringResource(id = R.string.delete),
+                                fontSize = 14.sp,
+                                modifier = Modifier
+                                    .clickable(onClick = {
+                                        deleteMessage(DeleteMessage(message.messageID))
+                                        expandedMenu = false
+                                    }))
                         }
                         Spacer(modifier = Modifier.weight(1f))
                     }
