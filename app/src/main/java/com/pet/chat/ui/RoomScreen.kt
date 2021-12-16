@@ -1,5 +1,6 @@
 package com.pet.chat.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -27,6 +29,8 @@ import com.pet.chat.network.data.send.ChatRead
 import com.pet.chat.network.data.send.DeleteMessage
 import com.pet.chat.network.data.send.SendMessage
 import com.pet.chat.ui.theme.LoveFinderTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import java.io.File
 
 data class RoomMessage(
@@ -79,7 +83,8 @@ fun ChatListPrewiew() {
             event = null,
             deleteMessage = { },
             eventChatRead = {},
-            loadFileAction = {})
+            loadFileAction = {},
+            scope = rememberCoroutineScope())
     }
 }
 
@@ -96,8 +101,13 @@ fun Chat(
     deleteMessage: (DeleteMessage) -> Unit,
     eventChatRead: (ChatRead) -> Unit,
     loadFileAction: (Attachment) -> Unit,
+    scope: CoroutineScope
 ) {
-    Scaffold(
+    var bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
+        bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed)
+    )
+
+    BottomSheetScaffold(
         topBar = {
             TopAppBar(
                 title = {
@@ -114,14 +124,26 @@ fun Chat(
                     }
                 }
             )
+        },
+        scaffoldState = bottomSheetScaffoldState,
+        sheetContent = {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(300.dp)
+                    .background(Color(0xAA3fa7cc))
+            ) {
+                Text(
+                    text = "Hello from bottom sheet",
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                )
+            }
         }
     ) { innerPadding ->
         LoveFinderTheme {
             val (message, messageChange) = rememberSaveable { mutableStateOf("") }
             val listState = rememberLazyListState()
-            val scaffoldState = rememberBottomSheetScaffoldState()
-
-            BottomSheetAttachFile(scaffoldState = scaffoldState)
 
             if (listState.firstVisibleItemIndex >= messages.size - 1) {
                 eventChatRead(ChatRead(roomId = roomID))
@@ -148,11 +170,19 @@ fun Chat(
                     Row() {
                         TextField(modifier = Modifier,
                             value = message,
-                            onValueChange = messageChange)
+                            onValueChange = messageChange, enabled = false)
                         IconButton(onClick = { sendAction() }, enabled = message.isNotEmpty()) {
                             Icon(Icons.Filled.Send, contentDescription = "Send")
                         }
-                        IconButton(onClick = {}, enabled = message.isNotEmpty()) {
+                        IconButton(onClick = {
+                            scope.launch{
+                                if (bottomSheetScaffoldState.bottomSheetState.isCollapsed) {
+                                    bottomSheetScaffoldState.bottomSheetState.expand()
+                                } else {
+                                    bottomSheetScaffoldState.bottomSheetState.collapse()
+                                }
+                            }
+                        }) {
                             Icon(Icons.Filled.Attachment, contentDescription = "AttachFile")
                         }
 
@@ -169,6 +199,12 @@ fun Chat(
 
         }
     }
+
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun changeScafford(scaffoldState: BottomSheetScaffoldState) {
 
 }
 
@@ -228,18 +264,6 @@ fun MessageItem(
         }
     }
 
-}
-
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-fun BottomSheetAttachFile(modifier: Modifier = Modifier, scaffoldState: BottomSheetScaffoldState) {
-    BottomSheetScaffold(
-        sheetContent = {
-        },
-        scaffoldState = scaffoldState
-    ) { innerPadding ->
-        //Image or animation content
-    }
 }
 
 

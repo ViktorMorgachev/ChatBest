@@ -79,7 +79,9 @@ class MainActivity : ComponentActivity() {
                         deleteMessage = {
                             viewModel.postEventToServer(EventToServer.DeleteMessageEvent(it))
                         },
-                        eventChatRead = { viewModel.postEventToServer(EventToServer.ChatReadEvent(it)) }, loadFileAction = {})
+                        eventChatRead = { viewModel.postEventToServer(EventToServer.ChatReadEvent(it)) },
+                        loadFileAction = {},
+                        scope = rememberCoroutineScope())
                 }
 
             }
