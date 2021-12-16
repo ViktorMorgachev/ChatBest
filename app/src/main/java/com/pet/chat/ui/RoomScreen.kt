@@ -21,11 +21,13 @@ import androidx.navigation.NavController
 import com.pet.chat.App
 import com.pet.chat.R
 import com.pet.chat.network.EventFromServer
+import com.pet.chat.network.data.Attachment
 import com.pet.chat.network.data.Message
 import com.pet.chat.network.data.send.ChatRead
 import com.pet.chat.network.data.send.DeleteMessage
 import com.pet.chat.network.data.send.SendMessage
 import com.pet.chat.ui.theme.LoveFinderTheme
+import java.io.File
 
 data class RoomMessage(
     val messageID: Int,
@@ -73,10 +75,15 @@ fun ChatListPrewiew() {
             messages = mockData,
             navController = null,
             roomID = -1,
-            clearChat = {}, event = null, deleteMessage = { }, eventChatRead = {})
+            clearChat = {},
+            event = null,
+            deleteMessage = { },
+            eventChatRead = {},
+            loadFileAction = {})
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun Chat(
     event: EventFromServer?,
@@ -88,6 +95,7 @@ fun Chat(
     navController: NavController?,
     deleteMessage: (DeleteMessage) -> Unit,
     eventChatRead: (ChatRead) -> Unit,
+    loadFileAction: (Attachment) -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -111,6 +119,10 @@ fun Chat(
         LoveFinderTheme {
             val (message, messageChange) = rememberSaveable { mutableStateOf("") }
             val listState = rememberLazyListState()
+            val scaffoldState = rememberBottomSheetScaffoldState()
+
+            BottomSheetAttachFile(scaffoldState = scaffoldState)
+
             if (listState.firstVisibleItemIndex >= messages.size - 1) {
                 eventChatRead(ChatRead(roomId = roomID))
             }
@@ -133,14 +145,19 @@ fun Chat(
                     }
                 }
                 Column(modifier = Modifier.padding(all = 4.dp)) {
-                    TextField(modifier = Modifier.fillMaxWidth(),
-                        value = message,
-                        onValueChange = messageChange,
-                        trailingIcon = {
-                            IconButton(onClick = { sendAction() }, enabled = message.isNotEmpty()) {
-                                Icon(Icons.Filled.Send, contentDescription = "Send")
-                            }
-                        })
+                    Row() {
+                        TextField(modifier = Modifier,
+                            value = message,
+                            onValueChange = messageChange)
+                        IconButton(onClick = { sendAction() }, enabled = message.isNotEmpty()) {
+                            Icon(Icons.Filled.Send, contentDescription = "Send")
+                        }
+                        IconButton(onClick = {}, enabled = message.isNotEmpty()) {
+                            Icon(Icons.Filled.Attachment, contentDescription = "AttachFile")
+                        }
+
+                    }
+
                     Button(onClick = { sendAction() },
                         modifier = modifier.fillMaxWidth(),
                         enabled = message.isNotEmpty()) {
@@ -211,6 +228,18 @@ fun MessageItem(
         }
     }
 
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun BottomSheetAttachFile(modifier: Modifier = Modifier, scaffoldState: BottomSheetScaffoldState) {
+    BottomSheetScaffold(
+        sheetContent = {
+        },
+        scaffoldState = scaffoldState
+    ) { innerPadding ->
+        //Image or animation content
+    }
 }
 
 

@@ -46,7 +46,9 @@ class MainActivity : ComponentActivity() {
         NavHost(navController = navController, startDestination = Screen.Autorization.route) {
             composable(Screen.Autorization.route) {
                 AutorizationScreen(onAuthEvent = {
-                    viewModel.postEventToServer(EventToServer.AuthEvent(it))
+                    //viewModel.postEventToServer(EventToServer.AuthEvent(it))
+                    // TODO For testing must be delete
+                    navController.navigate(Screen.Room.createRoute("-1"))
                 },
                     navController = navController)
             }
@@ -81,7 +83,7 @@ class MainActivity : ComponentActivity() {
                         deleteMessage = {
                             viewModel.postEventToServer(EventToServer.DeleteMessageEvent(it))
                         },
-                        eventChatRead = { viewModel.postEventToServer(EventToServer.ChatReadEvent(it)) })
+                        eventChatRead = { viewModel.postEventToServer(EventToServer.ChatReadEvent(it)) }, loadFileAction = {})
                 }
 
             }
