@@ -3,7 +3,6 @@ import com.pet.buildsrc.*
 plugins {
     id("com.android.application")
     kotlin("android")
-    kotlin("android.extensions")
     kotlin("kapt")
     id("dagger.hilt.android.plugin")
 }
@@ -69,14 +68,18 @@ dependencies {
     implementation(Libs.socket_io_client) {
         exclude(group = "org.json", module = "json")
     }
+
     implementation(Libs.com_google_dagger_hilt)
-    kapt(Libs.kapt_com_google_dagger_hilt)
+    implementation(Libs.retrofit2)
+    implementation(Libs.gson_converter_factory)
     implementation(Libs.compose_navigation)
     implementation(Libs.work_runtime_ktx)
     implementation(Libs.google_code_gson)
-    testImplementation(TestLibs.junit)
+    kapt(Libs.kapt_com_google_dagger_hilt)
     androidTestImplementation(AndroidTestLibs.ext_junit)
     androidTestImplementation(AndroidTestLibs.android_test_espresso_core)
     androidTestImplementation(AndroidTestLibs.androidx_compose_ui_test_junit4)
+    testImplementation(TestLibs.junit)
     debugImplementation(DebugLibs.compose_ui_tooling)
+
 }

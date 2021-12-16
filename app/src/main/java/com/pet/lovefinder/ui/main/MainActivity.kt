@@ -15,8 +15,10 @@ import com.pet.lovefinder.network.data.toChatItemInfo
 import com.pet.lovefinder.ui.ViewDataStorage
 import com.pet.lovefinder.ui.*
 import com.pet.lovefinder.ui.theme.LoveFinderTheme
+import dagger.hilt.android.AndroidEntryPoint
 import kotlin.math.log
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     val eventViewModel by viewModels<ChatViewModel>()

@@ -19,6 +19,8 @@ object Versions {
     val google_code_gson = "2.8.5"
     val compose_navigation = "2.4.0-beta02"
     val dagger_hilt_android = "2.39.1"
+    val squareup_retrofit = "2.9.0"
+    val gson_converter = "2.9.0"
 
 }
 
@@ -40,7 +42,10 @@ object Libs {
     val google_code_gson = "com.google.code.gson:gson:${Versions.google_code_gson}"
     val compose_navigation = "androidx.navigation:navigation-compose:${Versions.compose_navigation}"
     val com_google_dagger_hilt = "com.google.dagger:hilt-android:${Versions.dagger_hilt_android}"
+    val retrofit2 = "com.squareup.retrofit2:retrofit:${Versions.squareup_retrofit}"
+    val gson_converter_factory = "com.squareup.retrofit2:converter-gson:{${Versions.gson_converter}}"
     val kapt_com_google_dagger_hilt = "com.google.dagger:hilt-android-compiler:${Versions.dagger_hilt_android}"
+
 }
 
 object TestLibs {

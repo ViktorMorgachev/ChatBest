@@ -11,10 +11,13 @@ import com.pet.lovefinder.network.data.Chat
 import com.pet.lovefinder.network.data.Room
 import com.pet.lovefinder.network.data.send.*
 import com.pet.lovefinder.storage.Prefs
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ChatViewModel : ViewModel() {
+@HiltViewModel
+class ChatViewModel @Inject constructor(): ViewModel() {
 
     val events = MutableStateFlow<EventFromServer>(EventFromServer.Default("FIRST"))
 
