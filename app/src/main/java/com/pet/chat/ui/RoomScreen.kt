@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.*
@@ -103,11 +104,11 @@ fun Chat(
     loadFileAction: (Attachment) -> Unit,
     scope: CoroutineScope
 ) {
-    var bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
-        bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed)
+    val modalBottomSheetState = rememberModalBottomSheetState(
+        initialValue =ModalBottomSheetValue.Hidden
     )
 
-    BottomSheetScaffold(
+    Scaffold(
         topBar = {
             TopAppBar(
                 title = {
@@ -124,78 +125,69 @@ fun Chat(
                     }
                 }
             )
-        },
-        scaffoldState = bottomSheetScaffoldState,
-        sheetContent = {
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .height(300.dp)
-                    .background(Color(0xAA3fa7cc))
-            ) {
-                Text(
-                    text = "Hello from bottom sheet",
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                )
-            }
         }
     ) { innerPadding ->
         LoveFinderTheme {
-            val (message, messageChange) = rememberSaveable { mutableStateOf("") }
-            val listState = rememberLazyListState()
+            ModalBottomSheetLayout(
+                sheetContent = {
+                LazyRow() {
 
-            if (listState.firstVisibleItemIndex >= messages.size - 1) {
-                eventChatRead(ChatRead(roomId = roomID))
-            }
-            val sendAction = {
-                sendMessage(SendMessage(roomId = roomID,
-                    text = message,
-                    attachmentId = null))
-                messageChange("")
-            }
-            Column() {
-                LazyColumn(modifier = modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(horizontal = 8.dp)
-                    .padding(innerPadding), state = listState) {
-                    items(messages) { data ->
-                        MessageItem(modifier = Modifier.padding(all = 4.dp),
-                            message = data,
-                            deleteMessage)
-                    }
                 }
-                Column(modifier = Modifier.padding(all = 4.dp)) {
-                    Row() {
-                        TextField(modifier = Modifier,
-                            value = message,
-                            onValueChange = messageChange, enabled = false)
-                        IconButton(onClick = { sendAction() }, enabled = message.isNotEmpty()) {
-                            Icon(Icons.Filled.Send, contentDescription = "Send")
+            }, sheetState = modalBottomSheetState) {
+                val (message, messageChange) = rememberSaveable { mutableStateOf("") }
+                val listState = rememberLazyListState()
+
+                if (listState.firstVisibleItemIndex >= messages.size - 1) {
+                    eventChatRead(ChatRead(roomId = roomID))
+                }
+                val sendAction = {
+                    sendMessage(SendMessage(roomId = roomID,
+                        text = message,
+                        attachmentId = null))
+                    messageChange("")
+                }
+                Column() {
+                    LazyColumn(modifier = modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(horizontal = 8.dp)
+                        .padding(innerPadding), state = listState) {
+                        items(messages) { data ->
+                            MessageItem(modifier = Modifier.padding(all = 4.dp),
+                                message = data,
+                                deleteMessage)
                         }
-                        IconButton(onClick = {
-                            scope.launch{
-                                if (bottomSheetScaffoldState.bottomSheetState.isCollapsed) {
-                                    bottomSheetScaffoldState.bottomSheetState.expand()
-                                } else {
-                                    bottomSheetScaffoldState.bottomSheetState.collapse()
-                                }
+                    }
+                    Column(modifier = Modifier.padding(all = 4.dp)) {
+                        Row() {
+                            TextField(modifier = Modifier,
+                                value = message,
+                                onValueChange = messageChange)
+                            IconButton(onClick = { sendAction() }, enabled = message.isNotEmpty()) {
+                                Icon(Icons.Filled.Send, contentDescription = "Send")
                             }
-                        }) {
-                            Icon(Icons.Filled.Attachment, contentDescription = "AttachFile")
+                            IconButton(onClick = {
+                                scope.launch{
+                                    if (!modalBottomSheetState.isVisible)
+                                    modalBottomSheetState.show()
+                                    else  modalBottomSheetState.hide()
+                                }
+                            }) {
+                                Icon(Icons.Filled.Attachment, contentDescription = "AttachFile")
+                            }
+
                         }
 
+                        Button(onClick = { sendAction() },
+                            modifier = modifier.fillMaxWidth(),
+                            enabled = message.isNotEmpty()) {
+                            Text(text = "Отправить")
+                        }
                     }
 
-                    Button(onClick = { sendAction() },
-                        modifier = modifier.fillMaxWidth(),
-                        enabled = message.isNotEmpty()) {
-                        Text(text = "Отправить")
-                    }
                 }
-
             }
+
 
         }
     }
@@ -204,8 +196,10 @@ fun Chat(
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun changeScafford(scaffoldState: BottomSheetScaffoldState) {
-
+fun bottomSheetContent() {
+    val modalBottomSheetState = rememberModalBottomSheetState(
+        initialValue =ModalBottomSheetValue.Hidden
+    )
 }
 
 @Composable

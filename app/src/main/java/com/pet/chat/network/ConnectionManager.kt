@@ -129,35 +129,6 @@ object ConnectionManager {
     fun postEventToServer(event: EventToServer, error: (String) -> Unit) {
         try {
             socket?.emit(event.eventName, event.any.toSocketData())
-            /* when (event) {
-                 *//* is EventToServer.AuthEvent -> {
-                     socket?.emit("", event.data.toSocketData())
-                 }
-                 is EventToServer.CreateChatEvent -> {
-                     socket?.emit("", event.data.toSocketData())
-                 }
-                 is EventToServer.SendMessageEvent -> {
-                     socket?.emit("", event.data.toSocketData())
-                 }
-                 is EventToServer.GetChatHistory -> {
-                     socket?.emit("", event.data.toSocketData())
-                 }
-                 is EventToServer.DeleteChat -> {
-                     socket?.emit("", event.data.toSocketData())
-                 }*//*
-                is EventToServer.ClearChatEvent -> {
-                    socket?.emit("", event.data.toSocketData())
-                }
-                else -> {
-                    socket?.emit(event.eventName, even)
-                }
-                *//* is EventToServer.DeleteMessageEvent -> {
-                     socket?.emit("", event.data.toSocketData())
-                 }
-                 is EventToServer.ChatReadEvent ->{
-                     socket?.emit("", event.data.toSocketData())
-                 }*//*
-            }*/
         } catch (e: Throwable) {
             e.printStackTrace()
             error.invoke(": при отправке данных")
