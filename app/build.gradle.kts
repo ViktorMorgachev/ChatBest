@@ -5,10 +5,7 @@ plugins {
     kotlin("android")
     kotlin("android.extensions")
     kotlin("kapt")
-    /*id("com.android.application")
-    id("org.jetbrains.kotlin.android")*/
-   // id("org.jetbrains.kotlin.kapt")
-    //id("dagger.hilt.android.plugin")
+    id("dagger.hilt.android.plugin")
 }
 
 
