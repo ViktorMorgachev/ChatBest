@@ -45,11 +45,7 @@ class MainActivity : ComponentActivity() {
 
         NavHost(navController = navController, startDestination = Screen.Autorization.route) {
             composable(Screen.Autorization.route) {
-                AutorizationScreen(onAuthEvent = {
-                    //viewModel.postEventToServer(EventToServer.AuthEvent(it))
-                    // TODO For testing must be delete
-                    navController.navigate(Screen.Room.createRoute("-1"))
-                },
+                AutorizationScreen(onAuthEvent = { viewModel.postEventToServer(EventToServer.AuthEvent(it)) },
                     navController = navController)
             }
             composable(Screen.Chats.route) {
