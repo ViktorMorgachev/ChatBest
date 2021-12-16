@@ -1,10 +1,13 @@
 package com.pet.chat.ui.main
 
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pet.chat.App
+import com.pet.chat.R
 import com.pet.chat.network.ConnectionManager
 import com.pet.chat.network.EventFromServer
+import com.pet.chat.network.EventToServer
 import com.pet.chat.network.Subscriber
 import com.pet.chat.network.data.send.*
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -13,37 +16,16 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class ChatViewModel @Inject constructor(): ViewModel() {
+class ChatViewModel @Inject constructor() : ViewModel() {
 
-    val events = MutableStateFlow<EventFromServer>(EventFromServer.Default("FIRST"))
+    val events = MutableStateFlow<EventFromServer>(EventFromServer.NO_INITIALIZED)
 
-    fun login(userAuth: UserAuth) {
-        ConnectionManager.auth(userAuth)
-        App.prefs?.saveUser(userAuth)
-    }
 
-    fun createChat(chatStart: ChatStart) {
-        ConnectionManager.createChat(chatStart)
-    }
-
-    fun getChatHistory(chatHistory: ChatHistory) {
-        ConnectionManager.getChatHistory(chatHistory)
-    }
-
-    fun deleteChat(chatDelete: ChatDelete) {
-        ConnectionManager.deleteChat(chatDelete)
-    }
-
-    fun sendMesage(sendMessage: SendMessage) {
-        ConnectionManager.sendMesages(sendMessage = sendMessage)
-    }
-
-    fun clearChat(roomID: Int) {
-        ConnectionManager.clearChat(roomID = roomID)
-    }
-
-    fun deleteMessage(deleteMessage: DeleteMessage) {
-        ConnectionManager.deleteMessage(deleteMessage = deleteMessage)
+    fun postEventToServer(eventToServer: EventToServer) {
+        ConnectionManager.postEventToServer(event = eventToServer, error = {
+            val resultText = App.instance.applicationContext.getText(R.string.something_went_wrong).toString() + it
+            Toast.makeText(App.instance.applicationContext, resultText, Toast.LENGTH_LONG).show()
+        })
     }
 
     init {

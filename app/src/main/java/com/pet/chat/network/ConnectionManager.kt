@@ -1,6 +1,10 @@
 package com.pet.chat.network
 
+import android.widget.Toast
+import androidx.annotation.StringRes
+import androidx.compose.ui.res.stringResource
 import com.google.gson.Gson
+import com.pet.chat.R
 import com.pet.chat.helpers.toSocketData
 import com.pet.chat.network.data.receive.ChatClear
 import com.pet.chat.network.data.receive.MessageDelete
@@ -30,9 +34,19 @@ sealed class EventFromServer {
     data class ConnectionSuccess(val info: String) : EventFromServer()
     data class ConnectionError(val info: String) : EventFromServer()
     data class Disconnected(val info: String) : EventFromServer()
-    data class Default(val data: Any?) : EventFromServer()
+    object NO_INITIALIZED : EventFromServer()
     data class Debug(val data: Any?) : EventFromServer()
 
+}
+
+sealed class EventToServer {
+    data class AuthEvent(val data: UserAuth) : EventToServer()
+    data class CreateChatEvent(val data: ChatStart) : EventToServer()
+    data class SendMessageEvent(val data: SendMessage) : EventToServer()
+    data class GetChatHistory(val data: ChatHistory) : EventToServer()
+    data class DeleteChat(val data: ChatDelete) : EventToServer()
+    data class ClearChatEvent(val data: ClearChat) : EventToServer()
+    data class DeleteMessageEvent(val data: DeleteMessage) : EventToServer()
 }
 
 interface Subscriber {
@@ -113,31 +127,35 @@ object ConnectionManager {
         }
     }
 
-    fun auth(userAuth: UserAuth) {
-        socket?.emit("user.auth", userAuth.toSocketData())
-    }
+    fun postEventToServer(event: EventToServer, error: (String) -> Unit) {
+        try {
+            when (event) {
+                is EventToServer.AuthEvent -> {
+                    socket?.emit("user.auth", event.data.toSocketData())
+                }
+                is EventToServer.CreateChatEvent -> {
+                    socket?.emit("chat.start", event.data.toSocketData())
+                }
+                is EventToServer.SendMessageEvent -> {
+                    socket?.emit("message.send", event.data.toSocketData())
+                }
+                is EventToServer.GetChatHistory -> {
+                    socket?.emit("chat.history", event.data.toSocketData())
+                }
+                is EventToServer.DeleteChat -> {
+                    socket?.emit("chat.delete", event.data.toSocketData())
+                }
+                is EventToServer.ClearChatEvent -> {
+                    socket?.emit("chat.clear", ClearChat(roomID = event.data.roomID).toSocketData())
+                }
+                is EventToServer.DeleteMessageEvent -> {
+                    socket?.emit("message.delete", event.data.toSocketData())
+                }
+            }
+        } catch (e: Throwable) {
+            e.printStackTrace()
+            error.invoke(": при отправке данных")
+        }
 
-    fun createChat(chat: ChatStart) {
-        socket?.emit("chat.start", chat.toSocketData())
-    }
-
-    fun sendMesages(sendMessage: SendMessage) {
-        socket?.emit("message.send", sendMessage.toSocketData())
-    }
-
-    fun getChatHistory(chatHistory: ChatHistory) {
-        socket?.emit("chat.history", chatHistory.toSocketData())
-    }
-
-    fun deleteChat(chatDelete: ChatDelete) {
-        socket?.emit("chat.delete", chatDelete.toSocketData())
-    }
-
-    fun clearChat(roomID: Int) {
-        socket?.emit("chat.clear", ClearChat(roomID = roomID).toSocketData())
-    }
-
-    fun deleteMessage(deleteMessage: DeleteMessage) {
-        socket?.emit("message.delete", deleteMessage.toSocketData())
     }
 }

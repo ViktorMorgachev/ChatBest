@@ -4,7 +4,7 @@ object Versions {
     val compose_version = "1.0.0"
     val kotlin_android = "1.5.10"
     val android_library = "7.1.0-alpha10"
-    val kotlin_jvm = "1.5.30"
+    val kotlin_jvm = "1.5.10"
     val androidx_core_ktx = "1.7.0"
     val androidx_lifecycle_runtime = "2.3.1"
     val junit = "4.13.2"

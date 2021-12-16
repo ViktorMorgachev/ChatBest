@@ -10,7 +10,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.navigation.compose.*
 import com.pet.chat.R
 import com.pet.chat.network.EventFromServer
+import com.pet.chat.network.EventToServer
 import com.pet.chat.network.data.receive.ChatDelete
+import com.pet.chat.network.data.send.ClearChat
 import com.pet.chat.network.data.toChatItemInfo
 import com.pet.chat.ui.ViewDataStorage
 import com.pet.chat.ui.*
@@ -43,21 +45,23 @@ class MainActivity : ComponentActivity() {
 
         NavHost(navController = navController, startDestination = Screen.Autorization.route) {
             composable(Screen.Autorization.route) {
-                AutorizationScreen(onAuthEvent = { viewModel.login(it) },
+                AutorizationScreen(onAuthEvent = {
+                    viewModel.postEventToServer(EventToServer.AuthEvent(it))
+                },
                     navController = navController)
             }
             composable(Screen.Chats.route) {
                 ChatsScreen(
                     navController = navController,
-                    deleteChat = { viewModel.deleteChat(it) },
+                    deleteChat = { viewModel.postEventToServer(EventToServer.DeleteChat(it)) },
                     openChat = {
-                        viewModel.getChatHistory(it)
+                        viewModel.postEventToServer(EventToServer.GetChatHistory(it))
                         navController.navigate(Screen.Room.createRoute(it.roomId.toString()))
                     }, chats = chats.value)
             }
             composable(Screen.CreateChat.route) {
                 CreateChatScreen(value = event.value,
-                    createChat = { viewModel.createChat(it) },
+                    createChat = { viewModel.postEventToServer(EventToServer.CreateChatEvent(it)) },
                     navController = navController)
             }
             composable(Screen.Room.route) { backStackEntry ->
@@ -65,13 +69,17 @@ class MainActivity : ComponentActivity() {
                 requireNotNull(roomID) { "roomID parameter wasn't found. Please make sure it's set!" }
                 chats.value.firstOrNull { it.roomID == roomID.toInt() }?.let {
                     val messages = it.roomMessages
-                    Chat(sendMessage = { viewModel.sendMesage(it) },
+                    Chat(sendMessage = {
+                        viewModel.postEventToServer(EventToServer.SendMessageEvent(it))
+                    },
                         messages = messages.toList(),
                         roomID = roomID.toInt(),
                         navController = navController,
-                        clearChat = { viewModel.clearChat(roomID.toInt()) },
+                        clearChat = {
+                            viewModel.postEventToServer(EventToServer.ClearChatEvent(ClearChat(roomID.toInt())))
+                        },
                         event = event.value,
-                        deleteMessage = { viewModel.deleteMessage(it) })
+                        deleteMessage = { viewModel.postEventToServer(EventToServer.DeleteMessageEvent(it)) })
                 }
 
             }
@@ -117,7 +125,7 @@ class MainActivity : ComponentActivity() {
         } catch (e: Throwable) {
             e.printStackTrace()
             Toast.makeText(this,
-                stringResource(id = R.string.something_went_wrong),
+                stringResource(id = R.string.something_went_wrong) + ": при получении данных",
                 Toast.LENGTH_LONG).show()
         }
     }

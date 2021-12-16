@@ -7,8 +7,9 @@ import com.pet.chat.helpers.*
 import io.socket.client.IO
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-class NetworkWorker(context: Context, workerParams: WorkerParameters) :
+class NetworkWorker @Inject constructor(context: Context, workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork() = withContext(Dispatchers.IO) {
