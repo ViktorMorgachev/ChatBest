@@ -1,5 +1,7 @@
 package com.pet.chat.ui
 
+import android.net.Uri
+import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -78,21 +80,31 @@ val mockData: List<RoomMessage> = listOf(mockAliceMessage.copy(text = "Hi Bob"),
     mockBobMessage,
     mockAliceMessage)
 
+val mockDataBottomSheetItem = BottomActionData(image = Icons.Outlined.Camera, "Camera", {})
+
+val mockDataBottomSheetItems = listOf(mockDataBottomSheetItem,
+    BottomActionData(image = Icons.Outlined.FileUpload, itemDescribe = "FileSystem", {}))
+
 @Preview(widthDp = 400, showSystemUi = true)
 @Composable
 fun ChatListPrewiew() {
     LoveFinderTheme {
-        Chat(sendMessage = {},
-            messages = mockData,
-            navController = null,
+        val dataForTesting = listOf(
+            BottomActionData(image = Icons.Outlined.Camera,
+                itemDescribe = "Camera",
+                onClickAction = {}))
+        Chat(event = null,
+            sendMessage = {},
             roomID = -1,
             clearChat = {},
-            event = null,
+            messages = mockData,
+            navController = null,
             deleteMessage = { },
             eventChatRead = {},
             loadFileAction = {},
             scope = rememberCoroutineScope(),
-            bottomSheetActions = mockDataBottomSheetItems)
+            cameraLauncher = { }
+        )
     }
 }
 
@@ -110,12 +122,14 @@ fun Chat(
     eventChatRead: (ChatRead) -> Unit,
     loadFileAction: (Attachment) -> Unit,
     scope: CoroutineScope,
-    bottomSheetActions: List<BottomActionData>,
+    cameraLauncher: () -> Unit,
+    bottomSheetActions: List<BottomActionData> = listOf(BottomActionData(image = Icons.Outlined.Camera,
+        itemDescribe = "Camera",
+        onClickAction = {/*cameraLauncher.launch()*/ })),
 ) {
     val modalBottomSheetState = rememberModalBottomSheetState(
         initialValue = ModalBottomSheetValue.Hidden
     )
-
 
     Scaffold(
         topBar = {
@@ -139,9 +153,11 @@ fun Chat(
         LoveFinderTheme {
             ModalBottomSheetLayout(
                 sheetContent = {
-                    LazyRow() {
-                        items(bottomSheetActions) { item ->
-                            BottomSheetItem(itemData = item)
+                    LoveFinderTheme {
+                        LazyRow() {
+                            items(bottomSheetActions) { item ->
+                                BottomSheetItem(itemData = item)
+                            }
                         }
                     }
                 }, sheetState = modalBottomSheetState) {
@@ -261,11 +277,6 @@ fun MessageItem(
 
 }
 
-val mockDataBottomSheetItem = BottomActionData(image = Icons.Outlined.Camera, "Camera", {})
-
-val mockDataBottomSheetItems = listOf(mockDataBottomSheetItem,
-    BottomActionData(image = Icons.Outlined.FileUpload, itemDescribe = "FileSystem", {}))
-
 @Preview
 @Composable
 fun BottomSheetItemPreview() {
@@ -281,11 +292,19 @@ fun BottomSheetItemPreview() {
 @Composable
 fun BottomSheetItem(itemData: BottomActionData) {
     Column(modifier = Modifier.padding(4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(imageVector = itemData.image,
+        IconButton(
+            onClick = { itemData.onClickAction.invoke() },
             modifier = Modifier
                 .height(32.dp)
                 .width(32.dp),
-            contentDescription = itemData.itemDescribe)
+        ) {
+            Icon(imageVector = itemData.image,
+                modifier = Modifier
+                    .height(32.dp)
+                    .width(32.dp),
+                contentDescription = itemData.itemDescribe)
+        }
+
         Text(text = itemData.itemDescribe)
     }
 }

@@ -22,6 +22,8 @@ object Versions {
     val squareup_retrofit = "2.9.0"
     val gson_converter = "2.9.0"
     val dexter = "6.2.3"
+    val fragment_ktx = "1.3.0"
+    val activity_ktx = "1.3.0-alpha02"
 
 }
 
@@ -47,6 +49,8 @@ object Libs {
     val gson_converter_factory = "com.squareup.retrofit2:converter-gson:{${Versions.gson_converter}}"
     val kapt_com_google_dagger_hilt = "com.google.dagger:hilt-android-compiler:${Versions.dagger_hilt_android}"
     val dexter_permission = "com.karumi:dexter:{${Versions.dexter}}"
+    val activity_ktx = "androidx.activity:activity-ktx:${Versions.activity_ktx}"
+    val fragment_ktx = "androidx.fragment:fragment-ktx:${Versions.fragment_ktx}"
 
 }
 

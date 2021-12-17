@@ -1,10 +1,14 @@
 package com.pet.chat.ui.main
 
+import android.Manifest
+import android.graphics.Bitmap
+import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.runtime.*
 import androidx.compose.ui.res.stringResource
@@ -24,6 +28,16 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     val eventViewModel by viewModels<ChatViewModel>()
+    var resultAfterCamera: ((Boolean) -> Unit)? = null
+    var resultAfterCameraPermission: ((Boolean) -> Unit)? = null
+    private val cameraLauncher =
+        registerForActivityResult(ActivityResultContracts.TakePicture()) {
+            resultAfterCamera?.invoke(it)
+        }
+    private val cameraPermissionContract =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+            resultAfterCameraPermission?.invoke(it)
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,11 +57,34 @@ class MainActivity : ComponentActivity() {
         val event = viewModel.events.collectAsState()
         val chats = ViewDataStorage.chats.collectAsState()
 
+        resultAfterCameraPermission = { granted ->
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                when {
+                    granted -> {
+                        viewModel.takePicture(this, launchCamera = { cameraLauncher.launch(it) })
+                    }
+                    !shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> {
+                        // доступ к камере запрещен, пользователь поставил галочку Don't ask again.
+                    }
+                    else -> {
+                        // доступ к камере запрещен, пользователь отклонил запрос
+                    }
+                }
+            }
+        }
+
+        resultAfterCamera = {
+            print("Result is $it")
+        }
+
+
         observe(event)
 
         NavHost(navController = navController, startDestination = Screen.Autorization.route) {
             composable(Screen.Autorization.route) {
-                AutorizationScreen(onAuthEvent = { viewModel.postEventToServer(EventToServer.AuthEvent(it)) },
+                AutorizationScreen(onAuthEvent = {
+                    viewModel.postEventToServer(EventToServer.AuthEvent(it))
+                },
                     navController = navController)
             }
             composable(Screen.Chats.route) {
@@ -67,9 +104,11 @@ class MainActivity : ComponentActivity() {
             composable(Screen.Room.route) { backStackEntry ->
                 val roomID = backStackEntry.arguments?.getString("roomID")
                 requireNotNull(roomID) { "roomID parameter wasn't found. Please make sure it's set!" }
-                chats.value.firstOrNull { it.roomID == roomID.toInt() }?.let { chatItemInfo->
+                chats.value.firstOrNull { it.roomID == roomID.toInt() }?.let { chatItemInfo ->
                     val messages = chatItemInfo.roomMessages
-                    Chat(sendMessage = { viewModel.postEventToServer(EventToServer.SendMessageEvent(it)) },
+                    Chat(sendMessage = {
+                        viewModel.postEventToServer(EventToServer.SendMessageEvent(it))
+                    },
                         messages = messages.toList(),
                         roomID = roomID.toInt(),
                         navController = navController,
@@ -84,7 +123,9 @@ class MainActivity : ComponentActivity() {
                         eventChatRead = { viewModel.postEventToServer(EventToServer.ChatReadEvent(it)) },
                         loadFileAction = {},
                         scope = rememberCoroutineScope(),
-                        bottomSheetActions = mockDataBottomSheetItems)
+                        bottomSheetActions = mockDataBottomSheetItems,
+                        cameraLauncher = { cameraPermissionContract.launch(Manifest.permission.CAMERA) }
+                    )
                 }
 
             }
@@ -130,7 +171,7 @@ class MainActivity : ComponentActivity() {
                     val data = (event.value as EventFromServer.ChatReadEvent).data
                     ViewDataStorage.updateChatState(data)
                 }
-                is EventFromServer.UserOnlineEvent ->{
+                is EventFromServer.UserOnlineEvent -> {
                     val data = (event.value as EventFromServer.UserOnlineEvent).data
                     ViewDataStorage.updateUserStatus(data)
                 }

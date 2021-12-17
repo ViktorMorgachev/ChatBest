@@ -71,10 +71,11 @@ dependencies {
 
     implementation(Libs.com_google_dagger_hilt)
     implementation(Libs.retrofit2)
-    implementation(Libs.dexter_permission)
     implementation(Libs.compose_navigation)
     implementation(Libs.work_runtime_ktx)
     implementation(Libs.google_code_gson)
+    implementation(Libs.fragment_ktx)
+    implementation(Libs.activity_ktx)
     kapt(Libs.kapt_com_google_dagger_hilt)
     androidTestImplementation(AndroidTestLibs.ext_junit)
     androidTestImplementation(AndroidTestLibs.android_test_espresso_core)
