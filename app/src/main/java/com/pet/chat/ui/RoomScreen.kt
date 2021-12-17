@@ -1,8 +1,6 @@
 package com.pet.chat.ui
 
 import android.net.Uri
-import androidx.activity.result.ActivityResultLauncher
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -15,23 +13,20 @@ import androidx.compose.material.icons.outlined.Camera
 import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.pet.chat.App
-import com.pet.chat.R
-import com.pet.chat.network.EventFromServer
+import com.pet.chat.events.InternalEvent
 import com.pet.chat.network.data.Attachment
 import com.pet.chat.network.data.Message
 import com.pet.chat.network.data.send.ChatRead
 import com.pet.chat.network.data.send.DeleteMessage
 import com.pet.chat.network.data.send.SendMessage
+import com.pet.chat.ui.main.ChatViewModel
 import com.pet.chat.ui.theme.LoveFinderTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -57,19 +52,6 @@ fun Message.toRoomMessage(): RoomMessage {
         isOwn = App.prefs?.userID == user_id.toInt(), messageID = this.id.toInt())
 }
 
-val mockAliceMessage =
-    RoomMessage(userID = "Alice",
-        date = "12.12.2021",
-        text = "From Alice",
-        isOwn = false,
-        messageID = -1)
-val mockBobMessage =
-    RoomMessage(userID = "Bob",
-        date = "12.12.2021",
-        text = "From Bob",
-        isOwn = true,
-        messageID = -1)
-
 val mockData: List<RoomMessage> = listOf(mockAliceMessage.copy(text = "Hi Bob"),
     mockAliceMessage.copy(text = "Hi Alice"),
     mockAliceMessage.copy(text = "How are you?"),
@@ -79,8 +61,6 @@ val mockData: List<RoomMessage> = listOf(mockAliceMessage.copy(text = "Hi Bob"),
     mockAliceMessage,
     mockBobMessage,
     mockAliceMessage)
-
-val mockDataBottomSheetItem = BottomActionData(image = Icons.Outlined.Camera, "Camera", {})
 
 val mockDataBottomSheetItems = listOf(mockDataBottomSheetItem,
     BottomActionData(image = Icons.Outlined.FileUpload, itemDescribe = "FileSystem", {}))
@@ -93,7 +73,7 @@ fun ChatListPrewiew() {
             BottomActionData(image = Icons.Outlined.Camera,
                 itemDescribe = "Camera",
                 onClickAction = {}))
-        Chat(event = null,
+        Chat(
             sendMessage = {},
             roomID = -1,
             clearChat = {},
@@ -103,7 +83,7 @@ fun ChatListPrewiew() {
             eventChatRead = {},
             loadFileAction = {},
             scope = rememberCoroutineScope(),
-            cameraLauncher = { }
+            cameraLauncher = { }, viewModel = viewModel()
         )
     }
 }
@@ -111,7 +91,6 @@ fun ChatListPrewiew() {
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun Chat(
-    event: EventFromServer?,
     modifier: Modifier = Modifier,
     sendMessage: (SendMessage) -> Unit,
     roomID: Int,
@@ -123,13 +102,17 @@ fun Chat(
     loadFileAction: (Attachment) -> Unit,
     scope: CoroutineScope,
     cameraLauncher: () -> Unit,
-    bottomSheetActions: List<BottomActionData> = listOf(BottomActionData(image = Icons.Outlined.Camera,
-        itemDescribe = "Camera",
-        onClickAction = {/*cameraLauncher.launch()*/ })),
+    bottomSheetActions: List<BottomActionData> =
+        listOf(BottomActionData(image = Icons.Outlined.Camera,
+            itemDescribe = "Camera",
+            onClickAction = { cameraLauncher.invoke() })),
+    // Нужно будет инжектить Hiltom
+    viewModel: ChatViewModel,
 ) {
     val modalBottomSheetState = rememberModalBottomSheetState(
         initialValue = ModalBottomSheetValue.Hidden
     )
+
 
     Scaffold(
         topBar = {
@@ -156,13 +139,35 @@ fun Chat(
                     LoveFinderTheme {
                         LazyRow() {
                             items(bottomSheetActions) { item ->
-                                BottomSheetItem(itemData = item)
+                                BottomSheetItem(itemData = item, closeBottomAction = {
+                                    scope.launch {
+                                        modalBottomSheetState.hide()
+                                    }
+                                })
                             }
                         }
                     }
-                }, sheetState = modalBottomSheetState) {
+                },
+                sheetState = modalBottomSheetState)
+            {
                 val (message, messageChange) = rememberSaveable { mutableStateOf("") }
                 val listState = rememberLazyListState()
+                val openDialog = remember { mutableStateOf(false) }
+                val internalEvents = viewModel.internalEvents.collectAsState()
+                val fileUri = remember {
+                    if (internalEvents.value is InternalEvent.OpenFilePreview) {
+                        (internalEvents.value as InternalEvent.OpenFilePreview).file
+                    } else null
+                }
+
+                if (internalEvents.value is InternalEvent.OpenFilePreview) {
+                    openDialog.value = true
+                }
+                openFilePreviewDialog(openDialog = openDialog,
+                    fileUri = fileUri,
+                    applyMessage = { message, fileUri ->
+                        // TODO add message with loading image progress
+                    })
 
                 if (listState.firstVisibleItemIndex >= messages.size - 1) {
                     eventChatRead(ChatRead(roomId = roomID))
@@ -221,60 +226,14 @@ fun Chat(
 }
 
 @Composable
-fun MessageItem(
-    modifier: Modifier = Modifier,
-    message: RoomMessage,
-    deleteMessage: (DeleteMessage) -> Unit,
+fun openFilePreviewDialog(
+    openDialog: MutableState<Boolean>,
+    fileUri: Uri?,
+    applyMessage: (message: String, fileUri: Uri) -> Unit,
 ) {
-    val isMe = message.isOwn
-    var expandedMenu by remember() { mutableStateOf(false) }
-
-    Row(horizontalArrangement = Arrangement.SpaceEvenly) {
-        if (isMe) {
-            Spacer(modifier = Modifier.weight(1f))
-        }
-        Card(modifier = modifier.fillMaxSize(0.7f)) {
-            Column() {
-                Row {
-                    if (isMe) {
-                        IconButton(onClick = { expandedMenu = !expandedMenu }) {
-                            Icon(Icons.Filled.MoreVert, contentDescription = "Menu")
-                        }
-                        DropdownMenu(
-                            expanded = expandedMenu,
-                            onDismissRequest = { expandedMenu = false }
-                        ) {
-                            Text(text = stringResource(id = R.string.delete),
-                                fontSize = 14.sp,
-                                modifier = Modifier
-                                    .clickable(onClick = {
-                                        deleteMessage(DeleteMessage(message.messageID))
-                                        expandedMenu = false
-                                    }))
-                        }
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
-                    Text(text = message.userID,
-                        Modifier
-                            .padding(4.dp)
-                            .align(Alignment.CenterVertically))
-                }
-                Text(text = message.text,
-                    style = TextStyle.Default,
-                    modifier = modifier
-                        .padding(horizontal = 4.dp))
-                Row {
-                    if (isMe) {
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
-                    Text(text = message.date,
-                        style = TextStyle.Default,
-                        modifier = modifier.padding(horizontal = 4.dp))
-                }
-            }
-        }
+    LoveFinderTheme {
+        FilePreviewDialog(fileUri = fileUri, applyMessage = applyMessage, openDialog = openDialog)
     }
-
 }
 
 @Preview
@@ -283,31 +242,13 @@ fun BottomSheetItemPreview() {
     LoveFinderTheme {
         LazyRow() {
             items(mockDataBottomSheetItems) { item ->
-                BottomSheetItem(itemData = item)
+                BottomSheetItem(itemData = item, closeBottomAction = {})
             }
         }
     }
 }
 
-@Composable
-fun BottomSheetItem(itemData: BottomActionData) {
-    Column(modifier = Modifier.padding(4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        IconButton(
-            onClick = { itemData.onClickAction.invoke() },
-            modifier = Modifier
-                .height(32.dp)
-                .width(32.dp),
-        ) {
-            Icon(imageVector = itemData.image,
-                modifier = Modifier
-                    .height(32.dp)
-                    .width(32.dp),
-                contentDescription = itemData.itemDescribe)
-        }
 
-        Text(text = itemData.itemDescribe)
-    }
-}
 
 
 

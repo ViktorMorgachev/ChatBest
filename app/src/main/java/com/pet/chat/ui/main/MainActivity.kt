@@ -11,6 +11,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.compose.*
 import com.pet.chat.R
@@ -36,7 +37,7 @@ class MainActivity : ComponentActivity() {
         }
     private val cameraPermissionContract =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) {
-            resultAfterCameraPermission?.invoke(it)
+            resultAfterCameraPermission!!.invoke(it)
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,6 +58,7 @@ class MainActivity : ComponentActivity() {
         val event = viewModel.events.collectAsState()
         val chats = ViewDataStorage.chats.collectAsState()
 
+
         resultAfterCameraPermission = { granted ->
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 when {
@@ -70,6 +72,8 @@ class MainActivity : ComponentActivity() {
                         // доступ к камере запрещен, пользователь отклонил запрос
                     }
                 }
+            } else {
+                viewModel.takePicture(this, launchCamera = { cameraLauncher.launch(it) })
             }
         }
 
@@ -116,15 +120,14 @@ class MainActivity : ComponentActivity() {
                             viewModel.postEventToServer(EventToServer.ClearChatEvent(ClearChat(
                                 roomID.toInt())))
                         },
-                        event = event.value,
                         deleteMessage = {
                             viewModel.postEventToServer(EventToServer.DeleteMessageEvent(it))
                         },
                         eventChatRead = { viewModel.postEventToServer(EventToServer.ChatReadEvent(it)) },
                         loadFileAction = {},
                         scope = rememberCoroutineScope(),
-                        bottomSheetActions = mockDataBottomSheetItems,
-                        cameraLauncher = { cameraPermissionContract.launch(Manifest.permission.CAMERA) }
+                        cameraLauncher = { cameraPermissionContract.launch(Manifest.permission.CAMERA) },
+                        viewModel = viewModel
                     )
                 }
 

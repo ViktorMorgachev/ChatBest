@@ -9,6 +9,8 @@ import androidx.lifecycle.viewModelScope
 import com.pet.chat.App
 import com.pet.chat.BuildConfig
 import com.pet.chat.R
+import com.pet.chat.events.EventsManager
+import com.pet.chat.events.InternalEvent
 import com.pet.chat.helpers.ImageUtils
 import com.pet.chat.network.ConnectionManager
 import com.pet.chat.network.EventFromServer
@@ -25,6 +27,7 @@ class ChatViewModel @Inject constructor() : ViewModel() {
 
     val events = MutableStateFlow<EventFromServer>(EventFromServer.NO_INITIALIZED)
     private var imageUri: Uri? = null
+    val internalEvents = MutableStateFlow<InternalEvent?>(null)
 
     fun postEventToServer(eventToServer: EventToServer) {
         ConnectionManager.postEventToServer(event = eventToServer, error = {
@@ -45,6 +48,10 @@ class ChatViewModel @Inject constructor() : ViewModel() {
             })
         }
 
+    }
+
+    fun postInternalAction(internalState: InternalEvent) = runBlocking {
+        internalEvents.emit(internalState)
     }
 
     fun takePicture(context: Context, launchCamera: (Uri) -> Unit) =
