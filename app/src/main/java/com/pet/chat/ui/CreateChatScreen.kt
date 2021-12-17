@@ -14,12 +14,12 @@ import androidx.navigation.NavController
 import com.pet.chat.R
 import com.pet.chat.network.EventFromServer
 import com.pet.chat.network.data.send.ChatStart
-import com.pet.chat.ui.theme.LoveFinderTheme
+import com.pet.chat.ui.theme.ChatTheme
 
 @Preview
 @Composable
 fun CreateChatScreenPreview() {
-    LoveFinderTheme {
+    ChatTheme {
         CreateChatScreenPreview()
     }
 }

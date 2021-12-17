@@ -12,7 +12,7 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.pet.chat.ui.theme.LoveFinderTheme
+import com.pet.chat.ui.theme.ChatTheme
 
 inline infix fun <reified T> Int.between(list: List<T>): Boolean {
     return this == 0 || this == list.size
@@ -66,7 +66,7 @@ fun MyOwnColumn(modifier: Modifier = Modifier, content: @Composable () -> Unit) 
 @Preview
 @Composable
 fun FirstBaseLineTopTest() {
-    LoveFinderTheme() {
+    ChatTheme() {
         Column() {
             Text(text = "Test text", modifier = Modifier.firstBaseLineTop(32.dp))
             Text(text = "Text text 2", modifier = Modifier.padding(top = 32.dp))

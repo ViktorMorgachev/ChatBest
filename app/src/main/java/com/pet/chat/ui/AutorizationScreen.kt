@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.pet.chat.R
 import com.pet.chat.network.data.send.UserAuth
-import com.pet.chat.ui.theme.LoveFinderTheme
+import com.pet.chat.ui.theme.ChatTheme
 
 @Composable
 fun AutorizationScreen(
@@ -60,7 +60,7 @@ fun AutorizationScreen(
 @Preview(widthDp = 400, showSystemUi = true)
 @Composable
 fun AutorizationScreenPrewiew() {
-    LoveFinderTheme {
+    ChatTheme {
         AutorizationScreen(onAuthEvent = {}, navController = null)
     }
 }

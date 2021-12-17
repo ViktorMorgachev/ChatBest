@@ -18,7 +18,7 @@ import com.pet.chat.network.data.Dialog
 import com.pet.chat.network.data.receive.MessageNew
 import com.pet.chat.network.data.send.ChatDelete
 import com.pet.chat.network.data.send.ChatHistory
-import com.pet.chat.ui.theme.LoveFinderTheme
+import com.pet.chat.ui.theme.ChatTheme
 import com.pet.chat.ui.theme.Shapes
 
 data class ChatItemInfo(
@@ -136,7 +136,7 @@ fun ChatsItem(
 @Preview(widthDp = 400, showSystemUi = true)
 @Composable
 fun ChatsScreenPreview() {
-    LoveFinderTheme {
+    ChatTheme {
         ChatsScreen(deleteChat = {}, openChat = {}, navController = null, chats = mockRoomChats)
     }
 }

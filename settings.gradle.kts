@@ -12,5 +12,5 @@ pluginManagement {
         }
     }
 }
-rootProject.name = "LoveFinder"
+rootProject.name = "Chat"
 include(":app")

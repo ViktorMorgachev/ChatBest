@@ -11,9 +11,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
-import com.pet.chat.network.data.Message
-import com.pet.chat.ui.theme.LoveFinderTheme
-import java.io.File
+import com.pet.chat.ui.theme.ChatTheme
 
 @Composable
 fun FilePreviewDialog(
@@ -40,7 +38,7 @@ fun FilePreviewDialog(
 @Preview(widthDp = 400, showSystemUi = true)
 @Composable
 fun FilePreviewDialogPreview() {
-    LoveFinderTheme {
+    ChatTheme {
         FilePreviewDialog(fileUri = null, applyMessage = {_, _->}, openDialog = remember { mutableStateOf(false) })
     }
 

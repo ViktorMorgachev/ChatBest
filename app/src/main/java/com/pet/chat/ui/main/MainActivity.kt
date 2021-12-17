@@ -1,7 +1,6 @@
 package com.pet.chat.ui.main
 
 import android.Manifest
-import android.graphics.Bitmap
 import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
@@ -11,7 +10,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.compose.*
 import com.pet.chat.R
@@ -22,7 +20,7 @@ import com.pet.chat.network.data.send.ClearChat
 import com.pet.chat.network.data.toChatItemInfo
 import com.pet.chat.ui.ViewDataStorage
 import com.pet.chat.ui.*
-import com.pet.chat.ui.theme.LoveFinderTheme
+import com.pet.chat.ui.theme.ChatTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -45,7 +43,7 @@ class MainActivity : ComponentActivity() {
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 
         setContent {
-            LoveFinderTheme {
+            ChatTheme {
                 MyApp(eventViewModel)
             }
         }

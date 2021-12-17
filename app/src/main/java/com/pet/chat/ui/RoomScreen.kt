@@ -27,7 +27,7 @@ import com.pet.chat.network.data.send.ChatRead
 import com.pet.chat.network.data.send.DeleteMessage
 import com.pet.chat.network.data.send.SendMessage
 import com.pet.chat.ui.main.ChatViewModel
-import com.pet.chat.ui.theme.LoveFinderTheme
+import com.pet.chat.ui.theme.ChatTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -68,7 +68,7 @@ val mockDataBottomSheetItems = listOf(mockDataBottomSheetItem,
 @Preview(widthDp = 400, showSystemUi = true)
 @Composable
 fun ChatListPrewiew() {
-    LoveFinderTheme {
+    ChatTheme {
         val dataForTesting = listOf(
             BottomActionData(image = Icons.Outlined.Camera,
                 itemDescribe = "Camera",
@@ -133,10 +133,10 @@ fun Chat(
             )
         }
     ) { innerPadding ->
-        LoveFinderTheme {
+        ChatTheme {
             ModalBottomSheetLayout(
                 sheetContent = {
-                    LoveFinderTheme {
+                    ChatTheme {
                         LazyRow() {
                             items(bottomSheetActions) { item ->
                                 BottomSheetItem(itemData = item, closeBottomAction = {
@@ -154,20 +154,17 @@ fun Chat(
                 val listState = rememberLazyListState()
                 val openDialog = remember { mutableStateOf(false) }
                 val internalEvents = viewModel.internalEvents.collectAsState()
-                val fileUri = remember {
-                    if (internalEvents.value is InternalEvent.OpenFilePreview) {
-                        (internalEvents.value as InternalEvent.OpenFilePreview).file
-                    } else null
-                }
+                val fileUri = remember { mutableSetOf(null) }
 
                 if (internalEvents.value is InternalEvent.OpenFilePreview) {
                     openDialog.value = true
+                    openFilePreviewDialog(openDialog = openDialog,
+                        fileUri =   (internalEvents.value as InternalEvent.OpenFilePreview).file,
+                        applyMessage = { message, fileUri ->
+                            openDialog.value = false
+                            // TODO add message with loading image progress
+                        })
                 }
-                openFilePreviewDialog(openDialog = openDialog,
-                    fileUri = fileUri,
-                    applyMessage = { message, fileUri ->
-                        // TODO add message with loading image progress
-                    })
 
                 if (listState.firstVisibleItemIndex >= messages.size - 1) {
                     eventChatRead(ChatRead(roomId = roomID))
@@ -231,7 +228,7 @@ fun openFilePreviewDialog(
     fileUri: Uri?,
     applyMessage: (message: String, fileUri: Uri) -> Unit,
 ) {
-    LoveFinderTheme {
+    ChatTheme {
         FilePreviewDialog(fileUri = fileUri, applyMessage = applyMessage, openDialog = openDialog)
     }
 }
@@ -239,7 +236,7 @@ fun openFilePreviewDialog(
 @Preview
 @Composable
 fun BottomSheetItemPreview() {
-    LoveFinderTheme {
+    ChatTheme {
         LazyRow() {
             items(mockDataBottomSheetItems) { item ->
                 BottomSheetItem(itemData = item, closeBottomAction = {})
