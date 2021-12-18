@@ -110,7 +110,7 @@ fun Chat(
 ) {
     val modalBottomSheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
 
-    val roomMessages = viewModel.chats.collectAsState().value.first { it.roomID == roomID }.roomMessages
+    val roomMessages = viewModel.messages.collectAsState()//{ it.roomID == roomID }.roomMessages
 
     Log.d("Chat", "Messages $roomMessages")
 
@@ -164,7 +164,7 @@ fun Chat(
                         })
                 }
 
-                if (listState.firstVisibleItemIndex >= roomMessages.size - 1) {
+                if (listState.firstVisibleItemIndex >= roomMessages.value.size - 1) {
                     eventChatRead(ChatRead(roomId = roomID))
                 }
                 val sendAction = {
@@ -179,7 +179,7 @@ fun Chat(
                         .weight(1f)
                         .padding(horizontal = 8.dp)
                         .padding(innerPadding), state = listState) {
-                        items(roomMessages) { data ->
+                        items(roomMessages.value) { data ->
                             MessageItem(modifier = Modifier.padding(all = 4.dp),
                                 message = data,
                                 deleteMessage)

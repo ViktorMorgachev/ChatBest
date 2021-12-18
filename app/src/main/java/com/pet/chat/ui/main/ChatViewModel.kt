@@ -20,15 +20,14 @@ import com.pet.chat.network.EventFromServer
 import com.pet.chat.network.EventToServer
 import com.pet.chat.network.Subscriber
 import com.pet.chat.network.data.User
-import com.pet.chat.network.data.base.ChatDetails
 import com.pet.chat.network.data.receive.*
 import com.pet.chat.network.data.receive.ChatDelete
 import com.pet.chat.network.data.receive.ChatRead
 import com.pet.chat.ui.ChatItemInfo
+import com.pet.chat.ui.RoomMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
-import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
@@ -36,9 +35,13 @@ class ChatViewModel @Inject constructor() : ViewModel() {
 
     val events = MutableStateFlow<EventFromServer>(EventFromServer.NO_INITIALIZED)
     val chats = MutableStateFlow<List<ChatItemInfo>>(listOf())
+    val messages = MutableStateFlow<List<RoomMessage>>(listOf())
     val users = MutableStateFlow<List<User>>(mutableListOf())
     private var imageUri: Uri? = null
     val internalEvents = MutableStateFlow<InternalEvent?>(null)
+
+    // Потом нужног будет это вырезать
+    private val currentRoom = -1
 
     fun postEventToServer(eventToServer: EventToServer) {
         Log.d("EventToServer", "$eventToServer")
@@ -71,6 +74,7 @@ class ChatViewModel @Inject constructor() : ViewModel() {
         if (actualChat != null) {
             val newList = actualChat.roomMessages.plus(chatDetails.roomMessages)
             actualChat.roomMessages = newList
+            messages.value = newList
         } else {
             chats.value = chats.value.addLast(chatDetails)
         }
@@ -79,11 +83,12 @@ class ChatViewModel @Inject constructor() : ViewModel() {
 
     fun deleteMessage(messageDelete: MessageDelete) = viewModelScope.launch(Dispatchers.IO) {
         val currentChat = chats.value.first { messageDelete.room.id.toInt() == it.roomID }
-        var messages = currentChat.roomMessages
-        messages.firstOrNull { it.messageID == messageDelete.message.id.toInt() }?.let {
-            messages = messages.removeWithInstance(it)
+        var roomMessages = currentChat.roomMessages
+        roomMessages.firstOrNull { it.messageID == messageDelete.message.id.toInt() }?.let {
+            roomMessages = roomMessages.removeWithInstance(it)
         }
-        currentChat.roomMessages = messages
+        messages.value = roomMessages
+        currentChat.roomMessages = roomMessages
         updateChat()
     }
 
@@ -98,7 +103,8 @@ class ChatViewModel @Inject constructor() : ViewModel() {
         chatsDetails.forEach { chatDetail ->
             val lastListMessagesInfo = chats.value.find { it.roomID == chatDetail.roomID }
             if (lastListMessagesInfo != null) {
-                lastListMessagesInfo.roomMessages = lastListMessagesInfo.roomMessages.addAll(chatDetail.roomMessages)
+                lastListMessagesInfo.roomMessages =
+                    lastListMessagesInfo.roomMessages.addAll(chatDetail.roomMessages)
             } else chats.value = chats.value.addLast(chatDetail)
         }
         updateChat()
@@ -112,6 +118,7 @@ class ChatViewModel @Inject constructor() : ViewModel() {
         }
         chats.value = newChats.toList()
         val emitResult = chats.tryEmit(chats.value)
+        messages.emit(messages.value)
         Log.d("UpdateChat", "Chat: ${chats.value} EmitResult $emitResult")
     }
 
