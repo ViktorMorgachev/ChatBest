@@ -1,5 +1,6 @@
 package com.pet.chat.network
 
+import android.util.Log
 import com.google.gson.Gson
 import com.pet.chat.helpers.toSocketData
 import com.pet.chat.network.data.receive.*
@@ -9,6 +10,7 @@ import com.pet.chat.network.data.receive.ChatDelete as ChatDeleteReceive
 import com.pet.chat.network.data.receive.ChatHistory as ChatHistoryReceive
 import io.socket.client.IO
 import io.socket.client.Socket
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 
 sealed class EventFromServer {
@@ -36,7 +38,9 @@ sealed class EventToServer(val eventName: String, val any: Any) {
     data class GetChatHistory(val data: ChatHistory) : EventToServer("chat.history", any = data)
     data class DeleteChat(val data: ChatDelete) : EventToServer("chat.delete", any = data)
     data class ClearChatEvent(val data: ClearChat) : EventToServer("chat.clear", any = data)
-    data class DeleteMessageEvent(val data: DeleteMessage) : EventToServer("message.delete", any = data)
+    data class DeleteMessageEvent(val data: DeleteMessage) :
+        EventToServer("message.delete", any = data)
+
     data class ChatReadEvent(val data: ChatRead) : EventToServer("chat.read", any = data)
 }
 
@@ -81,19 +85,24 @@ object ConnectionManager {
                 post(EventFromServer.AutorizationEvent(data = data))
             }
             socket.on("connection") {
-                println("Socket: SocketID ${socket.id()} Connected ${socket.connected()} Data $it")
+                Log.d("Socket",
+                    "Socket: SocketID ${socket.id()} Connected ${socket.connected()} Data $it")
             }
             socket.on(Socket.EVENT_CONNECT) {
-                println("Socket: SocketID ${socket.id()} Connected ${socket.connected()}")
+                Log.d("Socket",
+                    "Socket: Connect SocketID ${socket.id()} Connected ${socket.connected()}")
             }
 
             socket.on(Socket.EVENT_DISCONNECT) {
-                println("Socket: SocketID ${socket.id()} Connected ${socket.connected()}") // null
+                Log.d("Socket",
+                    "Socket: Disconnect SocketID ${socket.id()} Connected ${socket.connected()}")
             }
             socket.on(Socket.EVENT_CONNECT_ERROR) {
                 //options.auth.put("authorization", "bearer 1234")
-                println("Socket: SocketID ${socket.id()} Connected ${socket.connected()} Error $it")
-                socket.connect()
+                Log.d("Socket", "Socket: SocketID ${socket.id()} Connected ${socket.connected()} Error $it")
+                runBlocking {
+                    delay(1000)
+                }
             }
             socket.on("on.message.new") {
                 val data = Gson().fromJson("${it[0]}", MessageNew::class.java)

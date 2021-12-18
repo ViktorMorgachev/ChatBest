@@ -37,11 +37,12 @@ class ChatViewModel @Inject constructor() : ViewModel() {
     val chats = MutableStateFlow<List<ChatItemInfo>>(listOf())
     val messages = MutableStateFlow<List<RoomMessage>>(listOf())
     val users = MutableStateFlow<List<User>>(mutableListOf())
-    private var imageUri: Uri? = null
+    var imageUri: Uri? = null
     val internalEvents = MutableStateFlow<InternalEvent?>(null)
 
     // Потом нужног будет это вырезать
-    private val currentRoom = -1
+    // Проблема при возвращении назад с камеры, нужно будет поправить по хорошему
+    var currentRoom = -1
 
     fun postEventToServer(eventToServer: EventToServer) {
         Log.d("EventToServer", "$eventToServer")
@@ -92,7 +93,7 @@ class ChatViewModel @Inject constructor() : ViewModel() {
         updateChat()
     }
 
-    fun clearChat(chatClear: ChatClear) = viewModelScope.launch {
+    fun clearChat(chatClear: ChatClear) = viewModelScope.launch(Dispatchers.IO) {
         chats.value.find { it.roomID == chatClear.room.id.toInt() }?.let {
             chats.value = chats.value.removeWithInstance(it)
             updateChat()
@@ -129,27 +130,24 @@ class ChatViewModel @Inject constructor() : ViewModel() {
         updateChat()
     }
 
-    fun updateChatState(data: ChatRead) = viewModelScope.launch {
+    fun updateChatState(data: ChatRead) = viewModelScope.launch(Dispatchers.IO) {
         chats.value.find { it.roomID == data.room.id.toInt() }?.let {
             it.unreadCount = 0
         }
         updateChat()
     }
 
-    fun updateUserStatus(data: UserOnline) {
+    fun updateUserStatus(data: UserOnline) = viewModelScope.launch(Dispatchers.IO) {}
 
+    fun takePicture(context: Context, launchCamera: (Uri) -> Unit) = viewModelScope.launch {
+        CoroutineScope(Dispatchers.IO).launch {
+            ImageUtils.createImageFile(context)?.also { file ->
+                imageUri = FileProvider.getUriForFile(context,
+                    BuildConfig.APPLICATION_ID + ".fileprovider",
+                    file)
+            }
+        }.join()
+        imageUri?.let { launchCamera(it) }
     }
-
-    fun takePicture(context: Context, launchCamera: (Uri) -> Unit) =
-        runBlocking {
-            CoroutineScope(Dispatchers.IO).launch {
-                ImageUtils.createImageFile(context)?.also { file ->
-                    imageUri = FileProvider.getUriForFile(context,
-                        BuildConfig.APPLICATION_ID + ".fileprovider",
-                        file)
-                }
-            }.join()
-            imageUri?.let { launchCamera(it) }
-        }
 }
 

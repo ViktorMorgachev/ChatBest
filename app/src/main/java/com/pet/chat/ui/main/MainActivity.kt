@@ -18,6 +18,7 @@ import com.pet.chat.R
 import com.pet.chat.network.EventFromServer
 import com.pet.chat.network.EventToServer
 import com.pet.chat.network.data.receive.ChatDelete
+import com.pet.chat.network.data.send.ChatHistory
 import com.pet.chat.network.data.send.ClearChat
 import com.pet.chat.network.data.send.UserAuth
 import com.pet.chat.network.data.toChatItemInfo
@@ -82,6 +83,14 @@ class MainActivity : ComponentActivity() {
             print("Result is $it")
         }
 
+        Log.d("DebugInfo: ", "User autentificated: ${App.prefs?.identified()} Current Room ${viewModel.currentRoom}")
+        if (App.prefs?.identified() == true) {
+            viewModel.postEventToServer(EventToServer.AuthEvent(UserAuth(id = App.prefs?.userID!!, token = App.prefs?.userToken!!)))
+            if(viewModel.currentRoom != -1){
+                viewModel.postEventToServer(EventToServer.GetChatHistory(ChatHistory(limit = 10, roomId = viewModel.currentRoom, lastId = null)))
+            }
+        }
+
 
         observe(event, viewModel)
 
@@ -112,8 +121,12 @@ class MainActivity : ComponentActivity() {
                 Chat(sendMessage = { viewModel.postEventToServer(EventToServer.SendMessageEvent(it)) },
                     roomID = roomID.toInt(),
                     navController = navController,
-                    clearChat = { viewModel.postEventToServer(EventToServer.ClearChatEvent(ClearChat(roomID.toInt()))) },
-                    deleteMessage = { viewModel.postEventToServer(EventToServer.DeleteMessageEvent(it)) },
+                    clearChat = {
+                        viewModel.postEventToServer(EventToServer.ClearChatEvent(ClearChat(roomID.toInt())))
+                    },
+                    deleteMessage = {
+                        viewModel.postEventToServer(EventToServer.DeleteMessageEvent(it))
+                    },
                     eventChatRead = { viewModel.postEventToServer(EventToServer.ChatReadEvent(it)) },
                     loadFileAction = {},
                     scope = rememberCoroutineScope(),

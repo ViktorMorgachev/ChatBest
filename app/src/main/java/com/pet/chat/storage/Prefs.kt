@@ -14,6 +14,10 @@ class Prefs(context: Context) {
     private val preferences: SharedPreferences =
         context.getSharedPreferences("chat", Context.MODE_PRIVATE)
 
+    fun identified(): Boolean {
+        return userID != -1 && !userToken.isNullOrBlank()
+    }
+
     var userID: Int
         get() = preferences.getInt("userID", -1)
         set(value) = preferences.edit().putInt("userID", value).apply()
