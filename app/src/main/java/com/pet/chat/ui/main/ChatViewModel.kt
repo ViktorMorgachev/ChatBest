@@ -20,6 +20,7 @@ import com.pet.chat.network.EventFromServer
 import com.pet.chat.network.EventToServer
 import com.pet.chat.network.Subscriber
 import com.pet.chat.network.data.User
+import com.pet.chat.network.data.base.ChatDetails
 import com.pet.chat.network.data.receive.*
 import com.pet.chat.network.data.receive.ChatDelete
 import com.pet.chat.network.data.receive.ChatRead
@@ -27,6 +28,7 @@ import com.pet.chat.ui.ChatItemInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
+import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
@@ -103,8 +105,14 @@ class ChatViewModel @Inject constructor() : ViewModel() {
     }
 
     suspend fun updateChat() {
-        chats.emit(chats.value)
-        Log.d("UpdateChat", "Chat: ${chats.value}")
+
+        val newChats = mutableListOf<ChatItemInfo>()
+        chats.value.forEach {
+            newChats.add(it.copy())
+        }
+        chats.value = newChats.toList()
+        val emitResult = chats.tryEmit(chats.value)
+        Log.d("UpdateChat", "Chat: ${chats.value} EmitResult $emitResult")
     }
 
     fun deleteChat(chatDetails: ChatDelete) = viewModelScope.launch(Dispatchers.IO) {

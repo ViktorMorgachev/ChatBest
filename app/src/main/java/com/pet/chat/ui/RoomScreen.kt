@@ -1,6 +1,7 @@
 package com.pet.chat.ui
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -77,7 +78,6 @@ fun ChatListPrewiew() {
             sendMessage = {},
             roomID = -1,
             clearChat = {},
-            messages = mockData,
             navController = null,
             deleteMessage = { },
             eventChatRead = {},
@@ -107,13 +107,12 @@ fun Chat(
             onClickAction = { cameraLauncher.invoke() })),
     // Нужно будет инжектить Hiltom
     viewModel: ChatViewModel,
-    messages: List<RoomMessage>? = viewModel.chats.collectAsState().value.firstOrNull{it.roomID == roomID}?.roomMessages
 ) {
-    val modalBottomSheetState = rememberModalBottomSheetState(
-        initialValue = ModalBottomSheetValue.Hidden
-    )
+    val modalBottomSheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
 
-    val roomMessages = messages ?: listOf()
+    val roomMessages = viewModel.chats.collectAsState().value.first { it.roomID == roomID }.roomMessages
+
+    Log.d("Chat", "Messages $roomMessages")
 
     Scaffold(
         topBar = {
