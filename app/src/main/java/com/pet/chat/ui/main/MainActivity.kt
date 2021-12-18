@@ -3,6 +3,7 @@ package com.pet.chat.ui.main
 import android.Manifest
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -12,13 +13,15 @@ import androidx.activity.viewModels
 import androidx.compose.runtime.*
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.compose.*
+import com.pet.chat.App
 import com.pet.chat.R
 import com.pet.chat.network.EventFromServer
 import com.pet.chat.network.EventToServer
 import com.pet.chat.network.data.receive.ChatDelete
 import com.pet.chat.network.data.send.ClearChat
+import com.pet.chat.network.data.send.UserAuth
 import com.pet.chat.network.data.toChatItemInfo
-import com.pet.chat.ui.ViewDataStorage
+import com.pet.chat.storage.Prefs
 import com.pet.chat.ui.*
 import com.pet.chat.ui.theme.ChatTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -29,6 +32,7 @@ class MainActivity : ComponentActivity() {
     val eventViewModel by viewModels<ChatViewModel>()
     var resultAfterCamera: ((Boolean) -> Unit)? = null
     var resultAfterCameraPermission: ((Boolean) -> Unit)? = null
+
     private val cameraLauncher =
         registerForActivityResult(ActivityResultContracts.TakePicture()) {
             resultAfterCamera?.invoke(it)
@@ -54,7 +58,6 @@ class MainActivity : ComponentActivity() {
     fun MyApp(viewModel: ChatViewModel) {
         val navController = rememberNavController()
         val event = viewModel.events.collectAsState()
-        val chats = ViewDataStorage.chats.collectAsState()
 
 
         resultAfterCameraPermission = { granted ->
@@ -80,7 +83,7 @@ class MainActivity : ComponentActivity() {
         }
 
 
-        observe(event)
+        observe(event, viewModel)
 
         NavHost(navController = navController, startDestination = Screen.Autorization.route) {
             composable(Screen.Autorization.route) {
@@ -96,7 +99,7 @@ class MainActivity : ComponentActivity() {
                     openChat = {
                         viewModel.postEventToServer(EventToServer.GetChatHistory(it))
                         navController.navigate(Screen.Room.createRoute(it.roomId.toString()))
-                    }, chats = chats.value)
+                    }, viewModel = viewModel)
             }
             composable(Screen.CreateChat.route) {
                 CreateChatScreen(value = event.value,
@@ -106,75 +109,64 @@ class MainActivity : ComponentActivity() {
             composable(Screen.Room.route) { backStackEntry ->
                 val roomID = backStackEntry.arguments?.getString("roomID")
                 requireNotNull(roomID) { "roomID parameter wasn't found. Please make sure it's set!" }
-                chats.value.firstOrNull { it.roomID == roomID.toInt() }?.let { chatItemInfo ->
-                    val messages = chatItemInfo.roomMessages
-                    Chat(sendMessage = {
-                        viewModel.postEventToServer(EventToServer.SendMessageEvent(it))
-                    },
-                        messages = messages.toList(),
-                        roomID = roomID.toInt(),
-                        navController = navController,
-                        clearChat = {
-                            viewModel.postEventToServer(EventToServer.ClearChatEvent(ClearChat(
-                                roomID.toInt())))
-                        },
-                        deleteMessage = {
-                            viewModel.postEventToServer(EventToServer.DeleteMessageEvent(it))
-                        },
-                        eventChatRead = { viewModel.postEventToServer(EventToServer.ChatReadEvent(it)) },
-                        loadFileAction = {},
-                        scope = rememberCoroutineScope(),
-                        cameraLauncher = { cameraPermissionContract.launch(Manifest.permission.CAMERA) },
-                        viewModel = viewModel
-                    )
-                }
-
+                Chat(sendMessage = { viewModel.postEventToServer(EventToServer.SendMessageEvent(it)) },
+                    roomID = roomID.toInt(),
+                    navController = navController,
+                    clearChat = { viewModel.postEventToServer(EventToServer.ClearChatEvent(ClearChat(roomID.toInt()))) },
+                    deleteMessage = { viewModel.postEventToServer(EventToServer.DeleteMessageEvent(it)) },
+                    eventChatRead = { viewModel.postEventToServer(EventToServer.ChatReadEvent(it)) },
+                    loadFileAction = {},
+                    scope = rememberCoroutineScope(),
+                    cameraLauncher = { cameraPermissionContract.launch(Manifest.permission.CAMERA) },
+                    viewModel = viewModel
+                )
             }
         }
 
     }
 
     @Composable
-    fun observe(event: State<EventFromServer>) {
+    fun observe(event: State<EventFromServer>, viewModel: ChatViewModel) {
         try {
-            print("EventFromServer: ${event.value}")
+            Log.d("EventFromServer", "${event.value}")
             when (event.value) {
                 is EventFromServer.AutorizationEvent -> {
                     if ((event.value as EventFromServer.AutorizationEvent).data.success == true) {
                         val data = (event.value as EventFromServer.AutorizationEvent).data
-                        ViewDataStorage.updateChat(data.dialogs.map { it.toChatItemInfo() })
+                        App.prefs?.saveUser(UserAuth(data.user.id, token = data.token!!))
+                        viewModel.updateChat(data.dialogs.map { it.toChatItemInfo() })
                     }
                 }
                 is EventFromServer.MessageNewEvent -> {
                     val data = (event.value as EventFromServer.MessageNewEvent).data
-                    ViewDataStorage.updateChat(data.toChatItemInfo())
+                    viewModel.updateChat(data.toChatItemInfo())
                 }
                 is EventFromServer.ChatHistoryEvent -> {
                     val data = (event.value as EventFromServer.ChatHistoryEvent).data
                     data.toChatItemInfo()?.let { chatItemInfo ->
-                        ViewDataStorage.updateChat(chatItemInfo)
+                        viewModel.updateChat(chatItemInfo)
                     }
 
                 }
                 is EventFromServer.ChatDeleteEvent -> {
                     val data = (event.value as EventFromServer.ChatDeleteEvent).data
-                    ViewDataStorage.deleteChat(ChatDelete(chat = data.chat, room = data.room))
+                    viewModel.deleteChat(ChatDelete(chat = data.chat, room = data.room))
                 }
                 is EventFromServer.ChatClearEvent -> {
                     val data = (event.value as EventFromServer.ChatClearEvent).data
-                    ViewDataStorage.clearChat(data)
+                    viewModel.clearChat(data)
                 }
                 is EventFromServer.MessageDeleteEvent -> {
                     val data = (event.value as EventFromServer.MessageDeleteEvent).data
-                    ViewDataStorage.deleteMessage(data)
+                    viewModel.deleteMessage(data)
                 }
                 is EventFromServer.ChatReadEvent -> {
                     val data = (event.value as EventFromServer.ChatReadEvent).data
-                    ViewDataStorage.updateChatState(data)
+                    viewModel.updateChatState(data)
                 }
                 is EventFromServer.UserOnlineEvent -> {
                     val data = (event.value as EventFromServer.UserOnlineEvent).data
-                    ViewDataStorage.updateUserStatus(data)
+                    viewModel.updateUserStatus(data)
                 }
                 else -> {}
             }

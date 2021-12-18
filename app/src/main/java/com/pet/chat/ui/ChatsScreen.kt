@@ -1,5 +1,6 @@
 package com.pet.chat.ui
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -8,16 +9,21 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.pet.chat.R
 import com.pet.chat.network.data.Dialog
 import com.pet.chat.network.data.receive.MessageNew
 import com.pet.chat.network.data.send.ChatDelete
 import com.pet.chat.network.data.send.ChatHistory
+import com.pet.chat.ui.main.ChatViewModel
 import com.pet.chat.ui.theme.ChatTheme
 import com.pet.chat.ui.theme.Shapes
 
@@ -25,7 +31,7 @@ data class ChatItemInfo(
     val roomID: Int,
     val usersIDs: List<Int>,
     var unreadCount: Int,
-    var roomMessages: MutableList<RoomMessage> = mutableListOf(),
+    var roomMessages: List<RoomMessage> = listOf(),
 )
 
 fun Dialog.toChatItemInfo(): ChatItemInfo {
@@ -63,13 +69,14 @@ val mockRoomChats = listOf(
 
 @Composable
 fun ChatsScreen(
-    chats: List<ChatItemInfo>,
     modifier: Modifier = Modifier,
     deleteChat: (ChatDelete) -> Unit,
     openChat: (ChatHistory) -> Unit,
     navController: NavController?,
+    viewModel: ChatViewModel,
 ) {
-
+    val chats = viewModel.chats.collectAsState()
+    Log.d("ChatScreen", "Chats ${chats.value.size}")
     Scaffold(
         topBar = {
             TopAppBar(
@@ -89,12 +96,12 @@ fun ChatsScreen(
         LazyColumn(modifier = modifier
             .fillMaxWidth()
             .padding(innerPadding)) {
-            items(chats) { item ->
-                ChatsItem(chatDetails = item,
-                    OpenChat = {
-                        openChat(it)
-                    },
-                    deleteChat = { deleteChat(it) })
+            items(chats.value) { item ->
+                 ChatsItem(chatDetails = item,
+                     OpenChat = {
+                         openChat(it)
+                     },
+                     deleteChat = { deleteChat(it) })
             }
         }
     }
@@ -137,6 +144,6 @@ fun ChatsItem(
 @Composable
 fun ChatsScreenPreview() {
     ChatTheme {
-        ChatsScreen(deleteChat = {}, openChat = {}, navController = null, chats = mockRoomChats)
+        ChatsScreen(deleteChat = {}, openChat = {}, navController = null, viewModel = viewModel())
     }
 }

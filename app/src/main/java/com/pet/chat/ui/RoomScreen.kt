@@ -95,7 +95,6 @@ fun Chat(
     sendMessage: (SendMessage) -> Unit,
     roomID: Int,
     clearChat: () -> Unit,
-    messages: List<RoomMessage>,
     navController: NavController?,
     deleteMessage: (DeleteMessage) -> Unit,
     eventChatRead: (ChatRead) -> Unit,
@@ -108,11 +107,13 @@ fun Chat(
             onClickAction = { cameraLauncher.invoke() })),
     // Нужно будет инжектить Hiltom
     viewModel: ChatViewModel,
+    messages: List<RoomMessage>? = viewModel.chats.collectAsState().value.firstOrNull{it.roomID == roomID}?.roomMessages
 ) {
     val modalBottomSheetState = rememberModalBottomSheetState(
         initialValue = ModalBottomSheetValue.Hidden
     )
 
+    val roomMessages = messages ?: listOf()
 
     Scaffold(
         topBar = {
@@ -136,15 +137,13 @@ fun Chat(
         ChatTheme {
             ModalBottomSheetLayout(
                 sheetContent = {
-                    ChatTheme {
-                        LazyRow() {
-                            items(bottomSheetActions) { item ->
-                                BottomSheetItem(itemData = item, closeBottomAction = {
-                                    scope.launch {
-                                        modalBottomSheetState.hide()
-                                    }
-                                })
-                            }
+                    LazyRow() {
+                        items(bottomSheetActions) { item ->
+                            BottomSheetItem(itemData = item, closeBottomAction = {
+                                scope.launch {
+                                    modalBottomSheetState.hide()
+                                }
+                            })
                         }
                     }
                 },
@@ -159,14 +158,14 @@ fun Chat(
                 if (internalEvents.value is InternalEvent.OpenFilePreview) {
                     openDialog.value = true
                     openFilePreviewDialog(openDialog = openDialog,
-                        fileUri =   (internalEvents.value as InternalEvent.OpenFilePreview).file,
+                        fileUri = (internalEvents.value as InternalEvent.OpenFilePreview).file,
                         applyMessage = { message, fileUri ->
                             openDialog.value = false
                             // TODO add message with loading image progress
                         })
                 }
 
-                if (listState.firstVisibleItemIndex >= messages.size - 1) {
+                if (listState.firstVisibleItemIndex >= roomMessages.size - 1) {
                     eventChatRead(ChatRead(roomId = roomID))
                 }
                 val sendAction = {
@@ -181,7 +180,7 @@ fun Chat(
                         .weight(1f)
                         .padding(horizontal = 8.dp)
                         .padding(innerPadding), state = listState) {
-                        items(messages) { data ->
+                        items(roomMessages) { data ->
                             MessageItem(modifier = Modifier.padding(all = 4.dp),
                                 message = data,
                                 deleteMessage)

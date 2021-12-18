@@ -61,5 +61,32 @@ fun Any.toSocketData(): JSONObject {
 
 fun Message.isOwn(): Boolean {
     return App.prefs?.userID == this.user_id
-
 }
+
+inline fun <reified E> List<E>.addLast(data: E): List<E> {
+    val newList = mutableListOf<E>()
+    this.forEach {
+        newList.add(it)
+    }
+    newList.add(data)
+    return newList
+}
+
+inline fun <reified E> List<E>.addAll(list: List<E>): List<E> {
+    val newList = mutableListOf<E>()
+    this.forEach {
+        newList.add(it)
+    }
+    newList.addAll(list)
+    return newList
+}
+
+inline fun <reified E> List<E>.removeWithInstance(it: E): List<E> {
+    val newList = mutableListOf<E>()
+    this.forEach {
+        newList.add(it)
+    }
+    newList.remove(it)
+    return newList
+}
+

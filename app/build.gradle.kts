@@ -12,7 +12,7 @@ android {
     compileSdk = 31
 
     defaultConfig {
-        applicationId = "com.pet.lovefinder"
+        applicationId = "com.pet.chat"
         minSdk = 21
         targetSdk = 31
         versionCode = 1
