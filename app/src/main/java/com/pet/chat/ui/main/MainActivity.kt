@@ -58,7 +58,8 @@ class MainActivity : ComponentActivity() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 when {
                     granted -> {
-                        eventViewModel.takePicture(this, launchCamera = { cameraLauncher.launch(it) })
+                        eventViewModel.takePicture(this,
+                            launchCamera = { cameraLauncher.launch(it) })
                     }
                     !shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> {
                         // доступ к камере запрещен, пользователь поставил галочку Don't ask again.
@@ -73,10 +74,13 @@ class MainActivity : ComponentActivity() {
         }
 
         resultAfterCamera = {
-            Log.d("MainActivity", "result after camera and last file ${eventViewModel.imageUri?.path}")
+            Log.d("MainActivity",
+                "result after camera and last file ${eventViewModel.imageUri?.path}")
             if (it) {
-                eventViewModel.postInternalAction(internalEvent = InternalEvent.OpenFilePreview(fileUri = eventViewModel.imageUri,
-                    filePath = null))
+                eventViewModel.postInternalAction(internalEvent = InternalEvent.OpenFilePreview(
+                    fileUri = eventViewModel.imageUri,
+                    filePath = null,
+                    openDialog = true))
             }
         }
 

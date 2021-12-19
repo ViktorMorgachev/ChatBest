@@ -6,6 +6,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import java.io.File
 
 sealed class InternalEvent() {
-    data class OpenFilePreview(val fileUri: Uri?, val filePath: String?) : InternalEvent()
-    object  Default : InternalEvent()
+    data class OpenFilePreview(
+        val fileUri: Uri?,
+        val filePath: String?,
+        val openDialog: Boolean = true,
+    ) : InternalEvent()
+
+    data class None(val default: String = "") : InternalEvent()
 }

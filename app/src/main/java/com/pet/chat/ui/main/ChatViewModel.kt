@@ -75,7 +75,10 @@ class ChatViewModel @Inject constructor() : ViewModel() {
     }
 
     fun postInternalAction(internalEvent: InternalEvent) = viewModelScope.launch(Dispatchers.IO) {
+       // internalEvents.emit(InternalEvent.None)
         internalEvents.emit(internalEvent)
+        // Хак, отправили и записали значение дефолт, чтобы композиция работала нормально
+       // internalEvents.value = InternalEvent.None
     }
 
     fun updateChat(chatDetails: ChatItemInfo) = viewModelScope.launch(Dispatchers.IO) {

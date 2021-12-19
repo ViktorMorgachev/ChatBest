@@ -152,38 +152,43 @@ fun Chat(
             {
                 val (message, messageChange) = rememberSaveable { mutableStateOf("") }
                 val listState = rememberLazyListState()
-                val (openDialog, openDialogChange) = remember { mutableStateOf(false) }
                 val internalEvents = viewModel.internalEvents.collectAsState()
-                val fileUri: MutableState<Uri?> = remember { mutableStateOf<Uri?>(null) }
+                val fileUri = remember { mutableStateOf<Uri?>(null) }
                 val filePath = remember { mutableStateOf<String?>(null) }
+                val (openDialog, openDialogChange) = remember { mutableStateOf(false) }
 
-                if (internalEvents.value is InternalEvent.OpenFilePreview) {
-                    openDialogChange(true)
+               openDialogChange(if (internalEvents.value is InternalEvent.OpenFilePreview) {
                     fileUri.value = (internalEvents.value as InternalEvent.OpenFilePreview).fileUri
                     filePath.value = (internalEvents.value as InternalEvent.OpenFilePreview).filePath
+                    (internalEvents.value as InternalEvent.OpenFilePreview).openDialog
                 } else {
-                    openDialogChange(false)
-                }
+                    false
+                })
+
                 if (openDialog) {
                     FilePreviewDialog(openDialog = openDialogChange,
-                        fileUri = fileUri.value,
                         filePath = filePath.value,
+                        fileUri = fileUri.value,
                         applyMessage = { message, fileUri, filePath ->
 
-                        })
-                } else{
-
+                        }, viewModel = viewModel)
                 }
 
                 if (listState.firstVisibleItemIndex >= roomMessages.value.size - 1) {
                     eventChatRead(ChatRead(roomId = roomID))
                 }
+
                 val sendAction = {
                     sendMessage(SendMessage(roomId = roomID,
                         text = message,
                         attachmentId = null))
                     messageChange("")
                 }
+
+                if (internalEvents.value is InternalEvent.OpenFilePreview) {
+                    openDialogChange(true)
+                }
+
                 Column() {
                     LazyColumn(modifier = modifier
                         .fillMaxWidth()
@@ -242,7 +247,7 @@ fun openFilePreviewDialog(
         FilePreviewDialog(fileUri = fileUri,
             applyMessage = applyMessage,
             openDialog = { },
-            filePath = filePath)
+            filePath = filePath, viewModel = viewModel())
     }
 }
 
