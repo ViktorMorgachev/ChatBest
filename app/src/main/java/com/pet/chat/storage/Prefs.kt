@@ -11,12 +11,18 @@ class Prefs(context: Context) {
         userToken = userAuth.token
     }
 
+
     private val preferences: SharedPreferences =
         context.getSharedPreferences("chat", Context.MODE_PRIVATE)
 
     fun identified(): Boolean {
         return userID != -1 && !userToken.isNullOrBlank()
     }
+
+
+    var lastRooom: Int
+    get() = preferences.getInt("roomID", -1)
+        set(value) = preferences.edit().putInt("roomID", value).apply()
 
     var userID: Int
         get() = preferences.getInt("userID", -1)

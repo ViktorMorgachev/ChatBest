@@ -112,7 +112,7 @@ fun Chat(
 
     val roomMessages = viewModel.messages.collectAsState()//{ it.roomID == roomID }.roomMessages
 
-    viewModel.currentRoom = roomID
+    App.prefs?.lastRooom = roomID
 
     Log.d("Chat", "Messages $roomMessages")
 

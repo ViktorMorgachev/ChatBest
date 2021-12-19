@@ -60,6 +60,9 @@ class MainActivity : ComponentActivity() {
         val navController = rememberNavController()
         val event = viewModel.events.collectAsState()
 
+        Log.d("DebugInfo: ", "User autentificated: ${App.prefs?.identified()} Current Room ${App.prefs?.lastRooom}")
+
+
 
         resultAfterCameraPermission = { granted ->
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -83,13 +86,6 @@ class MainActivity : ComponentActivity() {
             print("Result is $it")
         }
 
-        Log.d("DebugInfo: ", "User autentificated: ${App.prefs?.identified()} Current Room ${viewModel.currentRoom}")
-        if (App.prefs?.identified() == true) {
-            viewModel.postEventToServer(EventToServer.AuthEvent(UserAuth(id = App.prefs?.userID!!, token = App.prefs?.userToken!!)))
-            if(viewModel.currentRoom != -1){
-                viewModel.postEventToServer(EventToServer.GetChatHistory(ChatHistory(limit = 10, roomId = viewModel.currentRoom, lastId = null)))
-            }
-        }
 
 
         observe(event, viewModel)
@@ -136,6 +132,11 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        if (App.prefs?.identified() == true) {
+            navController.navigate(Screen.Chats.route)
+        }
+
+
     }
 
     @Composable
@@ -148,6 +149,14 @@ class MainActivity : ComponentActivity() {
                         val data = (event.value as EventFromServer.AutorizationEvent).data
                         App.prefs?.saveUser(UserAuth(data.user.id, token = data.token!!))
                         viewModel.updateChat(data.dialogs.map { it.toChatItemInfo() })
+                    }
+                }
+                is EventFromServer.ConnectionSuccess -> {
+                    if (App.prefs?.identified() == true) {
+                        eventViewModel.postEventToServer(EventToServer.AuthEvent(UserAuth(id = App.prefs?.userID!!, token = App.prefs?.userToken!!)))
+                        if(App.prefs?.lastRooom != -1){
+                            eventViewModel.postEventToServer(EventToServer.GetChatHistory(ChatHistory(limit = 10, roomId = eventViewModel.currentRoom, lastId = null)))
+                        }
                     }
                 }
                 is EventFromServer.MessageNewEvent -> {

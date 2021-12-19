@@ -18,6 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.pet.chat.App
 import com.pet.chat.R
 import com.pet.chat.network.data.Dialog
 import com.pet.chat.network.data.receive.MessageNew
@@ -75,6 +76,8 @@ fun ChatsScreen(
     navController: NavController?,
     viewModel: ChatViewModel,
 ) {
+    App.prefs?.lastRooom = -1
+
     val chats = viewModel.chats.collectAsState()
     Log.d("ChatScreen", "Chats ${chats.value.size}")
     Scaffold(

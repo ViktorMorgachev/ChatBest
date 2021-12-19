@@ -46,11 +46,15 @@ class ChatViewModel @Inject constructor() : ViewModel() {
 
     fun postEventToServer(eventToServer: EventToServer) {
         Log.d("EventToServer", "$eventToServer")
-        ConnectionManager.postEventToServer(event = eventToServer, error = {
-            val resultText = App.instance.applicationContext.getText(R.string.something_went_wrong)
-                .toString() + it
-            Toast.makeText(App.instance.applicationContext, resultText, Toast.LENGTH_LONG).show()
-        })
+        viewModelScope.launch(Dispatchers.IO) {
+            ConnectionManager.postEventToServer(event = eventToServer, error = {
+                viewModelScope.launch(Dispatchers.Main){
+                    val resultText = App.instance.applicationContext.getText(R.string.something_went_wrong)
+                        .toString() + it
+                    Toast.makeText(App.instance.applicationContext, resultText, Toast.LENGTH_LONG).show()
+                }
+            })
+        }
     }
 
     init {

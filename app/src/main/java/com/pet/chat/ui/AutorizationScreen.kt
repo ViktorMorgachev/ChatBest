@@ -11,6 +11,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.pet.chat.App
 import com.pet.chat.R
 import com.pet.chat.network.data.send.UserAuth
 import com.pet.chat.ui.theme.ChatTheme
@@ -21,6 +22,9 @@ fun AutorizationScreen(
     onAuthEvent: (UserAuth) -> Unit,
     navController: NavController?,
 ) {
+
+    App.prefs?.lastRooom = -1
+
     Scaffold(
         topBar = {
             TopAppBar(

@@ -89,6 +89,7 @@ object ConnectionManager {
                     "Socket: SocketID ${socket.id()} Connected ${socket.connected()} Data $it")
             }
             socket.on(Socket.EVENT_CONNECT) {
+                post(EventFromServer.ConnectionSuccess)
                 Log.d("Socket",
                     "Socket: Connect SocketID ${socket.id()} Connected ${socket.connected()}")
             }
@@ -99,7 +100,8 @@ object ConnectionManager {
             }
             socket.on(Socket.EVENT_CONNECT_ERROR) {
                 //options.auth.put("authorization", "bearer 1234")
-                Log.d("Socket", "Socket: SocketID ${socket.id()} Connected ${socket.connected()} Error $it")
+                Log.d("Socket",
+                    "Socket: SocketID ${socket.id()} Connected ${socket.connected()} Error $it")
                 runBlocking {
                     delay(1000)
                 }
