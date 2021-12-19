@@ -90,11 +90,6 @@ class MainActivity : ComponentActivity() {
         Log.d("DebugInfo: ",
             "User autentificated: ${App.prefs?.identified()} Current Room ${App.states?.lastRooom}")
 
-
-
-
-
-
         observe(event, viewModel)
 
         NavHost(navController = navController, startDestination = Screen.Autorization.route) {

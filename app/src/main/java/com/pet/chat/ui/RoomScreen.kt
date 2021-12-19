@@ -2,6 +2,7 @@ package com.pet.chat.ui
 
 import android.net.Uri
 import android.util.Log
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -159,8 +160,7 @@ fun Chat(
                 if (internalEvents.value is InternalEvent.OpenFilePreview) {
                     openDialogChange(true)
                     fileUri.value = (internalEvents.value as InternalEvent.OpenFilePreview).fileUri
-                    filePath.value =
-                        (internalEvents.value as InternalEvent.OpenFilePreview).filePath
+                    filePath.value = (internalEvents.value as InternalEvent.OpenFilePreview).filePath
                 } else {
                     openDialogChange(false)
                 }
@@ -171,6 +171,8 @@ fun Chat(
                         applyMessage = { message, fileUri, filePath ->
 
                         })
+                } else{
+
                 }
 
                 if (listState.firstVisibleItemIndex >= roomMessages.value.size - 1) {

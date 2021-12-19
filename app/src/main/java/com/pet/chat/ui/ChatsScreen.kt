@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.pet.chat.App
@@ -74,10 +75,11 @@ fun ChatsScreen(
     deleteChat: (ChatDelete) -> Unit,
     openChat: (ChatHistory) -> Unit,
     navController: NavController?,
-    viewModel: ChatViewModel,
+    viewModel: ChatViewModel?,
 ) {
-    val chats = viewModel.chats.collectAsState()
-    Log.d("ChatScreen", "Chats ${chats.value.size}")
+ //   val viewModel = hiltViewModel<ChatViewModel>()
+    val chats = viewModel?.chats?.collectAsState()
+    Log.d("ChatScreen", "Chats ${chats?.value?.size}")
     Scaffold(
         topBar = {
             TopAppBar(
@@ -97,7 +99,7 @@ fun ChatsScreen(
         LazyColumn(modifier = modifier
             .fillMaxWidth()
             .padding(innerPadding)) {
-            items(chats.value) { item ->
+            items(chats?.value!!) { item ->
                 ChatsItem(chatDetails = item,
                     OpenChat = {
                         openChat(it)
@@ -145,6 +147,6 @@ fun ChatsItem(
 @Composable
 fun ChatsScreenPreview() {
     ChatTheme {
-        ChatsScreen(deleteChat = {}, openChat = {}, navController = null, viewModel = viewModel())
+        ChatsScreen(deleteChat = {}, openChat = {}, navController = null, viewModel = null)
     }
 }

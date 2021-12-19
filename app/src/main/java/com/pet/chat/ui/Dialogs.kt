@@ -20,6 +20,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.pet.chat.App
+import com.pet.chat.events.InternalEvent
+import com.pet.chat.ui.main.ChatViewModel
 import com.pet.chat.ui.theme.ChatTheme
 
 @Composable
@@ -27,11 +30,12 @@ fun FilePreviewDialog(
     fileUri: Uri?,
     filePath: String?,
     applyMessage: (message: String, fileUri: Uri?, filePath: String?) -> Unit,
-    openDialog: (Boolean) -> Unit,
+    openDialog: (Boolean) -> Unit
 ) {
     val (message, messageChange) = rememberSaveable { mutableStateOf("") }
     Dialog(
         onDismissRequest = {
+            App.states?.cameraFilePath = ""
             openDialog(false)
         }
     ){

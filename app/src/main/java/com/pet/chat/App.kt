@@ -2,6 +2,8 @@ package com.pet.chat
 
 import android.app.Application
 import android.util.Log
+import androidx.hilt.work.HiltWorkerFactory
+import androidx.work.Configuration
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
@@ -10,9 +12,10 @@ import com.pet.chat.network.NetworkWorker
 import com.pet.chat.storage.Prefs
 import com.pet.chat.storage.States
 import dagger.hilt.android.HiltAndroidApp
+import javax.inject.Inject
 
 @HiltAndroidApp
-class App : Application() {
+class App : Application(), Configuration.Provider {
 
     companion object {
         var prefs: Prefs? = null
@@ -20,6 +23,8 @@ class App : Application() {
         lateinit var instance: App
             private set
     }
+
+    @Inject lateinit var workerFactory: HiltWorkerFactory
 
     override fun onCreate() {
         super.onCreate()
@@ -44,5 +49,11 @@ class App : Application() {
     override fun onLowMemory() {
         super.onLowMemory()
         Log.d("Application", "onLowMemory()")
+    }
+
+    override fun getWorkManagerConfiguration(): Configuration {
+       return Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .build()
     }
 }

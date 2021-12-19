@@ -24,6 +24,9 @@ object Versions {
     val dexter = "6.2.3"
     val fragment_ktx = "1.3.0"
     val activity_ktx = "1.3.0-alpha02"
+    val hilt_navigation = "1.0.0"
+    val hilt_navigation_compose = "1.0.0-beta01"
+    val hilt_work = "1.0.0"
 
 }
 
@@ -51,6 +54,11 @@ object Libs {
     val dexter_permission = "com.karumi:dexter:{${Versions.dexter}}"
     val activity_ktx = "androidx.activity:activity-ktx:${Versions.activity_ktx}"
     val fragment_ktx = "androidx.fragment:fragment-ktx:${Versions.fragment_ktx}"
+    val hilt_navigation = "androidx.hilt:hilt-navigation-fragment:${Versions.hilt_navigation}"
+    val hilt_navigation_compose ="androidx.hilt:hilt-navigation-compose:${Versions.hilt_navigation_compose}"
+    val hilt_work = "androidx.hilt:hilt-work:${Versions.hilt_work}"
+    val kapt_hilt_work = "androidx.hilt:hilt-compiler:${Versions.hilt_work}"
+
 
 }
 

@@ -26,9 +26,11 @@ import com.pet.chat.network.data.receive.ChatRead
 import com.pet.chat.ui.ChatItemInfo
 import com.pet.chat.ui.RoomMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
+import javax.inject.Singleton
 
 @HiltViewModel
 class ChatViewModel @Inject constructor() : ViewModel() {
