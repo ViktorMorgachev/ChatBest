@@ -32,9 +32,6 @@ fun CreateChatScreen(
     createChat: (ChatStart) -> Unit,
     navController: NavController,
 ) {
-
-    App.prefs?.lastRooom = -1
-
     Scaffold(
         topBar = {
             TopAppBar(

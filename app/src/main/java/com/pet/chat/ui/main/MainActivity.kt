@@ -12,9 +12,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.runtime.*
 import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
 import com.pet.chat.App
 import com.pet.chat.R
+import com.pet.chat.events.InternalEvent
 import com.pet.chat.network.EventFromServer
 import com.pet.chat.network.EventToServer
 import com.pet.chat.network.data.receive.ChatDelete
@@ -22,7 +24,6 @@ import com.pet.chat.network.data.send.ChatHistory
 import com.pet.chat.network.data.send.ClearChat
 import com.pet.chat.network.data.send.UserAuth
 import com.pet.chat.network.data.toChatItemInfo
-import com.pet.chat.storage.Prefs
 import com.pet.chat.ui.*
 import com.pet.chat.ui.theme.ChatTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -34,10 +35,9 @@ class MainActivity : ComponentActivity() {
     var resultAfterCamera: ((Boolean) -> Unit)? = null
     var resultAfterCameraPermission: ((Boolean) -> Unit)? = null
 
-    private val cameraLauncher =
-        registerForActivityResult(ActivityResultContracts.TakePicture()) {
-            resultAfterCamera?.invoke(it)
-        }
+    private val cameraLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) {
+        resultAfterCamera?.invoke(it)
+    }
     private val cameraPermissionContract =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) {
             resultAfterCameraPermission!!.invoke(it)
@@ -53,22 +53,12 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-    }
-
-    @Composable
-    fun MyApp(viewModel: ChatViewModel) {
-        val navController = rememberNavController()
-        val event = viewModel.events.collectAsState()
-
-        Log.d("DebugInfo: ", "User autentificated: ${App.prefs?.identified()} Current Room ${App.prefs?.lastRooom}")
-
-
 
         resultAfterCameraPermission = { granted ->
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 when {
                     granted -> {
-                        viewModel.takePicture(this, launchCamera = { cameraLauncher.launch(it) })
+                        eventViewModel.takePicture(this, launchCamera = { cameraLauncher.launch(it) })
                     }
                     !shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> {
                         // доступ к камере запрещен, пользователь поставил галочку Don't ask again.
@@ -78,13 +68,30 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             } else {
-                viewModel.takePicture(this, launchCamera = { cameraLauncher.launch(it) })
+                eventViewModel.takePicture(this, launchCamera = { cameraLauncher.launch(it) })
             }
         }
 
         resultAfterCamera = {
-            print("Result is $it")
+            Log.d("MainActivity", "result after camera and last file ${eventViewModel.imageUri?.path}")
+            if (it) {
+                eventViewModel.postInternalAction(internalEvent = InternalEvent.OpenFilePreview(fileUri = eventViewModel.imageUri,
+                    filePath = null))
+            }
         }
+
+    }
+
+    @Composable
+    fun MyApp(viewModel: ChatViewModel) {
+        val navController = rememberNavController()
+        val event = viewModel.events.collectAsState()
+
+        Log.d("DebugInfo: ",
+            "User autentificated: ${App.prefs?.identified()} Current Room ${App.states?.lastRooom}")
+
+
+
 
 
 
@@ -95,7 +102,9 @@ class MainActivity : ComponentActivity() {
                 AutorizationScreen(onAuthEvent = {
                     viewModel.postEventToServer(EventToServer.AuthEvent(it))
                 },
-                    navController = navController)
+                    navController = navController).also {
+                    App.states?.lastRooom = -1
+                }
             }
             composable(Screen.Chats.route) {
                 ChatsScreen(
@@ -104,12 +113,16 @@ class MainActivity : ComponentActivity() {
                     openChat = {
                         viewModel.postEventToServer(EventToServer.GetChatHistory(it))
                         navController.navigate(Screen.Room.createRoute(it.roomId.toString()))
-                    }, viewModel = viewModel)
+                    }, viewModel = viewModel).also {
+                    App.states?.lastRooom = -1
+                }
             }
             composable(Screen.CreateChat.route) {
                 CreateChatScreen(value = event.value,
                     createChat = { viewModel.postEventToServer(EventToServer.CreateChatEvent(it)) },
-                    navController = navController)
+                    navController = navController).also {
+                    App.states?.lastRooom = -1
+                }
             }
             composable(Screen.Room.route) { backStackEntry ->
                 val roomID = backStackEntry.arguments?.getString("roomID")
@@ -128,15 +141,28 @@ class MainActivity : ComponentActivity() {
                     scope = rememberCoroutineScope(),
                     cameraLauncher = { cameraPermissionContract.launch(Manifest.permission.CAMERA) },
                     viewModel = viewModel
-                )
+                ).also {
+                    App.states?.lastRooom = roomID.toInt()
+                }
             }
         }
 
+        checkForRestoringState(navController, viewModel)
+
+
+    }
+
+    private fun checkForRestoringState(navController: NavHostController, viewModel: ChatViewModel) {
         if (App.prefs?.identified() == true) {
             navController.navigate(Screen.Chats.route)
         }
-
-
+        if (App.states?.lastRooom != -1) {
+            navController.navigate(Screen.Room.createRoute(App.states?.lastRooom.toString()))
+            if (App.states?.cameraFilePath!!.isNotEmpty()) {
+                viewModel.postInternalAction(internalEvent = InternalEvent.OpenFilePreview(fileUri = null,
+                    filePath = App.states?.cameraFilePath!!))
+            }
+        }
     }
 
     @Composable
@@ -153,9 +179,13 @@ class MainActivity : ComponentActivity() {
                 }
                 is EventFromServer.ConnectionSuccess -> {
                     if (App.prefs?.identified() == true) {
-                        eventViewModel.postEventToServer(EventToServer.AuthEvent(UserAuth(id = App.prefs?.userID!!, token = App.prefs?.userToken!!)))
-                        if(App.prefs?.lastRooom != -1){
-                            eventViewModel.postEventToServer(EventToServer.GetChatHistory(ChatHistory(limit = 10, roomId = eventViewModel.currentRoom, lastId = null)))
+                        eventViewModel.postEventToServer(EventToServer.AuthEvent(UserAuth(id = App.prefs?.userID!!,
+                            token = App.prefs?.userToken!!)))
+                        if (App.states?.lastRooom != -1) {
+                            eventViewModel.postEventToServer(EventToServer.GetChatHistory(
+                                ChatHistory(limit = 10,
+                                    roomId = eventViewModel.currentRoom,
+                                    lastId = null)))
                         }
                     }
                 }

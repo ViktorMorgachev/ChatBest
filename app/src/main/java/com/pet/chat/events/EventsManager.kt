@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import java.io.File
 
 sealed class InternalEvent() {
-    data class OpenFilePreview(val file: Uri) : InternalEvent()
+    data class OpenFilePreview(val fileUri: Uri?, val filePath: String?) : InternalEvent()
 }
 
 object EventsManager {

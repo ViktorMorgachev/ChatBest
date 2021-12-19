@@ -48,10 +48,12 @@ class ChatViewModel @Inject constructor() : ViewModel() {
         Log.d("EventToServer", "$eventToServer")
         viewModelScope.launch(Dispatchers.IO) {
             ConnectionManager.postEventToServer(event = eventToServer, error = {
-                viewModelScope.launch(Dispatchers.Main){
-                    val resultText = App.instance.applicationContext.getText(R.string.something_went_wrong)
-                        .toString() + it
-                    Toast.makeText(App.instance.applicationContext, resultText, Toast.LENGTH_LONG).show()
+                viewModelScope.launch(Dispatchers.Main) {
+                    val resultText =
+                        App.instance.applicationContext.getText(R.string.something_went_wrong)
+                            .toString() + it
+                    Toast.makeText(App.instance.applicationContext, resultText, Toast.LENGTH_LONG)
+                        .show()
                 }
             })
         }
@@ -70,8 +72,8 @@ class ChatViewModel @Inject constructor() : ViewModel() {
 
     }
 
-    fun postInternalAction(internalState: InternalEvent) = viewModelScope.launch(Dispatchers.IO) {
-        internalEvents.emit(internalState)
+    fun postInternalAction(internalEvent: InternalEvent) = viewModelScope.launch(Dispatchers.IO) {
+        internalEvents.emit(internalEvent)
     }
 
     fun updateChat(chatDetails: ChatItemInfo) = viewModelScope.launch(Dispatchers.IO) {
@@ -151,8 +153,7 @@ class ChatViewModel @Inject constructor() : ViewModel() {
         CoroutineScope(Dispatchers.IO).launch {
             ImageUtils.createImageFile(context)?.also { file ->
                 imageUri = FileProvider.getUriForFile(context,
-                    BuildConfig.APPLICATION_ID + ".fileprovider",
-                    file)
+                    BuildConfig.APPLICATION_ID + ".fileprovider", file)
             }
         }.join()
         imageUri?.let { launchCamera(it) }

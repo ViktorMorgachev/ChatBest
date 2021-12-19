@@ -76,8 +76,6 @@ fun ChatsScreen(
     navController: NavController?,
     viewModel: ChatViewModel,
 ) {
-    App.prefs?.lastRooom = -1
-
     val chats = viewModel.chats.collectAsState()
     Log.d("ChatScreen", "Chats ${chats.value.size}")
     Scaffold(

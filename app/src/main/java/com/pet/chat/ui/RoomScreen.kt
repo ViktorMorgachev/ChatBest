@@ -108,11 +108,10 @@ fun Chat(
     // Нужно будет инжектить Hiltom
     viewModel: ChatViewModel,
 ) {
-    val modalBottomSheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
+    val modalBottomSheetState =
+        rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
 
-    val roomMessages = viewModel.messages.collectAsState()//{ it.roomID == roomID }.roomMessages
-
-    App.prefs?.lastRooom = roomID
+    val roomMessages = viewModel.messages.collectAsState() //{ it.roomID == roomID }.roomMessages
 
     Log.d("Chat", "Messages $roomMessages")
 
@@ -152,17 +151,25 @@ fun Chat(
             {
                 val (message, messageChange) = rememberSaveable { mutableStateOf("") }
                 val listState = rememberLazyListState()
-                val openDialog = remember { mutableStateOf(false) }
+                val (openDialog, openDialogChange) = remember { mutableStateOf(false) }
                 val internalEvents = viewModel.internalEvents.collectAsState()
-                val fileUri = remember { mutableSetOf(null) }
+                val fileUri: MutableState<Uri?> = remember { mutableStateOf<Uri?>(null) }
+                val filePath = remember { mutableStateOf<String?>(null) }
 
                 if (internalEvents.value is InternalEvent.OpenFilePreview) {
-                    openDialog.value = true
-                    openFilePreviewDialog(openDialog = openDialog,
-                        fileUri = (internalEvents.value as InternalEvent.OpenFilePreview).file,
-                        applyMessage = { message, fileUri ->
-                            openDialog.value = false
-                            // TODO add message with loading image progress
+                    openDialogChange(true)
+                    fileUri.value = (internalEvents.value as InternalEvent.OpenFilePreview).fileUri
+                    filePath.value =
+                        (internalEvents.value as InternalEvent.OpenFilePreview).filePath
+                } else {
+                    openDialogChange(false)
+                }
+                if (openDialog) {
+                    FilePreviewDialog(openDialog = openDialogChange,
+                        fileUri = fileUri.value,
+                        filePath = filePath.value,
+                        applyMessage = { message, fileUri, filePath ->
+
                         })
                 }
 
@@ -226,10 +233,14 @@ fun Chat(
 fun openFilePreviewDialog(
     openDialog: MutableState<Boolean>,
     fileUri: Uri?,
-    applyMessage: (message: String, fileUri: Uri) -> Unit,
+    filePath: String?,
+    applyMessage: (message: String, fileUri: Uri?, filePath: String?) -> Unit,
 ) {
     ChatTheme {
-        FilePreviewDialog(fileUri = fileUri, applyMessage = applyMessage, openDialog = openDialog)
+        FilePreviewDialog(fileUri = fileUri,
+            applyMessage = applyMessage,
+            openDialog = { },
+            filePath = filePath)
     }
 }
 

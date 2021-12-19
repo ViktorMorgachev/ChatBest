@@ -2,6 +2,7 @@ package com.pet.chat.helpers
 
 import android.content.Context
 import android.os.Environment
+import com.pet.chat.App
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -22,6 +23,7 @@ object ImageUtils {
         ).apply {
             // Save a file: path for use with ACTION_VIEW intents
             currentPhotoPath = absolutePath
+            App.states?.cameraFilePath = currentPhotoPath
         }
     }
 }
