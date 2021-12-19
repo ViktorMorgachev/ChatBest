@@ -41,7 +41,7 @@ fun Dialog.toChatItemInfo(): ChatItemInfo {
     this.room.users.forEach {
         usersIDs.add(it.id.toInt())
     }
-    val messages = if (this.message != null) listOf(this.message.toRoomMessage()) else listOf()
+    val messages = if (this.message != null) listOf(this.message.toSimpleMessage()) else listOf()
     return ChatItemInfo(roomID = this.room.id.toInt(),
         usersIDs = usersIDs,
         unreadCount = this.chat.unread_count.toInt(),
@@ -56,7 +56,7 @@ fun MessageNew.toChatItemInfo(): ChatItemInfo {
     return ChatItemInfo(roomID = this.room.id.toInt(),
         usersIDs = usersIDs,
         unreadCount = this.chat.unread_count.toInt(),
-        roomMessages = mutableListOf(this.message.toRoomMessage()))
+        roomMessages = mutableListOf(this.message.toSimpleMessage()))
 }
 
 val mockRoomChat = ChatItemInfo(roomID = 122,

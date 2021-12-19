@@ -2,7 +2,7 @@ package com.pet.chat.network.data
 
 import com.pet.chat.network.data.receive.ChatHistory
 import com.pet.chat.ui.ChatItemInfo
-import com.pet.chat.ui.toRoomMessage
+import com.pet.chat.ui.toSimpleMessage
 
 fun ChatHistory.toChatItemInfo(): ChatItemInfo? {
     return if (this.room != null && this.chat != null) {
@@ -15,7 +15,7 @@ fun ChatHistory.toChatItemInfo(): ChatItemInfo? {
         ChatItemInfo(roomID = roomID.toInt(),
             usersIDs = userIds,
             unreadCount = unreadCount.toInt(),
-            roomMessages = this.messages.map { it.toRoomMessage() }.toMutableList())
+            roomMessages = this.messages.map { it.toSimpleMessage() }.toMutableList())
     } else null
 
 

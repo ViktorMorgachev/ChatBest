@@ -2,7 +2,6 @@ package com.pet.chat.ui
 
 import android.net.Uri
 import android.util.Log
-import androidx.activity.viewModels
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -22,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.pet.chat.App
+import com.pet.chat.App.Companion.prefs
 import com.pet.chat.events.InternalEvent
 import com.pet.chat.network.data.Attachment
 import com.pet.chat.network.data.Message
@@ -39,22 +39,54 @@ data class BottomActionData(
     val onClickAction: () -> Unit,
 )
 
-data class RoomMessage(
-    val messageID: Int,
-    val userID: String,
-    val date: String,
-    val text: String,
-    val isOwn: Boolean = false,
-)
+sealed class RoomMessage(
+    open val isOwn: Boolean,
+    open val messageID: Int,
+    open val userID: String,
+    open val text: String,
+    open val date: String?,
+) {
+    data class SendingMessage(
+        val filePath: String,
+        val fileState: FileState,
+        val fileType: String,
+        override val isOwn: Boolean = false,
+        override val messageID: Int,
+        override val userID: String,
+        override val text: String,
+        override val date: String?,
+    ) : RoomMessage(isOwn, messageID, userID, text, date)
 
-fun Message.toRoomMessage(): RoomMessage {
-    return RoomMessage(userID = user_id.toString(),
-        date = created_at.toString(),
-        text = text,
-        isOwn = App.prefs?.userID == user_id.toInt(), messageID = this.id.toInt())
+    data class SimpleMessage(
+        val roomAttachment: RoomAttachment? = null,
+        override val isOwn: Boolean,
+        override val messageID: Int,
+        override val userID: String,
+        override val text: String,
+        override val date: String?,
+    ) : RoomMessage(isOwn, messageID, userID, text, date)
 }
 
-val mockData: List<RoomMessage> = listOf(mockAliceMessage.copy(text = "Hi Bob"),
+enum class FileState {
+    Loading, Loaded
+}
+
+data class RoomAttachment(
+    val id: Int,
+    val type: String,
+    val fileID: Int,
+    val filePath: String?,
+    val fileState: FileState = if (filePath == null) FileState.Loading else FileState.Loaded,
+)
+
+fun Message.toSimpleMessage(): RoomMessage.SimpleMessage {
+    return RoomMessage.SimpleMessage(userID = user_id.toString(),
+        date = created_at.toString(),
+        text = text,
+        isOwn = prefs?.userID == user_id.toInt(), messageID = this.id.toInt())
+}
+
+val mockData: List<RoomMessage.SimpleMessage> = listOf(mockAliceMessage.copy(text = "Hi Bob"),
     mockAliceMessage.copy(text = "Hi Alice"),
     mockAliceMessage.copy(text = "How are you?"),
     mockBobMessage.copy(text = "I.m fine"),
@@ -157,9 +189,10 @@ fun Chat(
                 val filePath = remember { mutableStateOf<String?>(null) }
                 val (openDialog, openDialogChange) = remember { mutableStateOf(false) }
 
-               openDialogChange(if (internalEvents.value is InternalEvent.OpenFilePreview) {
+                openDialogChange(if (internalEvents.value is InternalEvent.OpenFilePreview) {
                     fileUri.value = (internalEvents.value as InternalEvent.OpenFilePreview).fileUri
-                    filePath.value = (internalEvents.value as InternalEvent.OpenFilePreview).filePath
+                    filePath.value =
+                        (internalEvents.value as InternalEvent.OpenFilePreview).filePath
                     (internalEvents.value as InternalEvent.OpenFilePreview).openDialog
                 } else {
                     false
@@ -169,8 +202,18 @@ fun Chat(
                     FilePreviewDialog(openDialog = openDialogChange,
                         filePath = filePath.value,
                         fileUri = fileUri.value,
-                        applyMessage = { message, fileUri, filePath ->
-
+                        applyMessage = { text, fileUri, path, fileType ->
+                            viewModel.addMessage(
+                                roomMessage = RoomMessage.SendingMessage(
+                                    text = text,
+                                    isOwn = true,
+                                    filePath = path!!,
+                                    fileState = FileState.Loading,
+                                    messageID = viewModel.messages.value.last().messageID + 1,
+                                    userID = App.prefs?.userID.toString(),
+                                    fileType = fileType,
+                                    date = null
+                                ))
                         }, viewModel = viewModel)
                 }
 
@@ -241,7 +284,7 @@ fun openFilePreviewDialog(
     openDialog: MutableState<Boolean>,
     fileUri: Uri?,
     filePath: String?,
-    applyMessage: (message: String, fileUri: Uri?, filePath: String?) -> Unit,
+    applyMessage: (message: String, fileUri: Uri?, filePath: String?, fileType: String) -> Unit,
 ) {
     ChatTheme {
         FilePreviewDialog(fileUri = fileUri,

@@ -12,5 +12,5 @@ sealed class InternalEvent() {
         val openDialog: Boolean = true,
     ) : InternalEvent()
 
-    data class None(val default: String = "") : InternalEvent()
+    object None: InternalEvent()
 }
