@@ -32,11 +32,7 @@ data class ChatItemInfo(
     val usersIDs: List<Int>,
     var unreadCount: Int,
     var roomMessages: List<RoomMessage> = listOf(),
-) {
-    override fun toString(): String {
-        return super.toString()
-    }
-}
+)
 
 fun Dialog.toChatItemInfo(): ChatItemInfo {
     val usersIDs = mutableListOf<Int>()

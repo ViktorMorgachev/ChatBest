@@ -1,6 +1,7 @@
 package com.pet.chat
 
 import android.app.Application
+import android.util.Log
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
@@ -21,6 +22,7 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
 
+        Log.d("Application","onCreate()")
 
         instance = this
         prefs = Prefs(applicationContext)
@@ -31,5 +33,10 @@ class App : Application() {
         if (!workManager.isWorkScheduled(networkWorkerTag)) {
             workManager.enqueue(workBuilder)
         }
+    }
+
+    override fun onLowMemory() {
+        super.onLowMemory()
+        Log.d("Application","onLowMemory()")
     }
 }

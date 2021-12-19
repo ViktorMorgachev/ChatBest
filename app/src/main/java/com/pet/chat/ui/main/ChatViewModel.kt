@@ -77,6 +77,7 @@ class ChatViewModel @Inject constructor() : ViewModel() {
             actualChat.roomMessages = newList
             messages.value = newList
         } else {
+            messages.value = chatDetails.roomMessages
             chats.value = chats.value.addLast(chatDetails)
         }
         updateChat()
@@ -106,7 +107,10 @@ class ChatViewModel @Inject constructor() : ViewModel() {
             if (lastListMessagesInfo != null) {
                 lastListMessagesInfo.roomMessages =
                     lastListMessagesInfo.roomMessages.addAll(chatDetail.roomMessages)
-            } else chats.value = chats.value.addLast(chatDetail)
+            } else {
+                chats.value = chats.value.addLast(chatDetail)
+                messages.value = chats.value.get(0).roomMessages
+            }
         }
         updateChat()
     }
