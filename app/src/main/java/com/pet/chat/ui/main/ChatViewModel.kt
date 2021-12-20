@@ -33,14 +33,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 
 @HiltViewModel
-class ChatViewModel @Inject constructor(
-    val internalEventsProvider: InternalEventsProvider,
-) : ViewModel() {
+class ChatViewModel @Inject constructor(): ViewModel() {
 
     val events = MutableStateFlow<EventFromServer>(EventFromServer.NO_INITIALIZED)
     val chats = MutableStateFlow<List<ChatItemInfo>>(listOf())
     val messages = MutableStateFlow<List<RoomMessage>>(listOf())
-    val internalEvents = MutableStateFlow<InternalEvent>(InternalEvent.None)
     val users = MutableStateFlow<List<User>>(mutableListOf())
     var imageUri: Uri? = null
 
@@ -77,7 +74,7 @@ class ChatViewModel @Inject constructor(
     }
 
     fun postInternalAction(internalEvent: InternalEvent) = viewModelScope.launch(Dispatchers.IO) {
-        internalEvents.emit(internalEvent)
+      InternalEventsProvider.internalEvents.emit(internalEvent)
     }
 
     fun addMessage(roomMessage: RoomMessage) = viewModelScope.launch(Dispatchers.IO) {

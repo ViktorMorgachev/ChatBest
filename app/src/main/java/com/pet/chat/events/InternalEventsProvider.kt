@@ -16,6 +16,6 @@ sealed class InternalEvent() {
     data class FileSuccessUpload(val messageID: Int, val fileLoadResponse: LoadFileResponse?) : InternalEvent()
 }
 
-class InternalEventsProvider{
+object InternalEventsProvider{
     val internalEvents = MutableStateFlow<InternalEvent>(InternalEvent.None)
 }

@@ -49,7 +49,6 @@ class FileUploadWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, workerParams) {
 
     private val client = OkHttpClient().newBuilder().addInterceptor(HttpLoggingInterceptor())
-    @Inject lateinit var internalEventsProvider: InternalEventsProvider
 
     override suspend fun doWork() = withContext(Dispatchers.IO) {
         try {
@@ -58,7 +57,7 @@ class FileUploadWorker @AssistedInject constructor(
             //internalEventsProvider.internalEvents.emit(InternalEvent.FileSuccessDownload(inputData.toFile().messageID))
             Result.success()
         } catch (error: Throwable) {
-            internalEventsProvider.internalEvents.emit(InternalEvent.FileErrorUpload(inputData.toFile().messageID))
+            InternalEventsProvider.internalEvents.emit(InternalEvent.FileErrorUpload(inputData.toFile().messageID))
             error.printStackTrace()
             Result.failure()
         }
@@ -66,7 +65,6 @@ class FileUploadWorker @AssistedInject constructor(
 
     suspend private fun uploadFile(file: SendFile) {
 
-        //http://185.26.121.63:3000/upload?token=abcde&type=video&user_id=123
         val baseUrl = "http://185.26.121.63:3001/upload?"
 
         val fileToUpload = File(file.filePath)
@@ -89,12 +87,16 @@ class FileUploadWorker @AssistedInject constructor(
             .post(requestFile)
             .build()
 
+        Log.d("FileUploadWorker",
+            "UploadFile: URL ${baseUrl.plus(requestBuilder)} File ${fileToUpload.canonicalPath}")
+
         val response = client.build().newCall(request).execute()
         if (response.isSuccessful) {
             Log.d("FileUploadWorker", "Responce sucess Responce data: ${response.body()}")
         } else {
-            Log.d("FileUploadWorker", "Responce Error: ${response.body()} : ${response.code()} Messages ${response.message()}")
-            internalEventsProvider.internalEvents.emit(InternalEvent.FileErrorUpload(inputData.toFile().messageID))
+            Log.d("FileUploadWorker",
+                "Responce Error: ${response.body()} : ${response.code()} Messages ${response.message()}")
+            InternalEventsProvider.internalEvents.emit(InternalEvent.FileErrorUpload(inputData.toFile().messageID))
         }
     }
 }

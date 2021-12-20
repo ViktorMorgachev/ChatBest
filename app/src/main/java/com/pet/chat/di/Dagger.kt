@@ -32,11 +32,4 @@ class NetworkModule {
     fun provideUploadFileNetworkModule(retrofit: Retrofit): UploadFileService =
         retrofit.create(UploadFileService::class.java)
 
-    @Provides
-    @Singleton
-    fun provideInternalEvents(): InternalEventsProvider {
-        return InternalEventsProvider()
-    }
-
-
 }

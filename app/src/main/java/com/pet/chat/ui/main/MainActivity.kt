@@ -19,6 +19,7 @@ import androidx.work.WorkManager
 import com.pet.chat.App
 import com.pet.chat.R
 import com.pet.chat.events.InternalEvent
+import com.pet.chat.events.InternalEventsProvider
 import com.pet.chat.helpers.fileUploadWorkerTag
 import com.pet.chat.helpers.isWorkScheduled
 import com.pet.chat.helpers.workDataOf
@@ -114,7 +115,7 @@ class MainActivity : ComponentActivity() {
     fun MyApp(viewModel: ChatViewModel) {
         val navController = rememberNavController()
         val event = viewModel.events.collectAsState()
-        val internalEvents = viewModel.internalEvents.collectAsState()
+        val internalEvents = InternalEventsProvider.internalEvents.collectAsState()
 
         Log.d("DebugInfo: ",
             "User autentificated: ${App.prefs?.identified()} Current Room ${App.states?.lastRooom}")
