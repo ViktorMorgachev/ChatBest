@@ -210,7 +210,7 @@ fun Chat(
                         openDialog = openDialogChange,
                         filePath = filePath.value,
                         fileUri = fileUri.value,
-                        messageID = roomMessages.value.last().messageID + 1,
+                        messageID = if (roomMessages.value.isEmpty()) -999 else roomMessages.value.last().messageID + 1,
                         roomID = roomID,
                         applyMessage = applyMessageAction,
                         viewModel = viewModel)

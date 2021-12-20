@@ -185,7 +185,7 @@ class MainActivity : ComponentActivity() {
                     applyMessageAction = {
                         viewModel.addMessage(
                             roomMessage = RoomMessage.SendingMessage(
-                                text = text,
+                                text = it.text,
                                 isOwn = true,
                                 filePath = it.file.filePath,
                                 fileState = FileState.Loading,

@@ -64,7 +64,7 @@ class FileUploadWorker @AssistedInject constructor(
         }
     }
 
-    suspend private fun uploadFile(file: SendFile): LoadFileResponse? {
+    suspend private fun uploadFile(file: SendFile) {
 
         //http://185.26.121.63:3000/upload?token=abcde&type=video&user_id=123
         val baseUrl = "http://185.26.121.63:3001/upload?"
@@ -93,9 +93,8 @@ class FileUploadWorker @AssistedInject constructor(
         if (response.isSuccessful) {
             Log.d("FileUploadWorker", "Responce sucess Responce data: ${response.body()}")
         } else {
-            Log.d("FileUploadWorker",
-                "Responce Error: ${response.body()} : ${response.code()} Messages ${response.message()}")
+            Log.d("FileUploadWorker", "Responce Error: ${response.body()} : ${response.code()} Messages ${response.message()}")
+            internalEventsProvider.internalEvents.emit(InternalEvent.FileErrorUpload(inputData.toFile().messageID))
         }
-        return null
     }
 }
