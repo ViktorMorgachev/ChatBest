@@ -16,8 +16,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType
 import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
 import okhttp3.RequestBody
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Call
+import retrofit2.Retrofit
 import java.io.File
 import javax.inject.Inject
 import com.pet.chat.network.data.send.File as SendFile
@@ -37,24 +40,27 @@ fun Data.toFile(): SendFile {
 @HiltWorker
 class FileUploadWorker @AssistedInject constructor(
     @Assisted context: Context,
-    @Assisted workerParams: WorkerParameters,
+    @Assisted workerParams: WorkerParameters
 ) : CoroutineWorker(context, workerParams) {
-
-    @Inject
-    lateinit var fileUploadService: UploadFileService
+    // TODO разобраться с инжектированием!!!
+    /*@Inject
+    lateinit var uploadFileService: UploadFileService*/
 
     override suspend fun doWork() = withContext(Dispatchers.IO) {
         try {
             uploadFile(inputData.toFile())
             Result.success()
         } catch (error: Throwable) {
-
+            error.printStackTrace()
             Result.retry()
         }
     }
 
     suspend private fun uploadFile(file: SendFile) {
-        val service = fileUploadService
+        val service =  Retrofit.Builder()
+            .baseUrl("https://185.26.121.63:3001/")
+            .client(OkHttpClient().newBuilder().addInterceptor(HttpLoggingInterceptor()).build())
+            .build().create(UploadFileService::class.java)
 
         val fileToUpload = File(file.filePath)
         val fileUri = Uri.fromFile(fileToUpload)

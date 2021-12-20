@@ -202,6 +202,7 @@ fun Chat(
                     FilePreviewDialog(openDialog = openDialogChange,
                         filePath = filePath.value,
                         fileUri = fileUri.value,
+                        //TODO Так не делать, вынести в Action отдельный
                         applyMessage = { text, fileUri, path, fileType ->
                             viewModel.addMessage(
                                 roomMessage = RoomMessage.SendingMessage(

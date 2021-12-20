@@ -93,12 +93,13 @@ class MainActivity : ComponentActivity() {
     }
 
     fun startLoadPhoto(file: File) {
-        val workBuilder = OneTimeWorkRequestBuilder<NetworkWorker>().addTag(fileUploadWorkerTag).apply {
+        val workBuilder = OneTimeWorkRequestBuilder<FileUploadWorker>().addTag(fileUploadWorkerTag).apply {
                 setInputData(workDataOf(roomID to file.room,
                     type to file.type,
                     filePath to file.filePath))
             }.build()
         val workManager = WorkManager.getInstance(this)
+        workManager.enqueue(workBuilder)
         if (!workManager.isWorkScheduled(fileUploadWorkerTag)) {
             workManager.enqueue(workBuilder)
         }
@@ -152,6 +153,7 @@ class MainActivity : ComponentActivity() {
                     },
                     deleteMessage = {
                         if (it is RoomMessage.SendingMessage) {
+                            //TODO Остановить загрузку файла на сервер
                             viewModel.deleteMessage(it)
                         } else {
                             viewModel.postEventToServer(EventToServer.DeleteMessageEvent(
@@ -160,7 +162,7 @@ class MainActivity : ComponentActivity() {
                     },
                     eventChatRead = { viewModel.postEventToServer(EventToServer.ChatReadEvent(it)) },
                     loadFileAction = {
-
+                        startLoadPhoto(it)
                     },
                     scope = rememberCoroutineScope(),
                     cameraLauncher = { cameraPermissionContract.launch(Manifest.permission.CAMERA) },
