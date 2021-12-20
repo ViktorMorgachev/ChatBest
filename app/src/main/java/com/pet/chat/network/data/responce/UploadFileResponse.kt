@@ -1,7 +1,6 @@
 package com.pet.chat.network.data.responce
 
-import com.google.gson.annotations.SerializedName
-import com.pet.chat.network.data.Attachment
+import com.pet.chat.network.data.base.Attachment
 
 data class UploadFileResponse(
     val success: Boolean,

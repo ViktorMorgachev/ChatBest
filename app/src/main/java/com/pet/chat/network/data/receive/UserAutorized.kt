@@ -1,6 +1,6 @@
 package com.pet.chat.network.data.receive
 
-import com.pet.chat.network.data.Dialog
+import com.pet.chat.network.data.base.Dialog
 
 data class UserAutorized(
     var dialogs: List<Dialog>,

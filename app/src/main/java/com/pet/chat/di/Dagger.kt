@@ -1,10 +1,12 @@
 package com.pet.chat.di
 
-import com.pet.chat.network.services.RegistrationService
+import com.pet.chat.network.services.UploadFileService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.create
 
@@ -13,9 +15,10 @@ import retrofit2.create
 class NetworkModule {
 
     @Provides
-    fun provideRegistrationNetworkModule(): RegistrationService {
+    fun provideUploadFileNetworkModule(): UploadFileService {
         val retrofit = Retrofit.Builder()
-            .baseUrl("https://4text.app/")
+            .baseUrl("https://185.26.121.63:3001/")
+            .client(OkHttpClient().newBuilder().addInterceptor(HttpLoggingInterceptor()).build())
             .build()
         return retrofit.create()
     }

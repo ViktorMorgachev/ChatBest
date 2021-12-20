@@ -23,11 +23,10 @@ import androidx.navigation.NavController
 import com.pet.chat.App
 import com.pet.chat.App.Companion.prefs
 import com.pet.chat.events.InternalEvent
-import com.pet.chat.network.data.Attachment
-import com.pet.chat.network.data.Message
-import com.pet.chat.network.data.receive.MessageDelete
+import com.pet.chat.network.data.base.Attachment
+import com.pet.chat.network.data.base.Message
 import com.pet.chat.network.data.send.ChatRead
-import com.pet.chat.network.data.send.DeleteMessage
+import com.pet.chat.network.data.send.File
 import com.pet.chat.network.data.send.SendMessage
 import com.pet.chat.ui.main.ChatViewModel
 import com.pet.chat.ui.theme.ChatTheme
@@ -132,7 +131,7 @@ fun Chat(
     navController: NavController?,
     deleteMessage: (RoomMessage) -> Unit,
     eventChatRead: (ChatRead) -> Unit,
-    loadFileAction: (Attachment) -> Unit,
+    loadFileAction: (File) -> Unit,
     scope: CoroutineScope,
     cameraLauncher: () -> Unit,
     bottomSheetActions: List<BottomActionData> =
@@ -215,6 +214,7 @@ fun Chat(
                                     fileType = fileType,
                                     date = null
                                 ))
+                            loadFileAction(File(room = roomID, type = fileType, filePath = path))
                         }, viewModel = viewModel)
                 }
 

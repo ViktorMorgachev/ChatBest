@@ -1,6 +1,7 @@
 package com.pet.chat.helpers
 
-const val networkWorkerTag = "NetworkWork"
+const val socketConnectionWorkerTag = "WorkerForSockets"
+const val fileUploadWorkerTag = "WorkerForFileUpload"
 
 const val networkIP = "185.26.121.63"
 const val networkWSsocket = "3000"

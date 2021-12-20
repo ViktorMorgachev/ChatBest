@@ -1,17 +1,20 @@
-package com.pet.chat.network
+package com.pet.chat.network.workers
 
 import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.pet.chat.helpers.*
+import com.pet.chat.network.ConnectionManager
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import io.socket.client.IO
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
+/**
+ * For stable socket connection in future
+ * */
 @HiltWorker
 class NetworkWorker @AssistedInject constructor(@Assisted context: Context, @Assisted workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {

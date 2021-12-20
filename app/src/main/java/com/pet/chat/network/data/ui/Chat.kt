@@ -1,4 +1,4 @@
-package com.pet.chat.network.data
+package com.pet.chat.network.data.ui
 
 data class Chat(
     val user_id: Number,

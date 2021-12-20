@@ -27,6 +27,7 @@ object Versions {
     val hilt_navigation = "1.0.0"
     val hilt_navigation_compose = "1.0.0-beta01"
     val hilt_work = "1.0.0"
+    val loggingInterceptor = "3.8.0"
 
 }
 
@@ -58,6 +59,7 @@ object Libs {
     val hilt_navigation_compose ="androidx.hilt:hilt-navigation-compose:${Versions.hilt_navigation_compose}"
     val hilt_work = "androidx.hilt:hilt-work:${Versions.hilt_work}"
     val kapt_hilt_work = "androidx.hilt:hilt-compiler:${Versions.hilt_work}"
+    val logging_interceptors = "com.squareup.okhttp3:logging-interceptor:${Versions.loggingInterceptor}"
 
 
 }

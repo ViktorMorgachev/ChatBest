@@ -1,6 +1,7 @@
 package com.pet.chat.helpers
 
 import android.content.Context
+import android.net.Uri
 import android.os.Environment
 import com.pet.chat.App
 import java.io.File
@@ -26,4 +27,5 @@ object ImageUtils {
             App.states?.cameraFilePath = currentPhotoPath
         }
     }
+
 }

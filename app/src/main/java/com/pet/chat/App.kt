@@ -8,7 +8,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.pet.chat.helpers.*
-import com.pet.chat.network.NetworkWorker
+import com.pet.chat.network.workers.NetworkWorker
 import com.pet.chat.storage.Prefs
 import com.pet.chat.storage.States
 import dagger.hilt.android.HiltAndroidApp
@@ -35,13 +35,18 @@ class App : Application(), Configuration.Provider {
         prefs = Prefs(applicationContext)
         states = States(applicationContext)
 
-        val workBuilder =
-            OneTimeWorkRequestBuilder<NetworkWorker>().addTag(networkWorkerTag).setInputData(
-                workDataOf(networkHostTypeKey to NetworkHostType.WS.name.lowercase(),
-                    networkIPKey to networkIP,
-                    networkSocketKey to networkWSsocket)).build()
+        startWorker()
+
+    }
+
+    private fun startWorker() {
+        val workBuilder = OneTimeWorkRequestBuilder<NetworkWorker>().addTag(socketConnectionWorkerTag).apply {
+                setInputData(workDataOf(networkHostTypeKey to NetworkHostType.WS.name.lowercase(),
+                        networkIPKey to networkIP,
+                        networkSocketKey to networkWSsocket))
+            }.build()
         val workManager = WorkManager.getInstance(this)
-        if (!workManager.isWorkScheduled(networkWorkerTag)) {
+        if (!workManager.isWorkScheduled(socketConnectionWorkerTag)) {
             workManager.enqueue(workBuilder)
         }
     }
@@ -52,7 +57,7 @@ class App : Application(), Configuration.Provider {
     }
 
     override fun getWorkManagerConfiguration(): Configuration {
-       return Configuration.Builder()
+        return Configuration.Builder()
             .setWorkerFactory(workerFactory)
             .build()
     }

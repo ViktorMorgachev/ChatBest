@@ -78,6 +78,7 @@ dependencies {
     implementation(Libs.hilt_navigation_compose)
     implementation(Libs.activity_ktx)
     implementation(Libs.hilt_work)
+    implementation(Libs.logging_interceptors)
     kapt(Libs.kapt_hilt_work)
     kapt(Libs.kapt_com_google_dagger_hilt)
     androidTestImplementation(AndroidTestLibs.ext_junit)

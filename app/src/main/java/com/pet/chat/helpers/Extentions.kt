@@ -6,7 +6,7 @@ import androidx.work.WorkManager
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.pet.chat.App
-import com.pet.chat.network.data.Message
+import com.pet.chat.network.data.base.Message
 import org.json.JSONObject
 import java.util.concurrent.ExecutionException
 

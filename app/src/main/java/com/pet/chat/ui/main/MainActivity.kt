@@ -14,17 +14,22 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
+import androidx.work.Data
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.pet.chat.App
 import com.pet.chat.R
 import com.pet.chat.events.InternalEvent
+import com.pet.chat.helpers.fileUploadWorkerTag
+import com.pet.chat.helpers.isWorkScheduled
+import com.pet.chat.helpers.socketConnectionWorkerTag
+import com.pet.chat.helpers.workDataOf
 import com.pet.chat.network.EventFromServer
 import com.pet.chat.network.EventToServer
 import com.pet.chat.network.data.receive.ChatDelete
-import com.pet.chat.network.data.send.ChatHistory
-import com.pet.chat.network.data.send.ClearChat
-import com.pet.chat.network.data.send.DeleteMessage
-import com.pet.chat.network.data.send.UserAuth
+import com.pet.chat.network.data.send.*
 import com.pet.chat.network.data.toChatItemInfo
+import com.pet.chat.network.workers.*
 import com.pet.chat.ui.*
 import com.pet.chat.ui.theme.ChatTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -87,6 +92,18 @@ class MainActivity : ComponentActivity() {
 
     }
 
+    fun startLoadPhoto(file: File) {
+        val workBuilder = OneTimeWorkRequestBuilder<NetworkWorker>().addTag(fileUploadWorkerTag).apply {
+                setInputData(workDataOf(roomID to file.room,
+                    type to file.type,
+                    filePath to file.filePath))
+            }.build()
+        val workManager = WorkManager.getInstance(this)
+        if (!workManager.isWorkScheduled(fileUploadWorkerTag)) {
+            workManager.enqueue(workBuilder)
+        }
+    }
+
     @Composable
     fun MyApp(viewModel: ChatViewModel) {
         val navController = rememberNavController()
@@ -137,11 +154,14 @@ class MainActivity : ComponentActivity() {
                         if (it is RoomMessage.SendingMessage) {
                             viewModel.deleteMessage(it)
                         } else {
-                            viewModel.postEventToServer(EventToServer.DeleteMessageEvent(DeleteMessage(it.messageID)))
+                            viewModel.postEventToServer(EventToServer.DeleteMessageEvent(
+                                DeleteMessage(it.messageID)))
                         }
                     },
                     eventChatRead = { viewModel.postEventToServer(EventToServer.ChatReadEvent(it)) },
-                    loadFileAction = {},
+                    loadFileAction = {
+
+                    },
                     scope = rememberCoroutineScope(),
                     cameraLauncher = { cameraPermissionContract.launch(Manifest.permission.CAMERA) },
                     viewModel = viewModel
@@ -150,10 +170,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-
         checkForRestoringState(navController, viewModel)
-
-
     }
 
     private fun checkForRestoringState(navController: NavHostController, viewModel: ChatViewModel) {
