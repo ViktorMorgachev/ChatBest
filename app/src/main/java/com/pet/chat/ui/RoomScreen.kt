@@ -25,6 +25,7 @@ import com.pet.chat.App.Companion.prefs
 import com.pet.chat.events.InternalEvent
 import com.pet.chat.network.data.Attachment
 import com.pet.chat.network.data.Message
+import com.pet.chat.network.data.receive.MessageDelete
 import com.pet.chat.network.data.send.ChatRead
 import com.pet.chat.network.data.send.DeleteMessage
 import com.pet.chat.network.data.send.SendMessage
@@ -129,7 +130,7 @@ fun Chat(
     roomID: Int,
     clearChat: () -> Unit,
     navController: NavController?,
-    deleteMessage: (DeleteMessage) -> Unit,
+    deleteMessage: (RoomMessage) -> Unit,
     eventChatRead: (ChatRead) -> Unit,
     loadFileAction: (Attachment) -> Unit,
     scope: CoroutineScope,
@@ -241,7 +242,7 @@ fun Chat(
                         items(roomMessages.value) { data ->
                             MessageItem(modifier = Modifier.padding(all = 4.dp),
                                 message = data,
-                                deleteMessage)
+                                deleteMessage = deleteMessage)
                         }
                     }
                     Column(modifier = Modifier.padding(all = 4.dp)) {

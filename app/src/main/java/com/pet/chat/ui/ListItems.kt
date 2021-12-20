@@ -78,7 +78,7 @@ fun MessageItemPreview(modifier: Modifier = Modifier) {
 fun MessageItem(
     modifier: Modifier = Modifier,
     message: RoomMessage,
-    deleteMessage: (DeleteMessage) -> Unit,
+    deleteMessage: (RoomMessage) -> Unit,
 ) {
     val isMe = message.isOwn
     var expandedMenu by remember() { mutableStateOf(false) }
@@ -102,7 +102,7 @@ fun MessageItem(
                                 fontSize = 14.sp,
                                 modifier = Modifier
                                     .clickable(onClick = {
-                                        deleteMessage(DeleteMessage(message.messageID))
+                                        deleteMessage(message)
                                         expandedMenu = false
                                     }))
                         }
@@ -138,6 +138,8 @@ fun MessageItem(
                                } else {
                                    if (attachment.filePath != null){
                                        Icon(bitmap = BitmapFactory.decodeFile(attachment.filePath).asImageBitmap(), contentDescription = "PhotoLoad", modifier = Modifier.fillMaxWidth().height(20.dp))
+                                   } else {
+
                                    }
                                }
                            }

@@ -96,6 +96,11 @@ class ChatViewModel @Inject constructor() : ViewModel() {
         updateChat()
     }
 
+    fun deleteMessage(roomMessage: RoomMessage) = viewModelScope.launch(Dispatchers.IO) {
+        messages.value = messages.value.removeWithInstance(roomMessage)
+        updateChat()
+    }
+
     fun deleteMessage(messageDelete: MessageDelete) = viewModelScope.launch(Dispatchers.IO) {
         val currentChat = chats.value.first { messageDelete.room.id.toInt() == it.roomID }
         var roomMessages = currentChat.roomMessages

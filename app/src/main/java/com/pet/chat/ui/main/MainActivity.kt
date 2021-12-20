@@ -22,6 +22,7 @@ import com.pet.chat.network.EventToServer
 import com.pet.chat.network.data.receive.ChatDelete
 import com.pet.chat.network.data.send.ChatHistory
 import com.pet.chat.network.data.send.ClearChat
+import com.pet.chat.network.data.send.DeleteMessage
 import com.pet.chat.network.data.send.UserAuth
 import com.pet.chat.network.data.toChatItemInfo
 import com.pet.chat.ui.*
@@ -133,7 +134,11 @@ class MainActivity : ComponentActivity() {
                         viewModel.postEventToServer(EventToServer.ClearChatEvent(ClearChat(roomID.toInt())))
                     },
                     deleteMessage = {
-                        viewModel.postEventToServer(EventToServer.DeleteMessageEvent(it))
+                        if (it is RoomMessage.SendingMessage) {
+                            viewModel.deleteMessage(it)
+                        } else {
+                            viewModel.postEventToServer(EventToServer.DeleteMessageEvent(DeleteMessage(it.messageID)))
+                        }
                     },
                     eventChatRead = { viewModel.postEventToServer(EventToServer.ChatReadEvent(it)) },
                     loadFileAction = {},
