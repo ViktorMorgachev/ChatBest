@@ -11,6 +11,7 @@ import com.pet.chat.App
 import com.pet.chat.BuildConfig
 import com.pet.chat.R
 import com.pet.chat.events.InternalEvent
+import com.pet.chat.events.InternalEventsProvider
 import com.pet.chat.helpers.ImageUtils
 import com.pet.chat.helpers.addAll
 import com.pet.chat.helpers.addLast
@@ -24,6 +25,7 @@ import com.pet.chat.network.data.receive.*
 import com.pet.chat.network.data.receive.ChatDelete
 import com.pet.chat.network.data.receive.ChatRead
 import com.pet.chat.ui.ChatItemInfo
+import com.pet.chat.ui.FileState
 import com.pet.chat.ui.RoomMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
@@ -31,14 +33,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 
 @HiltViewModel
-class ChatViewModel @Inject constructor() : ViewModel() {
+class ChatViewModel @Inject constructor(
+    val internalEventsProvider: InternalEventsProvider,
+) : ViewModel() {
 
     val events = MutableStateFlow<EventFromServer>(EventFromServer.NO_INITIALIZED)
     val chats = MutableStateFlow<List<ChatItemInfo>>(listOf())
     val messages = MutableStateFlow<List<RoomMessage>>(listOf())
+    val internalEvents = MutableStateFlow<InternalEvent>(InternalEvent.None)
     val users = MutableStateFlow<List<User>>(mutableListOf())
     var imageUri: Uri? = null
-    val internalEvents = MutableStateFlow<InternalEvent?>(null)
 
     // Потом нужног будет это вырезать
     // Проблема при возвращении назад с камеры, нужно будет поправить по хорошему
@@ -76,8 +80,16 @@ class ChatViewModel @Inject constructor() : ViewModel() {
         internalEvents.emit(internalEvent)
     }
 
-    fun addMessage(roomMessage: RoomMessage) = viewModelScope.launch {
+    fun addMessage(roomMessage: RoomMessage) = viewModelScope.launch(Dispatchers.IO) {
         messages.value = messages.value.addLast(roomMessage)
+        updateChat()
+    }
+
+    fun fileUploadError(messageID: Int) = viewModelScope.launch(Dispatchers.IO) {
+        val message = (messages.value.find { it is RoomMessage.SendingMessage && it.messageID == messageID } as RoomMessage.SendingMessage)
+        message.fileState = FileState.Error
+        messages.value = messages.value.removeWithInstance(message)
+        messages.value = messages.value.addLast(message)
         updateChat()
     }
 

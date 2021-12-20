@@ -14,7 +14,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
-import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.pet.chat.App
@@ -22,7 +21,6 @@ import com.pet.chat.R
 import com.pet.chat.events.InternalEvent
 import com.pet.chat.helpers.fileUploadWorkerTag
 import com.pet.chat.helpers.isWorkScheduled
-import com.pet.chat.helpers.socketConnectionWorkerTag
 import com.pet.chat.helpers.workDataOf
 import com.pet.chat.network.EventFromServer
 import com.pet.chat.network.EventToServer
@@ -92,11 +90,15 @@ class MainActivity : ComponentActivity() {
 
     }
 
-    fun startLoadPhoto(file: File) {
-        val workBuilder = OneTimeWorkRequestBuilder<FileUploadWorker>().addTag(fileUploadWorkerTag).apply {
-                setInputData(workDataOf(roomID to file.room,
-                    type to file.type,
-                    filePath to file.filePath))
+    fun startLoadPhoto(messageWithFile: MessageWithFile) {
+        val workBuilder =
+            OneTimeWorkRequestBuilder<FileUploadWorker>().addTag(fileUploadWorkerTag).apply {
+                setInputData(workDataOf(roomID to messageWithFile.file.roomID,
+                    type to messageWithFile.file.type,
+                    filePath to messageWithFile.file.filePath,
+                    messageID to messageWithFile.messageID,
+                    text to messageWithFile.text
+                ))
             }.build()
         val workManager = WorkManager.getInstance(this)
         workManager.enqueue(workBuilder)
@@ -105,15 +107,20 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    fun startDownloadPhoto() {
+    }
+
     @Composable
     fun MyApp(viewModel: ChatViewModel) {
         val navController = rememberNavController()
         val event = viewModel.events.collectAsState()
+        val internalEvents = viewModel.internalEvents.collectAsState()
 
         Log.d("DebugInfo: ",
             "User autentificated: ${App.prefs?.identified()} Current Room ${App.states?.lastRooom}")
 
-        observe(event, viewModel)
+        observeEvent(event, viewModel)
+        observe(internalEvents, viewModel)
 
         NavHost(navController = navController, startDestination = Screen.Autorization.route) {
             composable(Screen.Autorization.route) {
@@ -145,15 +152,15 @@ class MainActivity : ComponentActivity() {
             composable(Screen.Room.route) { backStackEntry ->
                 val roomID = backStackEntry.arguments?.getString("roomID")
                 requireNotNull(roomID) { "roomID parameter wasn't found. Please make sure it's set!" }
+
                 Chat(sendMessage = { viewModel.postEventToServer(EventToServer.SendMessageEvent(it)) },
                     roomID = roomID.toInt(),
                     navController = navController,
                     clearChat = {
                         viewModel.postEventToServer(EventToServer.ClearChatEvent(ClearChat(roomID.toInt())))
                     },
-                    deleteMessage = {
+                    deleteMessageAction = {
                         if (it is RoomMessage.SendingMessage) {
-                            //TODO Остановить загрузку файла на сервер
                             viewModel.deleteMessage(it)
                         } else {
                             viewModel.postEventToServer(EventToServer.DeleteMessageEvent(
@@ -161,12 +168,34 @@ class MainActivity : ComponentActivity() {
                         }
                     },
                     eventChatRead = { viewModel.postEventToServer(EventToServer.ChatReadEvent(it)) },
-                    loadFileAction = {
-                        startLoadPhoto(it)
-                    },
                     scope = rememberCoroutineScope(),
                     cameraLauncher = { cameraPermissionContract.launch(Manifest.permission.CAMERA) },
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    internalEvent = internalEvents.value,
+                    tryLoadFileAction = {
+                        startLoadPhoto(MessageWithFile(
+                            File(roomID = roomID.toInt(),
+                                type = it.fileType,
+                                filePath = it.filePath), messageID = it.messageID, text = it.text
+                        ))
+                    },
+                    tryToDownLoadAction = {
+                        startDownloadPhoto()
+                    },
+                    applyMessageAction = {
+                        viewModel.addMessage(
+                            roomMessage = RoomMessage.SendingMessage(
+                                text = text,
+                                isOwn = true,
+                                filePath = it.file.filePath,
+                                fileState = FileState.Loading,
+                                messageID = it.messageID,
+                                userID = App.prefs?.userID.toString(),
+                                fileType = it.file.type,
+                                date = null
+                            ))
+                        startLoadPhoto(it)
+                    }
                 ).also {
                     App.states?.lastRooom = roomID.toInt()
                 }
@@ -189,7 +218,7 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun observe(event: State<EventFromServer>, viewModel: ChatViewModel) {
+    fun observeEvent(event: State<EventFromServer>, viewModel: ChatViewModel) {
         try {
             Log.d("EventFromServer", "${event.value}")
             when (event.value) {
@@ -249,6 +278,25 @@ class MainActivity : ComponentActivity() {
             e.printStackTrace()
             Toast.makeText(this,
                 stringResource(id = R.string.something_went_wrong) + ": при получении данных",
+                Toast.LENGTH_LONG).show()
+        }
+    }
+
+    @Composable
+    fun observe(event: State<InternalEvent>, viewModel: ChatViewModel) {
+        try {
+            Log.d("InternalEvent", "${event.value}")
+            when (event.value) {
+                is InternalEvent.FileErrorUpload -> {
+                    val data = (event.value as InternalEvent.FileErrorUpload).messageID
+                    viewModel.fileUploadError(messageID = data)
+                }
+                else -> {}
+            }
+        } catch (e: Throwable) {
+            e.printStackTrace()
+            Toast.makeText(this,
+                stringResource(id = R.string.something_went_wrong) + ": при получении обработке внутрених событий",
                 Toast.LENGTH_LONG).show()
         }
     }

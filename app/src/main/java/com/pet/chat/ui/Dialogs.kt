@@ -7,13 +7,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
@@ -24,6 +22,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pet.chat.App
 import com.pet.chat.events.InternalEvent
+import com.pet.chat.network.data.send.File
+import com.pet.chat.network.data.send.MessageWithFile
 import com.pet.chat.ui.main.ChatViewModel
 import com.pet.chat.ui.theme.ChatTheme
 
@@ -31,16 +31,18 @@ import com.pet.chat.ui.theme.ChatTheme
 fun FilePreviewDialog(
     fileUri: Uri?,
     filePath: String?,
-    applyMessage: (message: String, fileUri: Uri?, filePath: String?, fileType: String) -> Unit,
+    applyMessage: (MessageWithFile) -> Unit,
     openDialog: (Boolean) -> Unit,
     viewModel: ChatViewModel,
+    roomID: Int,
+    messageID: Int,
 ) {
     val (message, messageChange) = rememberSaveable { mutableStateOf("") }
     Dialog(
         onDismissRequest = {
             App.states?.cameraFilePath = ""
             viewModel.postInternalAction(InternalEvent.None)
-           // viewModel.postInternalAction(InternalEvent.OpenFilePreview(fileUri, filePath, false))
+            // viewModel.postInternalAction(InternalEvent.OpenFilePreview(fileUri, filePath, false))
         }
     ) {
         Column(modifier = Modifier.padding(4.dp)) {
@@ -50,13 +52,14 @@ fun FilePreviewDialog(
                 .padding(4.dp)) {
                 Image(bitmap = bitmap.asImageBitmap(),
                     contentDescription = "Photo for sending", modifier = Modifier.padding(4.dp))
-                  TextField(value = message,
-                      onValueChange = messageChange)
+                TextField(value = message,
+                    onValueChange = messageChange)
                 Row {
                     Button(
                         onClick = {
                             viewModel.postInternalAction(InternalEvent.None)
-                            applyMessage(message, fileUri, filePath, "photo")
+                            applyMessage(MessageWithFile(
+                                File(roomID = roomID, type = "photo", filePath = filePath!!), messageID = messageID, text = message))
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -85,9 +88,9 @@ fun FilePreviewDialog(
 fun FilePreviewDialogPreview() {
     ChatTheme {
         FilePreviewDialog(fileUri = null,
-            applyMessage = { _, _, _, _ -> },
+            applyMessage = { },
             openDialog = {},
-            filePath = null, viewModel = viewModel())
+            filePath = null, viewModel = viewModel(), roomID = -1, messageID = -1)
     }
 
 }

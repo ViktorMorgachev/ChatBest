@@ -9,8 +9,14 @@ enum class FileType {
     Photo, File, Video, Voice
 }
 
+data class MessageWithFile(
+    val file: File,
+    val messageID: Int,
+    val text: String,
+)
+
 data class File(
-    val room: Number,
+    val roomID: Number,
     val type: String,
     val filePath: String,
 )

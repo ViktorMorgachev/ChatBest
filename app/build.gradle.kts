@@ -79,6 +79,8 @@ dependencies {
     implementation(Libs.activity_ktx)
     implementation(Libs.hilt_work)
     implementation(Libs.logging_interceptors)
+    implementation(Libs.gson_converter_factory)
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     kapt(Libs.kapt_hilt_work)
     kapt(Libs.kapt_com_google_dagger_hilt)
     androidTestImplementation(AndroidTestLibs.ext_junit)

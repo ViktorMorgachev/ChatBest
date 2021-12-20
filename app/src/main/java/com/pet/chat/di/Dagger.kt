@@ -1,6 +1,8 @@
 package com.pet.chat.di
 
+import com.pet.chat.events.InternalEventsProvider
 import com.pet.chat.network.services.UploadFileService
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -16,18 +18,25 @@ import javax.inject.Singleton
 class NetworkModule {
 
     @Provides
-    fun providesBaseUrl() : String = "https://185.26.121.63:3001/"
+    fun providesBaseUrl(): String = "https://185.26.121.63:3001/"
 
     @Provides
     @Singleton
-    fun provideRetrofit(BASE_URL : String) : Retrofit = Retrofit.Builder()
+    fun provideRetrofit(BASE_URL: String): Retrofit = Retrofit.Builder()
         .baseUrl(BASE_URL)
         .client(OkHttpClient().newBuilder().addInterceptor(HttpLoggingInterceptor()).build())
         .build()
 
     @Provides
     @Singleton
-    fun provideUploadFileNetworkModule(retrofit : Retrofit) : UploadFileService = retrofit.create(UploadFileService::class.java)
+    fun provideUploadFileNetworkModule(retrofit: Retrofit): UploadFileService =
+        retrofit.create(UploadFileService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideInternalEvents(): InternalEventsProvider {
+        return InternalEventsProvider()
+    }
 
 
 }

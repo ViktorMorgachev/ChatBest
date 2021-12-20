@@ -20,7 +20,7 @@ object Versions {
     val compose_navigation = "2.4.0-beta02"
     val dagger_hilt_android = "2.39.1"
     val squareup_retrofit = "2.9.0"
-    val gson_converter = "2.9.0"
+    val gson_converter = "2.5.0"
     val dexter = "6.2.3"
     val fragment_ktx = "1.3.0"
     val activity_ktx = "1.3.0-alpha02"

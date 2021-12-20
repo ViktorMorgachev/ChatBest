@@ -23,11 +23,12 @@ import androidx.navigation.NavController
 import com.pet.chat.App
 import com.pet.chat.App.Companion.prefs
 import com.pet.chat.events.InternalEvent
-import com.pet.chat.network.data.base.Attachment
 import com.pet.chat.network.data.base.Message
 import com.pet.chat.network.data.send.ChatRead
 import com.pet.chat.network.data.send.File
+import com.pet.chat.network.data.send.MessageWithFile
 import com.pet.chat.network.data.send.SendMessage
+import com.pet.chat.network.workers.messageID
 import com.pet.chat.ui.main.ChatViewModel
 import com.pet.chat.ui.theme.ChatTheme
 import kotlinx.coroutines.CoroutineScope
@@ -48,7 +49,7 @@ sealed class RoomMessage(
 ) {
     data class SendingMessage(
         val filePath: String,
-        val fileState: FileState,
+        var fileState: FileState,
         val fileType: String,
         override val isOwn: Boolean = false,
         override val messageID: Int,
@@ -68,7 +69,7 @@ sealed class RoomMessage(
 }
 
 enum class FileState {
-    Loading, Loaded
+    Loading, Loaded, Error
 }
 
 data class RoomAttachment(
@@ -112,26 +113,30 @@ fun ChatListPrewiew() {
             roomID = -1,
             clearChat = {},
             navController = null,
-            deleteMessage = { },
+            deleteMessageAction = { },
             eventChatRead = {},
-            loadFileAction = {},
             scope = rememberCoroutineScope(),
-            cameraLauncher = { }, viewModel = viewModel()
+            cameraLauncher = { },
+            viewModel = viewModel(),
+            internalEvent = InternalEvent.None,
+            tryLoadFileAction = {},
+            tryToDownLoadAction = {},
+            applyMessageAction = {}
         )
     }
 }
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
+// TODO слишком много параметров, нужно будет рефакторить
 fun Chat(
     modifier: Modifier = Modifier,
     sendMessage: (SendMessage) -> Unit,
     roomID: Int,
     clearChat: () -> Unit,
     navController: NavController?,
-    deleteMessage: (RoomMessage) -> Unit,
+    deleteMessageAction: (RoomMessage) -> Unit,
     eventChatRead: (ChatRead) -> Unit,
-    loadFileAction: (File) -> Unit,
     scope: CoroutineScope,
     cameraLauncher: () -> Unit,
     bottomSheetActions: List<BottomActionData> =
@@ -140,6 +145,10 @@ fun Chat(
             onClickAction = { cameraLauncher.invoke() })),
     // Нужно будет инжектить Hiltom
     viewModel: ChatViewModel,
+    internalEvent: InternalEvent,
+    tryLoadFileAction: (RoomMessage.SendingMessage) -> Unit,
+    tryToDownLoadAction: (RoomMessage.SimpleMessage) -> Unit,
+    applyMessageAction: (MessageWithFile) -> Unit,
 ) {
     val modalBottomSheetState =
         rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
@@ -184,39 +193,27 @@ fun Chat(
             {
                 val (message, messageChange) = rememberSaveable { mutableStateOf("") }
                 val listState = rememberLazyListState()
-                val internalEvents = viewModel.internalEvents.collectAsState()
                 val fileUri = remember { mutableStateOf<Uri?>(null) }
                 val filePath = remember { mutableStateOf<String?>(null) }
                 val (openDialog, openDialogChange) = remember { mutableStateOf(false) }
 
-                openDialogChange(if (internalEvents.value is InternalEvent.OpenFilePreview) {
-                    fileUri.value = (internalEvents.value as InternalEvent.OpenFilePreview).fileUri
-                    filePath.value =
-                        (internalEvents.value as InternalEvent.OpenFilePreview).filePath
-                    (internalEvents.value as InternalEvent.OpenFilePreview).openDialog
+                openDialogChange(if (internalEvent is InternalEvent.OpenFilePreview) {
+                    fileUri.value = internalEvent.fileUri
+                    filePath.value = internalEvent.filePath
+                    internalEvent.openDialog
                 } else {
                     false
                 })
 
                 if (openDialog) {
-                    FilePreviewDialog(openDialog = openDialogChange,
+                    FilePreviewDialog(
+                        openDialog = openDialogChange,
                         filePath = filePath.value,
                         fileUri = fileUri.value,
-                        //TODO Так не делать, вынести в Action отдельный
-                        applyMessage = { text, fileUri, path, fileType ->
-                            viewModel.addMessage(
-                                roomMessage = RoomMessage.SendingMessage(
-                                    text = text,
-                                    isOwn = true,
-                                    filePath = path!!,
-                                    fileState = FileState.Loading,
-                                    messageID = viewModel.messages.value.last().messageID + 1,
-                                    userID = App.prefs?.userID.toString(),
-                                    fileType = fileType,
-                                    date = null
-                                ))
-                            loadFileAction(File(room = roomID, type = fileType, filePath = path))
-                        }, viewModel = viewModel)
+                        messageID = roomMessages.value.last().messageID + 1,
+                        roomID = roomID,
+                        applyMessage = applyMessageAction,
+                        viewModel = viewModel)
                 }
 
                 if (listState.firstVisibleItemIndex >= roomMessages.value.size - 1) {
@@ -230,7 +227,7 @@ fun Chat(
                     messageChange("")
                 }
 
-                if (internalEvents.value is InternalEvent.OpenFilePreview) {
+                if (internalEvent is InternalEvent.OpenFilePreview) {
                     openDialogChange(true)
                 }
 
@@ -243,7 +240,10 @@ fun Chat(
                         items(roomMessages.value) { data ->
                             MessageItem(modifier = Modifier.padding(all = 4.dp),
                                 message = data,
-                                deleteMessage = deleteMessage)
+                                deleteMessageAction = deleteMessageAction,
+                                tryLoadAction = tryLoadFileAction,
+                                tryDownloadAction = tryToDownLoadAction
+                            )
                         }
                     }
                     Column(modifier = Modifier.padding(all = 4.dp)) {
@@ -286,13 +286,17 @@ fun openFilePreviewDialog(
     openDialog: MutableState<Boolean>,
     fileUri: Uri?,
     filePath: String?,
-    applyMessage: (message: String, fileUri: Uri?, filePath: String?, fileType: String) -> Unit,
+    applyMessage: (MessageWithFile) -> Unit,
 ) {
     ChatTheme {
-        FilePreviewDialog(fileUri = fileUri,
+        FilePreviewDialog(
+            fileUri = fileUri,
             applyMessage = applyMessage,
             openDialog = { },
-            filePath = filePath, viewModel = viewModel())
+            filePath = filePath,
+            viewModel = viewModel(),
+            roomID = -1,
+            messageID = -1)
     }
 }
 
