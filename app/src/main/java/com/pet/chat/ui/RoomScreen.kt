@@ -25,10 +25,8 @@ import com.pet.chat.App.Companion.prefs
 import com.pet.chat.events.InternalEvent
 import com.pet.chat.network.data.base.Message
 import com.pet.chat.network.data.send.ChatRead
-import com.pet.chat.network.data.send.File
-import com.pet.chat.network.data.send.MessageWithFile
+import com.pet.chat.network.data.base.File
 import com.pet.chat.network.data.send.SendMessage
-import com.pet.chat.network.workers.messageID
 import com.pet.chat.ui.main.ChatViewModel
 import com.pet.chat.ui.theme.ChatTheme
 import kotlinx.coroutines.CoroutineScope
@@ -46,45 +44,44 @@ sealed class RoomMessage(
     open val userID: String,
     open val text: String,
     open val date: String?,
+    open val file: File?,
 ) {
     data class SendingMessage(
-        val filePath: String,
-        var fileState: FileState,
-        val fileType: String,
         override val isOwn: Boolean = false,
         override val messageID: Int,
         override val userID: String,
         override val text: String,
         override val date: String?,
-    ) : RoomMessage(isOwn, messageID, userID, text, date)
+        override val file: File?,
+    ) : RoomMessage(isOwn, messageID, userID, text, date, file)
 
     data class SimpleMessage(
-        val roomAttachment: RoomAttachment? = null,
         override val isOwn: Boolean,
         override val messageID: Int,
         override val userID: String,
         override val text: String,
         override val date: String?,
-    ) : RoomMessage(isOwn, messageID, userID, text, date)
+        override val file: File?,
+    ) : RoomMessage(isOwn, messageID, userID, text, date, file)
 }
 
-enum class FileState {
-    Loading, Loaded, Error
+enum class State {
+    Loading, Loaded, Error, None, Done
 }
-
-data class RoomAttachment(
-    val id: Int,
-    val type: String,
-    val fileID: Int,
-    val filePath: String?,
-    val fileState: FileState = if (filePath == null) FileState.Loading else FileState.Loaded,
-)
 
 fun Message.toSimpleMessage(): RoomMessage.SimpleMessage {
+    val file = if (this.attachment == null) null else {
+        File(this.attachment.room_id,
+            type = this.attachment.type,
+            null,
+            this.attachment.file_id.toInt(), state = State.Loaded)
+    }
+
     return RoomMessage.SimpleMessage(userID = user_id.toString(),
         date = created_at.toString(),
         text = text,
-        isOwn = prefs?.userID == user_id.toInt(), messageID = this.id.toInt())
+        isOwn = prefs?.userID == user_id.toInt(), messageID = this.id.toInt(),
+        file = file)
 }
 
 val mockData: List<RoomMessage.SimpleMessage> = listOf(mockAliceMessage.copy(text = "Hi Bob"),
@@ -121,7 +118,7 @@ fun ChatListPrewiew() {
             internalEvent = InternalEvent.None,
             tryLoadFileAction = {},
             tryToDownLoadAction = {},
-            applyMessageAction = {}
+            applyMessageAction = { _, _ -> {} }
         )
     }
 }
@@ -131,29 +128,29 @@ fun ChatListPrewiew() {
 // TODO слишком много параметров, нужно будет рефакторить
 fun Chat(
     modifier: Modifier = Modifier,
-    sendMessage: (SendMessage) -> Unit,
     roomID: Int,
     clearChat: () -> Unit,
     navController: NavController?,
-    deleteMessageAction: (RoomMessage) -> Unit,
-    eventChatRead: (ChatRead) -> Unit,
     scope: CoroutineScope,
     cameraLauncher: () -> Unit,
     bottomSheetActions: List<BottomActionData> =
         listOf(BottomActionData(image = Icons.Outlined.Camera,
             itemDescribe = "Camera",
             onClickAction = { cameraLauncher.invoke() })),
-    // Нужно будет инжектить Hiltom
+    // TODO Нужно будет инжектить Hiltom
     viewModel: ChatViewModel,
     internalEvent: InternalEvent,
     tryLoadFileAction: (RoomMessage.SendingMessage) -> Unit,
     tryToDownLoadAction: (RoomMessage.SimpleMessage) -> Unit,
-    applyMessageAction: (MessageWithFile) -> Unit,
+    applyMessageAction: (String, File) -> Unit,
+    deleteMessageAction: (RoomMessage) -> Unit,
+    sendMessage: (SendMessage) -> Unit,
+    eventChatRead: (ChatRead) -> Unit,
 ) {
     val modalBottomSheetState =
         rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
 
-    val roomMessages = viewModel.messages.collectAsState() //{ it.roomID == roomID }.roomMessages
+    val roomMessages = viewModel.messages.collectAsState()
 
     Log.d("Chat", "Messages $roomMessages")
 
@@ -208,9 +205,7 @@ fun Chat(
                 if (openDialog) {
                     FilePreviewDialog(
                         openDialog = openDialogChange,
-                        filePath = filePath.value,
-                        fileUri = fileUri.value,
-                        messageID = if (roomMessages.value.isEmpty()) -999 else roomMessages.value.last().messageID + 1,
+                        file = File(roomID = roomID, type = "photo", App.states?.cameraFilePath, state = State.None),
                         roomID = roomID,
                         applyMessage = applyMessageAction,
                         viewModel = viewModel)
@@ -241,7 +236,7 @@ fun Chat(
                             MessageItem(modifier = Modifier.padding(all = 4.dp),
                                 message = data,
                                 deleteMessageAction = deleteMessageAction,
-                                tryLoadAction = tryLoadFileAction,
+                                tryUploadAction = tryLoadFileAction,
                                 tryDownloadAction = tryToDownLoadAction
                             )
                         }
@@ -284,19 +279,16 @@ fun Chat(
 @Composable
 fun openFilePreviewDialog(
     openDialog: MutableState<Boolean>,
-    fileUri: Uri?,
-    filePath: String?,
-    applyMessage: (MessageWithFile) -> Unit,
+    file: File,
+    applyMessage: (String, File) -> Unit,
 ) {
     ChatTheme {
         FilePreviewDialog(
-            fileUri = fileUri,
+            file = file,
             applyMessage = applyMessage,
             openDialog = { },
-            filePath = filePath,
             viewModel = viewModel(),
-            roomID = -1,
-            messageID = -1)
+            roomID = -1)
     }
 }
 

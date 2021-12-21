@@ -8,39 +8,65 @@ import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.WorkerParameters
 import com.pet.chat.App
-import com.pet.chat.events.InternalEvent
-import com.pet.chat.events.InternalEventsProvider
-import com.pet.chat.network.data.responce.LoadFileResponse
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.*
 import okhttp3.logging.HttpLoggingInterceptor
 import java.io.File
 import java.lang.StringBuilder
-import javax.inject.Inject
-import com.pet.chat.network.data.send.MessageWithFile
-import com.pet.chat.network.data.send.File as SendFile
 
-const val roomID = "ROOM_ID"
-const val type = "FILE_TYPE"
-const val filePath = "FILE_PATH"
-const val messageID = "MESSAGE_ID"
-const val text = "TEXT"
+// Don't use this, bad practice, but code exellent :)
+object DataBuffer {
+    private var data: List<Any> = listOf()
 
-fun Data.toFile(): MessageWithFile {
-    return MessageWithFile(
-        file = SendFile(
-            roomID = this.getInt(roomID, -1),
-            type = this.getString(type) ?: "",
-            filePath = this.getString(filePath) ?: "",
-        ),
-        messageID = this.getInt(messageID, -1),
-        text = this.getString(text) ?: ""
-    )
+    fun write(data: Any) {
+        synchronized(this) {
+            this.data = listOf(data)
+        }
+    }
+
+    fun read(): Any? {
+        synchronized(this) {
+            val dataForResult = data.firstOrNull()
+            data = listOf()
+            return dataForResult
+        }
+    }
 }
+
+class FileUploadConverter {
+
+    companion object {
+        const val roomID = "ROOM_ID"
+        const val filePath = "FILE_PATH"
+        const val fileID = "FILE_ID"
+        const val state = "STATE"
+        const val fileType = "FILE_TYPE"
+        const val message = "MESSAGE"
+    }
+
+    fun dataToSendingFile(data: Data): SendingFile {
+        return SendingFile(
+            filePath = data.getString(filePath)!!,
+            roomID = data.getInt(roomID, -1),
+            fileType = data.getString(fileType)!!,
+            message = data.getString(message) ?: "",
+            fileName = "sending_file"
+        )
+    }
+
+
+}
+
+data class SendingFile(
+    val filePath: String,
+    val message: String,
+    val fileName: String,
+    val fileType: String,
+    val roomID: Int,
+)
 
 @HiltWorker
 class FileUploadWorker @AssistedInject constructor(
@@ -50,22 +76,27 @@ class FileUploadWorker @AssistedInject constructor(
 
     private val client = OkHttpClient().newBuilder().addInterceptor(HttpLoggingInterceptor())
 
+    // TODO скорей всего использовать провайдер синглтон куда будем
+    //  данные слать, его пробросить во вью модел, в ней уже подписываться на изменения и делать по факту что необходимо
+
     override suspend fun doWork() = withContext(Dispatchers.IO) {
         try {
-            val result = uploadFile(inputData.toFile().file)
+            val fileUploadConverter = FileUploadConverter()
+            val data = fileUploadConverter.dataToSendingFile(inputData)
+            val result = uploadFile(data)
             // мы не должны напрямую взаимодействовать в viewModel
             //internalEventsProvider.internalEvents.emit(InternalEvent.FileSuccessDownload(inputData.toFile().messageID))
             Result.success()
         } catch (error: Throwable) {
-            InternalEventsProvider.internalEvents.emit(InternalEvent.FileErrorUpload(inputData.toFile().messageID))
+            //  InternalEventsProvider.internalEvents.emit(InternalEvent.FileErrorUpload(inputData.toFile().messageID))
             error.printStackTrace()
             Result.failure()
         }
     }
 
-    suspend private fun uploadFile(file: SendFile) {
+    suspend private fun uploadFile(file: SendingFile) {
 
-        val baseUrl = "http://185.26.121.63:3001/upload?"
+        val baseUrl = "http://185.26.121.63:3001/upload/?"
 
         val fileToUpload = File(file.filePath)
         val fileUri = FileProvider.getUriForFile(applicationContext,
@@ -78,7 +109,7 @@ class FileUploadWorker @AssistedInject constructor(
         val requestBuilder = StringBuilder()
         requestBuilder
             .append("token=${App.prefs!!.userToken}&")
-            .append("type=${file.type}&")
+            .append("type=${file.fileType}&")
             .append("user_id=${App.prefs!!.userID}&")
             .append("room_id=${file.roomID.toInt()}")
 
@@ -96,7 +127,7 @@ class FileUploadWorker @AssistedInject constructor(
         } else {
             Log.d("FileUploadWorker",
                 "Responce Error: ${response.body()} : ${response.code()} Messages ${response.message()}")
-            InternalEventsProvider.internalEvents.emit(InternalEvent.FileErrorUpload(inputData.toFile().messageID))
+            //InternalEventsProvider.internalEvents.emit(InternalEvent.FileErrorUpload(inputData.toFile().messageID))
         }
     }
 }

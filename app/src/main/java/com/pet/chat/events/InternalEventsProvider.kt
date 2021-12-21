@@ -10,10 +10,7 @@ sealed class InternalEvent() {
         val filePath: String?,
         val openDialog: Boolean = true,
     ) : InternalEvent()
-
     object None : InternalEvent()
-    data class FileErrorUpload(val messageID: Int) : InternalEvent()
-    data class FileSuccessUpload(val messageID: Int, val fileLoadResponse: LoadFileResponse?) : InternalEvent()
 }
 
 object InternalEventsProvider{

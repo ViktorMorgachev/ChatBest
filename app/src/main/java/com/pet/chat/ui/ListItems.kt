@@ -12,33 +12,39 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pet.chat.R
+import com.pet.chat.network.data.base.File
 import com.pet.chat.ui.theme.ChatTheme
 
 val mockDataBottomSheetItem = BottomActionData(image = Icons.Outlined.Camera, "Camera", {})
 
 val mockAliceMessage =
-    RoomMessage.SimpleMessage(userID = "Alice",
+    RoomMessage.SimpleMessage(
+        userID = "Alice",
         date = "12.12.2021",
         text = "From Alice",
         isOwn = false,
-        messageID = -1)
+        messageID = -1,
+        file = null)
 val mockBobMessage =
-    RoomMessage.SimpleMessage(userID = "Bob",
+    RoomMessage.SimpleMessage(
+        userID = "Bob",
         date = "12.12.2021",
         text = "From Bob",
         isOwn = true,
         messageID = -1,
-        roomAttachment = RoomAttachment(id = 34,
+        file = File(
+            roomID = -1,
             type = "photo",
             fileID = 213234,
-            filePath = null,
-            fileState = FileState.Loaded))
+            filePath = null, state = State.None))
 
 @Composable
 fun BottomSheetItem(itemData: BottomActionData, closeBottomAction: () -> Unit) {
@@ -67,7 +73,10 @@ fun BottomSheetItem(itemData: BottomActionData, closeBottomAction: () -> Unit) {
 @Composable
 fun MessageItemPreview(modifier: Modifier = Modifier) {
     ChatTheme {
-        MessageItem(message = mockBobMessage, deleteMessageAction = {}, tryLoadAction = {}, tryDownloadAction = {})
+        MessageItem(message = mockBobMessage,
+            deleteMessageAction = {},
+            tryUploadAction = {},
+            tryDownloadAction = {})
     }
 }
 
@@ -76,7 +85,7 @@ fun MessageItem(
     modifier: Modifier = Modifier,
     message: RoomMessage,
     deleteMessageAction: (RoomMessage) -> Unit,
-    tryLoadAction: (RoomMessage.SendingMessage) -> Unit,
+    tryUploadAction: (RoomMessage.SendingMessage) -> Unit,
     tryDownloadAction: (RoomMessage.SimpleMessage) -> Unit,
 ) {
     val isMe = message.isOwn
@@ -113,40 +122,49 @@ fun MessageItem(
                             .align(Alignment.CenterVertically))
                 }
 
-                Box(modifier = Modifier.fillMaxWidth()) {
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     when (message) {
                         is RoomMessage.SendingMessage -> {
-                            val sendingMessage = message as RoomMessage.SendingMessage
-                            if (sendingMessage.fileType == "photo") {
-                                Image(bitmap = BitmapFactory.decodeFile(sendingMessage.filePath)
-                                    .asImageBitmap(),
-                                    contentDescription = "Image",
-                                    modifier = Modifier.fillMaxWidth())
-                            }
-                            when (sendingMessage.fileState) {
-                                FileState.Loading -> {
-                                    CircularProgressIndicator(modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(4.dp), strokeWidth = 4.dp)
+                            message.file?.let { file ->
+                                if (file.type == "photo") {
+                                    Image(bitmap = BitmapFactory.decodeFile(file.filePath)
+                                        .asImageBitmap(),
+                                        contentDescription = "Image",
+                                        modifier = Modifier.fillMaxWidth())
                                 }
-                                FileState.Error -> {
-                                    IconButton(onClick = { tryLoadAction(message) },
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .padding(4.dp)) {
-                                        Icon(imageVector = Icons.Filled.Error,
-                                            contentDescription = "Error")
+                                when (file.state) {
+                                    State.Loading -> {
+                                        CircularProgressIndicator(modifier = Modifier
+                                            .fillMaxSize(0.5f)
+                                            .padding(4.dp), strokeWidth = 4.dp)
                                     }
+                                    State.Error -> {
+                                        Button(
+                                            onClick = { tryUploadAction(message) },
+                                            modifier = Modifier
+                                                .fillMaxSize(0.5f)
+                                                .padding(4.dp)) {
+                                            Text(text = "Заново отправить")
+                                        }
+                                    }
+                                    State.Done -> {
+                                        Icon(modifier = Modifier
+                                            .fillMaxSize(0.5f)
+                                            .padding(4.dp),
+                                            imageVector = ImageVector.vectorResource(R.drawable.done),
+                                            contentDescription = "Done")
+                                    }
+                                    else -> {}
                                 }
                             }
+
                         }
                         is RoomMessage.SimpleMessage -> {
-                            val simpleMessage = message as RoomMessage.SimpleMessage
-                            simpleMessage.roomAttachment?.let { attachment ->
-                                when (attachment.fileState) {
-                                    FileState.Loading -> {
+                            message.file?.let { attachment ->
+                                when (attachment.state) {
+                                    State.Loading -> {
                                         CircularProgressIndicator(modifier = Modifier
-                                            .fillMaxSize()
+                                            .fillMaxSize(0.5f)
                                             .padding(4.dp))
                                         if (attachment.type == "photo") {
                                             Icon(imageVector = Icons.Default.PhotoCamera,
@@ -156,23 +174,33 @@ fun MessageItem(
                                                     .height(20.dp))
                                         }
                                     }
-                                    FileState.Error -> {
-                                        IconButton(onClick = { tryDownloadAction(message) },
+                                    State.Error -> {
+                                        Button(
+                                            onClick = { tryDownloadAction(message) },
                                             modifier = Modifier
-                                                .fillMaxSize()
+                                                .fillMaxSize(0.5f)
                                                 .padding(4.dp)) {
-                                            Icon(imageVector = Icons.Filled.Error,
-                                                contentDescription = "Error")
+                                            Text(text = "Заново отправить")
                                         }
                                     }
-                                    FileState.Loaded -> {
+                                    State.Loaded -> {
                                         if (attachment.filePath != null) {
                                             Icon(bitmap = BitmapFactory.decodeFile(attachment.filePath)
                                                 .asImageBitmap(),
                                                 contentDescription = "PhotoLoad",
                                                 modifier = Modifier
-                                                    .fillMaxWidth()
+                                                    .fillMaxSize(0.5f)
+                                                    .padding(4.dp)
                                                     .height(20.dp))
+                                        }
+                                    }
+                                    State.None -> {
+                                        IconButton(onClick = { tryDownloadAction(message) }) {
+                                            Icon(modifier = Modifier
+                                                .fillMaxSize(0.5f)
+                                                .padding(4.dp),
+                                                imageVector = ImageVector.vectorResource(R.drawable.arrow_downward),
+                                                contentDescription = "Download")
                                         }
                                     }
                                 }

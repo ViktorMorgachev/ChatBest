@@ -22,20 +22,17 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pet.chat.App
 import com.pet.chat.events.InternalEvent
-import com.pet.chat.network.data.send.File
-import com.pet.chat.network.data.send.MessageWithFile
+import com.pet.chat.network.data.base.File
 import com.pet.chat.ui.main.ChatViewModel
 import com.pet.chat.ui.theme.ChatTheme
 
 @Composable
 fun FilePreviewDialog(
-    fileUri: Uri?,
-    filePath: String?,
-    applyMessage: (MessageWithFile) -> Unit,
+    file: File?,
+    applyMessage: (String, File) -> Unit,
     openDialog: (Boolean) -> Unit,
     viewModel: ChatViewModel,
     roomID: Int,
-    messageID: Int,
 ) {
     val (message, messageChange) = rememberSaveable { mutableStateOf("") }
     Dialog(
@@ -46,7 +43,7 @@ fun FilePreviewDialog(
         }
     ) {
         Column(modifier = Modifier.padding(4.dp)) {
-            val bitmap = BitmapFactory.decodeFile(filePath)
+            val bitmap = BitmapFactory.decodeFile(file!!.filePath!!)
             Column(modifier = Modifier
                 .fillMaxWidth()
                 .padding(4.dp)) {
@@ -58,8 +55,12 @@ fun FilePreviewDialog(
                     Button(
                         onClick = {
                             viewModel.postInternalAction(InternalEvent.None)
-                            applyMessage(MessageWithFile(
-                                File(roomID = roomID, type = "photo", filePath = filePath!!), messageID = messageID, text = message))
+                            applyMessage(message,
+                                File(roomID = roomID,
+                                    type = "photo",
+                                    filePath = file.filePath!!,
+                                    fileID = null,
+                                    state = State.None))
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -69,7 +70,6 @@ fun FilePreviewDialog(
                     Button(
                         onClick = {
                             viewModel.postInternalAction(InternalEvent.None)
-                            //viewModel.postInternalAction(InternalEvent.OpenFilePreview(fileUri, filePath, false))
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -87,10 +87,12 @@ fun FilePreviewDialog(
 @Composable
 fun FilePreviewDialogPreview() {
     ChatTheme {
-        FilePreviewDialog(fileUri = null,
-            applyMessage = { },
+        FilePreviewDialog(
+            file = null,
+            applyMessage = { _, _ -> },
             openDialog = {},
-            filePath = null, viewModel = viewModel(), roomID = -1, messageID = -1)
+            viewModel = viewModel(),
+            roomID = -1)
     }
 
 }

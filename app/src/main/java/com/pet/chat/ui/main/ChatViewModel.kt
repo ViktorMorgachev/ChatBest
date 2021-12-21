@@ -7,25 +7,30 @@ import android.widget.Toast
 import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.pet.chat.App
 import com.pet.chat.BuildConfig
 import com.pet.chat.R
 import com.pet.chat.events.InternalEvent
 import com.pet.chat.events.InternalEventsProvider
-import com.pet.chat.helpers.ImageUtils
-import com.pet.chat.helpers.addAll
-import com.pet.chat.helpers.addLast
-import com.pet.chat.helpers.removeWithInstance
+import com.pet.chat.helpers.*
 import com.pet.chat.network.ConnectionManager
 import com.pet.chat.network.EventFromServer
 import com.pet.chat.network.EventToServer
 import com.pet.chat.network.Subscriber
+import com.pet.chat.network.data.base.File
 import com.pet.chat.network.data.base.User
 import com.pet.chat.network.data.receive.*
 import com.pet.chat.network.data.receive.ChatDelete
 import com.pet.chat.network.data.receive.ChatRead
+import com.pet.chat.network.workers.*
+import com.pet.chat.network.workers.FileUploadConverter.Companion.filePath
+import com.pet.chat.network.workers.FileUploadConverter.Companion.fileType
+import com.pet.chat.network.workers.FileUploadConverter.Companion.message
+import com.pet.chat.network.workers.FileUploadConverter.Companion.roomID
 import com.pet.chat.ui.ChatItemInfo
-import com.pet.chat.ui.FileState
+import com.pet.chat.ui.State
 import com.pet.chat.ui.RoomMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
@@ -33,7 +38,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 
 @HiltViewModel
-class ChatViewModel @Inject constructor(): ViewModel() {
+class ChatViewModel @Inject constructor() : ViewModel() {
 
     val events = MutableStateFlow<EventFromServer>(EventFromServer.NO_INITIALIZED)
     val chats = MutableStateFlow<List<ChatItemInfo>>(listOf())
@@ -74,7 +79,7 @@ class ChatViewModel @Inject constructor(): ViewModel() {
     }
 
     fun postInternalAction(internalEvent: InternalEvent) = viewModelScope.launch(Dispatchers.IO) {
-      InternalEventsProvider.internalEvents.emit(internalEvent)
+        InternalEventsProvider.internalEvents.emit(internalEvent)
     }
 
     fun addMessage(roomMessage: RoomMessage) = viewModelScope.launch(Dispatchers.IO) {
@@ -82,9 +87,21 @@ class ChatViewModel @Inject constructor(): ViewModel() {
         updateChat()
     }
 
+    fun addTempMessage(messageText: String, file: File) = viewModelScope.launch(Dispatchers.IO) {
+        val lastMessageID = messages.value.last().messageID + 1;
+        messages.value = messages.value.addLast(RoomMessage.SendingMessage(isOwn = true,
+            messageID = lastMessageID,
+            userID = App.prefs!!.userID.toString(),
+            text = messageText,
+            date = "current date",
+            file = file))
+        updateChat()
+    }
+
     fun fileUploadError(messageID: Int) = viewModelScope.launch(Dispatchers.IO) {
-        val message = (messages.value.find { it is RoomMessage.SendingMessage && it.messageID == messageID } as RoomMessage.SendingMessage)
-        message.fileState = FileState.Error
+        val message =
+            (messages.value.find { it is RoomMessage.SendingMessage && it.messageID == messageID } as RoomMessage.SendingMessage)
+        message.file?.state = State.Error
         messages.value = messages.value.removeWithInstance(message)
         messages.value = messages.value.addLast(message)
         updateChat()
@@ -176,6 +193,24 @@ class ChatViewModel @Inject constructor(): ViewModel() {
             }
         }.join()
         imageUri?.let { launchCamera(it) }
+    }
+
+    fun startUploadFile(messageText: String, file: File) {
+        val workData = workDataOf(roomID to file.roomID.toInt(),
+            filePath to  file.filePath!!,
+            fileType to file.type,
+            message to messageText
+        )
+        val workBuilder = OneTimeWorkRequestBuilder<FileUploadWorker>().addTag(fileUploadWorkerTag).setInputData(workData).build()
+        val workManager = WorkManager.getInstance(App.instance)
+        workManager.enqueue(workBuilder)
+        if (!workManager.isWorkScheduled(fileUploadWorkerTag)) {
+            workManager.enqueue(workBuilder)
+        }
+    }
+
+    fun startDownloadPhoto()= viewModelScope.launch(Dispatchers.IO){
+
     }
 }
 
