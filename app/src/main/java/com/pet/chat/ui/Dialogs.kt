@@ -30,15 +30,14 @@ import com.pet.chat.ui.theme.ChatTheme
 fun FilePreviewDialog(
     file: File?,
     applyMessage: (String, File) -> Unit,
-    openDialog: (Boolean) -> Unit,
-    viewModel: ChatViewModel,
     roomID: Int,
+    closeDialog: () -> Unit,
 ) {
     val (message, messageChange) = rememberSaveable { mutableStateOf("") }
     Dialog(
         onDismissRequest = {
             App.states?.cameraFilePath = ""
-            viewModel.postInternalAction(InternalEvent.None)
+            closeDialog.invoke()
             // viewModel.postInternalAction(InternalEvent.OpenFilePreview(fileUri, filePath, false))
         }
     ) {
@@ -54,7 +53,7 @@ fun FilePreviewDialog(
                 Row {
                     Button(
                         onClick = {
-                            viewModel.postInternalAction(InternalEvent.None)
+                            closeDialog.invoke()
                             applyMessage(message,
                                 File(roomID = roomID,
                                     type = "photo",
@@ -69,7 +68,7 @@ fun FilePreviewDialog(
                     }
                     Button(
                         onClick = {
-                            viewModel.postInternalAction(InternalEvent.None)
+                            closeDialog.invoke()
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -90,9 +89,7 @@ fun FilePreviewDialogPreview() {
         FilePreviewDialog(
             file = null,
             applyMessage = { _, _ -> },
-            openDialog = {},
-            viewModel = viewModel(),
-            roomID = -1)
+            roomID = -1, closeDialog = {})
     }
 
 }

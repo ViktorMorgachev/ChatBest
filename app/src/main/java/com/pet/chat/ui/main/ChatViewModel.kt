@@ -20,6 +20,7 @@ import com.pet.chat.network.EventFromServer
 import com.pet.chat.network.EventToServer
 import com.pet.chat.network.Subscriber
 import com.pet.chat.network.data.base.File
+import com.pet.chat.network.data.base.FilePreview
 import com.pet.chat.network.data.base.User
 import com.pet.chat.network.data.receive.*
 import com.pet.chat.network.data.receive.ChatDelete
@@ -35,10 +36,11 @@ import com.pet.chat.ui.RoomMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
 @HiltViewModel
-class ChatViewModel @Inject constructor() : ViewModel() {
+class ChatViewModel @Inject constructor(val eventsProvider: InternalEventsProvider) : ViewModel() {
 
     val events = MutableStateFlow<EventFromServer>(EventFromServer.NO_INITIALIZED)
     val chats = MutableStateFlow<List<ChatItemInfo>>(listOf())
@@ -74,12 +76,24 @@ class ChatViewModel @Inject constructor() : ViewModel() {
                     }
                 }
             })
+            val internalEvent = eventsProvider.internalEvents.asStateFlow()
+            observeInternalEvent(internalEvent.value)
         }
 
     }
 
-    fun postInternalAction(internalEvent: InternalEvent) = viewModelScope.launch(Dispatchers.IO) {
-        InternalEventsProvider.internalEvents.emit(internalEvent)
+    private fun observeInternalEvent(internalEvent: InternalEvent?) {
+        when (internalEvent) {
+            is InternalEvent.OpenFilePreview -> {
+
+            }
+            is InternalEvent.LoadingFileError -> {
+
+            }
+            is InternalEvent.LoadingFileLoading -> {
+
+            }
+        }
     }
 
     fun addMessage(roomMessage: RoomMessage) = viewModelScope.launch(Dispatchers.IO) {
@@ -197,11 +211,12 @@ class ChatViewModel @Inject constructor() : ViewModel() {
 
     fun startUploadFile(messageText: String, file: File) {
         val workData = workDataOf(roomID to file.roomID.toInt(),
-            filePath to  file.filePath!!,
+            filePath to file.filePath!!,
             fileType to file.type,
             message to messageText
         )
-        val workBuilder = OneTimeWorkRequestBuilder<FileUploadWorker>().addTag(fileUploadWorkerTag).setInputData(workData).build()
+        val workBuilder = OneTimeWorkRequestBuilder<FileUploadWorker>().addTag(fileUploadWorkerTag)
+            .setInputData(workData).build()
         val workManager = WorkManager.getInstance(App.instance)
         workManager.enqueue(workBuilder)
         if (!workManager.isWorkScheduled(fileUploadWorkerTag)) {
@@ -209,8 +224,21 @@ class ChatViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-    fun startDownloadPhoto()= viewModelScope.launch(Dispatchers.IO){
+    fun startDownloadPhoto() = viewModelScope.launch(Dispatchers.IO) {
 
+    }
+
+    fun resultAfterCamera(it: Boolean) = viewModelScope.launch(Dispatchers.IO) {
+
+        Log.d("MainActivity",
+            "result after camera and last file ${imageUri?.path}")
+        if (it) {
+            eventsProvider.internalEvents.emit(InternalEvent.OpenFilePreview(
+                FilePreview( fileUri = imageUri,
+                    filePath = null,
+                    openDialog = true)
+              ))
+        }
     }
 }
 

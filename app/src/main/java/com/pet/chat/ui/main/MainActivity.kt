@@ -34,6 +34,7 @@ import com.pet.chat.network.workers.*
 import com.pet.chat.ui.*
 import com.pet.chat.ui.theme.ChatTheme
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -80,16 +81,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        resultAfterCamera = {
-            Log.d("MainActivity",
-                "result after camera and last file ${eventViewModel.imageUri?.path}")
-            if (it) {
-                eventViewModel.postInternalAction(internalEvent = InternalEvent.OpenFilePreview(
-                    fileUri = eventViewModel.imageUri,
-                    filePath = null,
-                    openDialog = true))
-            }
-        }
+
 
     }
 
@@ -97,7 +89,11 @@ class MainActivity : ComponentActivity() {
     fun MyApp(viewModel: ChatViewModel) {
         val navController = rememberNavController()
         val event = viewModel.events.collectAsState()
-        val internalEvents = InternalEventsProvider.internalEvents.collectAsState()
+
+        resultAfterCamera = {
+            eventViewModel.resultAfterCamera(it)
+        }
+
 
         Log.d("DebugInfo: ",
             "User autentificated: ${App.prefs?.identified()} Current Room ${App.states?.lastRooom}")
@@ -153,7 +149,6 @@ class MainActivity : ComponentActivity() {
                     scope = rememberCoroutineScope(),
                     cameraLauncher = { cameraPermissionContract.launch(Manifest.permission.CAMERA) },
                     viewModel = viewModel,
-                    internalEvent = internalEvents.value,
                     tryLoadFileAction = {
                         val file = File(roomID = it.file!!.roomID, type = it.file.type, filePath = it.file.filePath, fileID = it.file.fileID, state = it.file.state)
                         viewModel.startUploadFile(it.text, file)
@@ -179,8 +174,7 @@ class MainActivity : ComponentActivity() {
         if (App.states?.lastRooom != -1) {
             navController.navigate(Screen.Room.createRoute(App.states?.lastRooom.toString()))
             if (App.states?.cameraFilePath!!.isNotEmpty()) {
-                viewModel.postInternalAction(internalEvent = InternalEvent.OpenFilePreview(fileUri = null,
-                    filePath = App.states?.cameraFilePath!!))
+                viewModel.resultAfterCamera(true)
             }
         }
     }

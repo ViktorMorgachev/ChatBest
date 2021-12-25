@@ -147,12 +147,12 @@ fun MessageItem(
                                             Text(text = "Заново отправить")
                                         }
                                     }
-                                    State.Done -> {
+                                    State.Loaded -> {
                                         Icon(modifier = Modifier
                                             .fillMaxSize(0.5f)
                                             .padding(4.dp),
                                             imageVector = ImageVector.vectorResource(R.drawable.done),
-                                            contentDescription = "Done")
+                                            contentDescription = "Loaded")
                                     }
                                     else -> {}
                                 }

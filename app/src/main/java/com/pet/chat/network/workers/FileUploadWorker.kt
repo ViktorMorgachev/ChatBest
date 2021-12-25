@@ -8,6 +8,9 @@ import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.WorkerParameters
 import com.pet.chat.App
+import com.pet.chat.events.InternalEvent
+import com.pet.chat.events.InternalEventsProvider
+import com.pet.chat.ui.State
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
@@ -72,23 +75,21 @@ data class SendingFile(
 class FileUploadWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted workerParams: WorkerParameters,
+    val eventsProvider: InternalEventsProvider,
 ) : CoroutineWorker(context, workerParams) {
 
     private val client = OkHttpClient().newBuilder().addInterceptor(HttpLoggingInterceptor())
-
-    // TODO скорей всего использовать провайдер синглтон куда будем
-    //  данные слать, его пробросить во вью модел, в ней уже подписываться на изменения и делать по факту что необходимо
-
+   private var data: SendingFile? = null
+    
     override suspend fun doWork() = withContext(Dispatchers.IO) {
         try {
             val fileUploadConverter = FileUploadConverter()
-            val data = fileUploadConverter.dataToSendingFile(inputData)
-            val result = uploadFile(data)
-            // мы не должны напрямую взаимодействовать в viewModel
-            //internalEventsProvider.internalEvents.emit(InternalEvent.FileSuccessDownload(inputData.toFile().messageID))
+            data = fileUploadConverter.dataToSendingFile(inputData)
+            val result = uploadFile(data!!)
+            eventsProvider.internalEvents.emit(InternalEvent.LoadingFileLoading(data!!))
             Result.success()
         } catch (error: Throwable) {
-            //  InternalEventsProvider.internalEvents.emit(InternalEvent.FileErrorUpload(inputData.toFile().messageID))
+            eventsProvider.internalEvents.emit(InternalEvent.LoadingFileError(data!!))
             error.printStackTrace()
             Result.failure()
         }
@@ -123,8 +124,10 @@ class FileUploadWorker @AssistedInject constructor(
 
         val response = client.build().newCall(request).execute()
         if (response.isSuccessful) {
-            Log.d("FileUploadWorker", "Responce sucess Responce data: ${response.body()}")
+
+            Log.d("FileUploadWorker", "Response success Responce data: ${response.body()}")
         } else {
+            eventsProvider.internalEvents.emit(InternalEvent.LoadingFileError(data!!))
             Log.d("FileUploadWorker",
                 "Responce Error: ${response.body()} : ${response.code()} Messages ${response.message()}")
             //InternalEventsProvider.internalEvents.emit(InternalEvent.FileErrorUpload(inputData.toFile().messageID))

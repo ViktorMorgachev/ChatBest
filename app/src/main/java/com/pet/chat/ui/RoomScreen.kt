@@ -26,6 +26,7 @@ import com.pet.chat.events.InternalEvent
 import com.pet.chat.network.data.base.Message
 import com.pet.chat.network.data.send.ChatRead
 import com.pet.chat.network.data.base.File
+import com.pet.chat.network.data.base.FilePreview
 import com.pet.chat.network.data.send.SendMessage
 import com.pet.chat.ui.main.ChatViewModel
 import com.pet.chat.ui.theme.ChatTheme
@@ -66,7 +67,7 @@ sealed class RoomMessage(
 }
 
 enum class State {
-    Loading, Loaded, Error, None, Done
+    Loading, Loaded, Error, None
 }
 
 fun Message.toSimpleMessage(): RoomMessage.SimpleMessage {
@@ -115,7 +116,6 @@ fun ChatListPrewiew() {
             scope = rememberCoroutineScope(),
             cameraLauncher = { },
             viewModel = viewModel(),
-            internalEvent = InternalEvent.None,
             tryLoadFileAction = {},
             tryToDownLoadAction = {},
             applyMessageAction = { _, _ -> {} }
@@ -125,7 +125,6 @@ fun ChatListPrewiew() {
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-// TODO слишком много параметров, нужно будет рефакторить
 fun Chat(
     modifier: Modifier = Modifier,
     roomID: Int,
@@ -139,13 +138,13 @@ fun Chat(
             onClickAction = { cameraLauncher.invoke() })),
     // TODO Нужно будет инжектить Hiltom
     viewModel: ChatViewModel,
-    internalEvent: InternalEvent,
     tryLoadFileAction: (RoomMessage.SendingMessage) -> Unit,
     tryToDownLoadAction: (RoomMessage.SimpleMessage) -> Unit,
     applyMessageAction: (String, File) -> Unit,
     deleteMessageAction: (RoomMessage) -> Unit,
     sendMessage: (SendMessage) -> Unit,
     eventChatRead: (ChatRead) -> Unit,
+    openDialogEvent: MutableState<FilePreview?> = remember { mutableStateOf(null) },
 ) {
     val modalBottomSheetState =
         rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
@@ -190,25 +189,21 @@ fun Chat(
             {
                 val (message, messageChange) = rememberSaveable { mutableStateOf("") }
                 val listState = rememberLazyListState()
-                val fileUri = remember { mutableStateOf<Uri?>(null) }
-                val filePath = remember { mutableStateOf<String?>(null) }
                 val (openDialog, openDialogChange) = remember { mutableStateOf(false) }
 
-                openDialogChange(if (internalEvent is InternalEvent.OpenFilePreview) {
-                    fileUri.value = internalEvent.fileUri
-                    filePath.value = internalEvent.filePath
-                    internalEvent.openDialog
-                } else {
-                    false
-                })
+                if (openDialogEvent.value != null) {
+                    openDialogChange(true)
+                } else openDialogChange(false)
 
                 if (openDialog) {
                     FilePreviewDialog(
-                        openDialog = openDialogChange,
-                        file = File(roomID = roomID, type = "photo", App.states?.cameraFilePath, state = State.None),
+                        file = File(roomID = roomID,
+                            type = "photo",
+                            App.states?.cameraFilePath,
+                            state = State.None),
                         roomID = roomID,
                         applyMessage = applyMessageAction,
-                        viewModel = viewModel)
+                        closeDialog = { openDialogChange.invoke(true) })
                 }
 
                 if (listState.firstVisibleItemIndex >= roomMessages.value.size - 1) {
@@ -222,9 +217,9 @@ fun Chat(
                     messageChange("")
                 }
 
-                if (internalEvent is InternalEvent.OpenFilePreview) {
-                    openDialogChange(true)
-                }
+                /*  if (internalEvent is InternalEvent.OpenFilePreview) {
+                      openDialogChange(true)
+                  }*/
 
                 Column() {
                     LazyColumn(modifier = modifier
@@ -286,9 +281,7 @@ fun openFilePreviewDialog(
         FilePreviewDialog(
             file = file,
             applyMessage = applyMessage,
-            openDialog = { },
-            viewModel = viewModel(),
-            roomID = -1)
+            roomID = -1, closeDialog = {})
     }
 }
 
