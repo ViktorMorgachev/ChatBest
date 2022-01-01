@@ -136,7 +136,6 @@ fun Chat(
         listOf(BottomActionData(image = Icons.Outlined.Camera,
             itemDescribe = "Camera",
             onClickAction = { cameraLauncher.invoke() })),
-    // TODO Нужно будет инжектить Hiltom
     viewModel: ChatViewModel,
     tryLoadFileAction: (RoomMessage.SendingMessage) -> Unit,
     tryToDownLoadAction: (RoomMessage.SimpleMessage) -> Unit,

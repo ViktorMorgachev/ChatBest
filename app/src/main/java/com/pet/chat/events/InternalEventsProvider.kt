@@ -15,7 +15,6 @@ sealed class InternalEvent() {
     data class LoadingFileError(val sendingFile: SendingFile) : InternalEvent()
     data class LoadingFileLoading(val sendingFile: SendingFile) : InternalEvent()
     data class LoadingFileSuccess(val roomID: Int, val attachment: Attachment) : InternalEvent()
-
 }
 
 @Singleton

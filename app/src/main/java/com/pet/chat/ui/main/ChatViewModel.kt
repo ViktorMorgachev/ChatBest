@@ -1,9 +1,11 @@
 package com.pet.chat.ui.main
 
+import android.Manifest
 import android.content.Context
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
 import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -42,6 +44,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ChatViewModel @Inject constructor(val eventsProvider: InternalEventsProvider) : ViewModel() {
 
+    lateinit var cameraPermissionContract: ActivityResultLauncher<String>
     val events = MutableStateFlow<EventFromServer>(EventFromServer.NO_INITIALIZED)
     val chats = MutableStateFlow<List<ChatItemInfo>>(listOf())
     val messages = MutableStateFlow<List<RoomMessage>>(listOf())
@@ -103,12 +106,16 @@ class ChatViewModel @Inject constructor(val eventsProvider: InternalEventsProvid
 
     fun addTempMessage(messageText: String, file: File) = viewModelScope.launch(Dispatchers.IO) {
         val lastMessageID = messages.value.last().messageID + 1;
-        messages.value = messages.value.addLast(RoomMessage.SendingMessage(isOwn = true,
-            messageID = lastMessageID,
-            userID = App.prefs!!.userID.toString(),
-            text = messageText,
-            date = "current date",
-            file = file))
+        messages.value = messages.value.addLast(
+            RoomMessage.SendingMessage(
+                isOwn = true,
+                messageID = lastMessageID,
+                userID = App.prefs!!.userID.toString(),
+                text = messageText,
+                date = "current date",
+                file = file
+            )
+        )
         updateChat()
     }
 
@@ -202,15 +209,18 @@ class ChatViewModel @Inject constructor(val eventsProvider: InternalEventsProvid
     fun takePicture(context: Context, launchCamera: (Uri) -> Unit) = viewModelScope.launch {
         CoroutineScope(Dispatchers.IO).launch {
             ImageUtils.createImageFile(context)?.also { file ->
-                imageUri = FileProvider.getUriForFile(context,
-                    BuildConfig.APPLICATION_ID + ".fileprovider", file)
+                imageUri = FileProvider.getUriForFile(
+                    context,
+                    BuildConfig.APPLICATION_ID + ".fileprovider", file
+                )
             }
         }.join()
         imageUri?.let { launchCamera(it) }
     }
 
     fun startUploadFile(messageText: String, file: File) {
-        val workData = workDataOf(roomID to file.roomID.toInt(),
+        val workData = workDataOf(
+            roomID to file.roomID.toInt(),
             filePath to file.filePath!!,
             fileType to file.type,
             message to messageText
@@ -224,21 +234,31 @@ class ChatViewModel @Inject constructor(val eventsProvider: InternalEventsProvid
         }
     }
 
-    fun startDownloadPhoto() = viewModelScope.launch(Dispatchers.IO) {
+    fun startDownloadPhoto() = viewModelScope.launch(Dispatchers.Default) {
 
     }
 
-    fun resultAfterCamera(it: Boolean) = viewModelScope.launch(Dispatchers.IO) {
+    fun resultAfterCamera(it: Boolean) = viewModelScope.launch(Dispatchers.Default) {
 
-        Log.d("MainActivity",
-            "result after camera and last file ${imageUri?.path}")
+        Log.d(
+            "MainActivity",
+            "result after camera and last file ${imageUri?.path}"
+        )
         if (it) {
-            eventsProvider.internalEvents.emit(InternalEvent.OpenFilePreview(
-                FilePreview( fileUri = imageUri,
-                    filePath = null,
-                    openDialog = true)
-              ))
+            eventsProvider.internalEvents.emit(
+                InternalEvent.OpenFilePreview(
+                    FilePreview(
+                        fileUri = imageUri,
+                        filePath = null,
+                        openDialog = true
+                    )
+                )
+            )
         }
+    }
+
+    fun launchCamera() = viewModelScope.launch(Dispatchers.Main) {
+        cameraPermissionContract.launch(Manifest.permission.CAMERA)
     }
 }
 

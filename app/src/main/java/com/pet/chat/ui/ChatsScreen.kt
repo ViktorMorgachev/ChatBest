@@ -72,8 +72,7 @@ fun ChatsScreen(
     navController: NavController?,
     viewModel: ChatViewModel?,
 ) {
- //   val viewModel = hiltViewModel<ChatViewModel>()
-    val chats = viewModel?.chats?.collectAsState()
+    val chats = viewModel!!.chats!!.collectAsState()
     Log.d("ChatScreen", "Chats ${chats?.value?.size}")
     Scaffold(
         topBar = {

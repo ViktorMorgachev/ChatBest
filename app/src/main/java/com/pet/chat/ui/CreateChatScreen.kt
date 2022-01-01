@@ -28,7 +28,6 @@ fun CreateChatScreenPreview() {
 @Composable
 fun CreateChatScreen(
     modifier: Modifier = Modifier,
-    value: EventFromServer,
     createChat: (ChatStart) -> Unit,
     navController: NavController,
 ) {

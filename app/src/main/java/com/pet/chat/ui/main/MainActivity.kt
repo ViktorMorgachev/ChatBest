@@ -9,37 +9,28 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.*
 import androidx.compose.runtime.State
 import androidx.compose.ui.res.stringResource
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import com.pet.chat.App
 import com.pet.chat.R
-import com.pet.chat.events.InternalEvent
-import com.pet.chat.events.InternalEventsProvider
-import com.pet.chat.helpers.fileUploadWorkerTag
-import com.pet.chat.helpers.isWorkScheduled
-import com.pet.chat.helpers.workDataOf
 import com.pet.chat.network.EventFromServer
 import com.pet.chat.network.EventToServer
-import com.pet.chat.network.data.base.File
 import com.pet.chat.network.data.receive.ChatDelete
 import com.pet.chat.network.data.send.*
 import com.pet.chat.network.data.toChatItemInfo
-import com.pet.chat.network.workers.*
 import com.pet.chat.ui.*
+import com.pet.chat.ui.chatflow.chatFlow
 import com.pet.chat.ui.theme.ChatTheme
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    val eventViewModel by viewModels<ChatViewModel>()
     var resultAfterCamera: ((Boolean) -> Unit)? = null
     var resultAfterCameraPermission: ((Boolean) -> Unit)? = null
 
@@ -56,17 +47,31 @@ class MainActivity : ComponentActivity() {
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 
         setContent {
+            val navController = rememberNavController()
+
+            NavHost(navController = navController, startDestination = Screen.Autorization.route) {
+                chatFlow(navController)
+            }
+
             ChatTheme {
-                MyApp(eventViewModel)
+                MyApp(navController)
             }
         }
 
+
+    }
+
+    @OptIn(ExperimentalFoundationApi::class)
+    @Composable
+    fun MyApp(navController: NavHostController) {
+        val viewModel = hiltViewModel<ChatViewModel>()
+        val event = viewModel.events.collectAsState()
 
         resultAfterCameraPermission = { granted ->
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 when {
                     granted -> {
-                        eventViewModel.takePicture(this,
+                        viewModel.takePicture(this,
                             launchCamera = { cameraLauncher.launch(it) })
                     }
                     !shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> {
@@ -77,97 +82,27 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             } else {
-                eventViewModel.takePicture(this, launchCamera = { cameraLauncher.launch(it) })
+                viewModel.takePicture(this, launchCamera = { cameraLauncher.launch(it) })
             }
         }
 
-
-
-    }
-
-    @Composable
-    fun MyApp(viewModel: ChatViewModel) {
-        val navController = rememberNavController()
-        val event = viewModel.events.collectAsState()
+        viewModel.cameraPermissionContract = this.cameraPermissionContract
 
         resultAfterCamera = {
-            eventViewModel.resultAfterCamera(it)
+            viewModel.resultAfterCamera(it)
         }
 
+        Log.d(
+            "DebugInfo: ",
+            "User autentificated: ${App.prefs?.identified()} Current Room ${App.states?.lastRooom}"
+        )
 
-        Log.d("DebugInfo: ",
-            "User autentificated: ${App.prefs?.identified()} Current Room ${App.states?.lastRooom}")
-
-        observeEvent(event, viewModel)
-
-        NavHost(navController = navController, startDestination = Screen.Autorization.route) {
-            composable(Screen.Autorization.route) {
-                AutorizationScreen(onAuthEvent = {
-                    viewModel.postEventToServer(EventToServer.AuthEvent(it))
-                },
-                    navController = navController).also {
-                    App.states?.lastRooom = -1
-                }
-            }
-            composable(Screen.Chats.route) {
-                ChatsScreen(
-                    navController = navController,
-                    deleteChat = { viewModel.postEventToServer(EventToServer.DeleteChat(it)) },
-                    openChat = {
-                        viewModel.postEventToServer(EventToServer.GetChatHistory(it))
-                        navController.navigate(Screen.Room.createRoute(it.roomId.toString()))
-                    }, viewModel = viewModel).also {
-                    App.states?.lastRooom = -1
-                }
-            }
-            composable(Screen.CreateChat.route) {
-                CreateChatScreen(value = event.value,
-                    createChat = { viewModel.postEventToServer(EventToServer.CreateChatEvent(it)) },
-                    navController = navController).also {
-                    App.states?.lastRooom = -1
-                }
-            }
-            composable(Screen.Room.route) { backStackEntry ->
-                val roomID = backStackEntry.arguments?.getString("roomID")
-                requireNotNull(roomID) { "roomID parameter wasn't found. Please make sure it's set!" }
-
-                Chat(sendMessage = { viewModel.postEventToServer(EventToServer.SendMessageEvent(it)) },
-                    roomID = roomID.toInt(),
-                    navController = navController,
-                    clearChat = {
-                        viewModel.postEventToServer(EventToServer.ClearChatEvent(ClearChat(roomID.toInt())))
-                    },
-                    deleteMessageAction = {
-                        if (it is RoomMessage.SendingMessage) {
-                            viewModel.deleteMessage(it)
-                        } else {
-                            viewModel.postEventToServer(EventToServer.DeleteMessageEvent(
-                                DeleteMessage(it.messageID)))
-                        }
-                    },
-                    eventChatRead = { viewModel.postEventToServer(EventToServer.ChatReadEvent(it)) },
-                    scope = rememberCoroutineScope(),
-                    cameraLauncher = { cameraPermissionContract.launch(Manifest.permission.CAMERA) },
-                    viewModel = viewModel,
-                    tryLoadFileAction = {
-                        val file = File(roomID = it.file!!.roomID, type = it.file.type, filePath = it.file.filePath, fileID = it.file.fileID, state = it.file.state)
-                        viewModel.startUploadFile(it.text, file)
-                    },
-                    tryToDownLoadAction = {
-                        viewModel.startDownloadPhoto()
-                    },
-                    applyMessageAction = { text, file->
-                        viewModel.addTempMessage(text, file)
-                    }
-                ).also {
-                    App.states?.lastRooom = roomID.toInt()
-                }
-            }
-        }
+        observeNetworkEvent(event)
         checkForRestoringState(navController, viewModel)
     }
 
     private fun checkForRestoringState(navController: NavHostController, viewModel: ChatViewModel) {
+
         if (App.prefs?.identified() == true) {
             navController.navigate(Screen.Chats.route)
         }
@@ -180,7 +115,8 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun observeEvent(event: State<EventFromServer>, viewModel: ChatViewModel) {
+    fun observeNetworkEvent(event: State<EventFromServer>) {
+        val viewModel = hiltViewModel<ChatViewModel>()
         try {
             Log.d("EventFromServer", "${event.value}")
             when (event.value) {
@@ -193,13 +129,24 @@ class MainActivity : ComponentActivity() {
                 }
                 is EventFromServer.ConnectionSuccess -> {
                     if (App.prefs?.identified() == true) {
-                        eventViewModel.postEventToServer(EventToServer.AuthEvent(UserAuth(id = App.prefs?.userID!!,
-                            token = App.prefs?.userToken!!)))
+                        viewModel.postEventToServer(
+                            EventToServer.AuthEvent(
+                                UserAuth(
+                                    id = App.prefs?.userID!!,
+                                    token = App.prefs?.userToken!!
+                                )
+                            )
+                        )
                         if (App.states?.lastRooom != -1) {
-                            eventViewModel.postEventToServer(EventToServer.GetChatHistory(
-                                ChatHistory(limit = 10,
-                                    roomId = eventViewModel.currentRoom,
-                                    lastId = null)))
+                            viewModel.postEventToServer(
+                                EventToServer.GetChatHistory(
+                                    ChatHistory(
+                                        limit = 10,
+                                        roomId = viewModel.currentRoom,
+                                        lastId = null
+                                    )
+                                )
+                            )
                         }
                     }
                 }
@@ -234,13 +181,16 @@ class MainActivity : ComponentActivity() {
                     val data = (event.value as EventFromServer.UserOnlineEvent).data
                     viewModel.updateUserStatus(data)
                 }
-                else -> {}
+                else -> {
+                }
             }
         } catch (e: Throwable) {
             e.printStackTrace()
-            Toast.makeText(this,
+            Toast.makeText(
+                this,
                 stringResource(id = R.string.something_went_wrong) + ": при получении данных",
-                Toast.LENGTH_LONG).show()
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 }
