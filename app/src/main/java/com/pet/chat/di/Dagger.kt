@@ -1,16 +1,16 @@
 package com.pet.chat.di
 
-import com.pet.chat.events.InternalEventsProvider
 import com.pet.chat.network.services.UploadFileService
-import dagger.Binds
+import com.pet.chat.providers.MultipleChatProviderImpl
+import com.pet.chat.ui.ChatItemInfo
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.flow.MutableStateFlow
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
-import retrofit2.create
 import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)
@@ -31,5 +31,11 @@ class NetworkModule {
     @Singleton
     fun provideUploadFileNetworkModule(retrofit: Retrofit): UploadFileService =
         retrofit.create(UploadFileService::class.java)
+
+    @Provides
+    fun provideMultipleChatProvider(): MultipleChatProviderImpl{
+      return  MultipleChatProviderImpl(chats = MutableStateFlow(listOf()))
+    }
+
 
 }

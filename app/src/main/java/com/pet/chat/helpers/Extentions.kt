@@ -89,4 +89,13 @@ inline fun <reified E> List<E>.removeWithInstance(it: E): List<E> {
     newList.remove(it)
     return newList
 }
+inline fun <reified E> List<E>.replaceWithInstance(it: E, replacement: E): List<E> {
+    val newList = mutableListOf<E>()
+    this.forEach {
+        newList.add(it)
+    }
+    newList.remove(it)
+    newList.add(replacement)
+    return newList
+}
 

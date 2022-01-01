@@ -142,7 +142,7 @@ class MainActivity : ComponentActivity() {
                                 EventToServer.GetChatHistory(
                                     ChatHistory(
                                         limit = 10,
-                                        roomId = viewModel.currentRoom,
+                                        roomId = App.states?.lastRooom!!,
                                         lastId = null
                                     )
                                 )
@@ -171,7 +171,7 @@ class MainActivity : ComponentActivity() {
                 }
                 is EventFromServer.MessageDeleteEvent -> {
                     val data = (event.value as EventFromServer.MessageDeleteEvent).data
-                    viewModel.deleteMessage(data)
+                    viewModel.deleteMessage(data, data.room.id.toInt())
                 }
                 is EventFromServer.ChatReadEvent -> {
                     val data = (event.value as EventFromServer.ChatReadEvent).data

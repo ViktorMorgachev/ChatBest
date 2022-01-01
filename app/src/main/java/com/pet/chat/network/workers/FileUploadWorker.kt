@@ -8,9 +8,8 @@ import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.WorkerParameters
 import com.pet.chat.App
-import com.pet.chat.events.InternalEvent
-import com.pet.chat.events.InternalEventsProvider
-import com.pet.chat.ui.State
+import com.pet.chat.providers.InternalEvent
+import com.pet.chat.providers.InternalEventsProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers

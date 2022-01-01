@@ -1,11 +1,8 @@
-package com.pet.chat.events
+package com.pet.chat.providers
 
-import android.net.Uri
 import com.pet.chat.network.data.base.Attachment
 import com.pet.chat.network.data.base.FilePreview
-import com.pet.chat.network.data.responce.LoadFileResponse
 import com.pet.chat.network.workers.SendingFile
-import com.pet.chat.ui.State
 import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton

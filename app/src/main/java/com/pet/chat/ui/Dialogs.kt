@@ -1,7 +1,6 @@
 package com.pet.chat.ui
 
 import android.graphics.BitmapFactory
-import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,11 +18,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pet.chat.App
-import com.pet.chat.events.InternalEvent
 import com.pet.chat.network.data.base.File
-import com.pet.chat.ui.main.ChatViewModel
 import com.pet.chat.ui.theme.ChatTheme
 
 @Composable

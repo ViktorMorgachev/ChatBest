@@ -1,6 +1,5 @@
 package com.pet.chat.ui
 
-import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,13 +21,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.pet.chat.App
 import com.pet.chat.App.Companion.prefs
-import com.pet.chat.events.InternalEvent
 import com.pet.chat.network.data.base.Message
 import com.pet.chat.network.data.send.ChatRead
 import com.pet.chat.network.data.base.File
 import com.pet.chat.network.data.base.FilePreview
 import com.pet.chat.network.data.send.SendMessage
 import com.pet.chat.ui.main.ChatViewModel
+import com.pet.chat.ui.main.MessagesViewModel
 import com.pet.chat.ui.theme.ChatTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -136,7 +135,7 @@ fun Chat(
         listOf(BottomActionData(image = Icons.Outlined.Camera,
             itemDescribe = "Camera",
             onClickAction = { cameraLauncher.invoke() })),
-    viewModel: ChatViewModel,
+    viewModel: MessagesViewModel,
     tryLoadFileAction: (RoomMessage.SendingMessage) -> Unit,
     tryToDownLoadAction: (RoomMessage.SimpleMessage) -> Unit,
     applyMessageAction: (String, File) -> Unit,
