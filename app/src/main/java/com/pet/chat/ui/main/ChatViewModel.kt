@@ -34,14 +34,13 @@ import com.pet.chat.network.workers.FileUploadConverter.Companion.message
 import com.pet.chat.network.workers.FileUploadConverter.Companion.roomID
 import com.pet.chat.providers.MultipleChatProviderImpl
 import com.pet.chat.providers.UsersProviderImpl
-import com.pet.chat.providers.interfaces.UsersProvider
 import com.pet.chat.ui.ChatItemInfo
-import com.pet.chat.ui.State
 import com.pet.chat.ui.RoomMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import javax.inject.Inject
 
 @HiltViewModel
@@ -77,12 +76,17 @@ class ChatViewModel @Inject constructor(
                 override fun post(eventFromServer: EventFromServer) {
                     viewModelScope.launch {
                         events.emit(eventFromServer)
+                        println("CurrentEvent: ${events.value}")
                     }
                 }
             })
             val internalEvent = eventsProvider.internalEvents.asStateFlow()
             observeInternalEvent(internalEvent.value)
-
+            events.collect {
+                if (it is EventFromServer.ConnectionError) {
+                    println("EventFromServer Test : $it")
+                }
+            }
         }
 
     }
@@ -213,6 +217,10 @@ class ChatViewModel @Inject constructor(
 
     fun launchCamera() = viewModelScope.launch(Dispatchers.Main) {
         cameraPermissionContract.launch(Manifest.permission.CAMERA)
+    }
+
+    fun tryToConnect() {
+        ConnectionManager.tryToConnect()
     }
 
 

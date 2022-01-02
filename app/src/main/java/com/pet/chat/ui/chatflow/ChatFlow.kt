@@ -14,33 +14,32 @@ import com.pet.chat.ui.*
 import com.pet.chat.ui.main.ChatViewModel
 import com.pet.chat.ui.main.MessagesViewModel
 
-fun NavGraphBuilder.chatFlow(navController: NavController) {
+fun NavGraphBuilder.chatFlow(
+    navController: NavController,
+    chatViewModel: ChatViewModel
+) {
     composable(Screen.Autorization.route) {
-        val chatViewModel = hiltViewModel<ChatViewModel>()
         AutorizationScreen(
             onAuthEvent = {
                 chatViewModel.postEventToServer(EventToServer.AuthEvent(it))
             },
-            navController = navController
+            viewModel = chatViewModel
         ).also {
             App.states?.lastRooom = -1
         }
     }
     composable(Screen.Chats.route) {
-        val chatViewModel = hiltViewModel<ChatViewModel>()
         ChatsScreen(
             navController = navController,
             deleteChat = { chatViewModel.postEventToServer(EventToServer.DeleteChat(it)) },
             openChat = {
                 chatViewModel.postEventToServer(EventToServer.GetChatHistory(it))
-                navController.navigate(Screen.Room.createRoute(it.roomId.toString()))
             }, viewModel = chatViewModel
         ).also {
             App.states?.lastRooom = -1
         }
     }
     composable(Screen.CreateChat.route) {
-        val chatViewModel = hiltViewModel<ChatViewModel>()
         CreateChatScreen(
             createChat = { chatViewModel.postEventToServer(EventToServer.CreateChatEvent(it)) },
             navController = navController
@@ -49,12 +48,12 @@ fun NavGraphBuilder.chatFlow(navController: NavController) {
         }
     }
     composable(Screen.Room.route) { backStackEntry ->
-        val chatViewModel = hiltViewModel<ChatViewModel>()
         val messagesViewModel = hiltViewModel<MessagesViewModel>()
         val roomID = backStackEntry.arguments?.getString("roomID")
         requireNotNull(roomID) { "roomID parameter wasn't found. Please make sure it's set!" }
         messagesViewModel.curentRoomID = roomID.toInt()
-        Chat(sendMessage = { chatViewModel.postEventToServer(EventToServer.SendMessageEvent(it)) },
+        Chat(
+            sendMessage = { chatViewModel.postEventToServer(EventToServer.SendMessageEvent(it)) },
             roomID = roomID.toInt(),
             navController = navController,
             clearChat = {
@@ -90,7 +89,8 @@ fun NavGraphBuilder.chatFlow(navController: NavController) {
             },
             applyMessageAction = { text, file ->
                 chatViewModel.addTempMessage(text, file, roomID.toInt())
-            }
+            },
+            chatViewModel = chatViewModel
         ).also {
             App.states?.lastRooom = roomID.toInt()
         }

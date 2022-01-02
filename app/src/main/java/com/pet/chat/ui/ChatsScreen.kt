@@ -8,14 +8,16 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.pet.chat.R
+import com.pet.chat.network.EventFromServer
 import com.pet.chat.network.data.base.Dialog
 import com.pet.chat.network.data.receive.MessageNew
 import com.pet.chat.network.data.send.ChatDelete
@@ -23,6 +25,9 @@ import com.pet.chat.network.data.send.ChatHistory
 import com.pet.chat.ui.main.ChatViewModel
 import com.pet.chat.ui.theme.ChatTheme
 import com.pet.chat.ui.theme.Shapes
+import com.pet.chat.ui.theme.snackBarHost
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 data class ChatItemInfo(
     val roomID: Int,
@@ -37,10 +42,12 @@ fun Dialog.toChatItemInfo(): ChatItemInfo {
         usersIDs.add(it.id.toInt())
     }
     val messages = if (this.message != null) listOf(this.message.toSimpleMessage()) else listOf()
-    return ChatItemInfo(roomID = this.room.id.toInt(),
+    return ChatItemInfo(
+        roomID = this.room.id.toInt(),
         usersIDs = usersIDs,
         unreadCount = this.chat.unread_count.toInt(),
-        roomMessages = messages.toMutableList())
+        roomMessages = messages.toMutableList()
+    )
 }
 
 fun MessageNew.toChatItemInfo(): ChatItemInfo {
@@ -48,16 +55,20 @@ fun MessageNew.toChatItemInfo(): ChatItemInfo {
     this.room.users.forEach {
         usersIDs.add(it.id.toInt())
     }
-    return ChatItemInfo(roomID = this.room.id.toInt(),
+    return ChatItemInfo(
+        roomID = this.room.id.toInt(),
         usersIDs = usersIDs,
         unreadCount = this.chat.unread_count.toInt(),
-        roomMessages = mutableListOf(this.message.toSimpleMessage()))
+        roomMessages = mutableListOf(this.message.toSimpleMessage())
+    )
 }
 
-val mockRoomChat = ChatItemInfo(roomID = 122,
+val mockRoomChat = ChatItemInfo(
+    roomID = 122,
     usersIDs = listOf(145, 176),
     unreadCount = 7,
-    roomMessages = mutableListOf())
+    roomMessages = mutableListOf()
+)
 
 val mockRoomChats = listOf(
     mockRoomChat,
@@ -70,11 +81,15 @@ fun ChatsScreen(
     deleteChat: (ChatDelete) -> Unit,
     openChat: (ChatHistory) -> Unit,
     navController: NavController?,
-    viewModel: ChatViewModel?,
+    viewModel: ChatViewModel
 ) {
-    val chats = viewModel!!.chats!!.collectAsState()
-    Log.d("ChatScreen", "Chats ${chats?.value?.size}")
+    val scaffoldState = rememberScaffoldState()
+    val chats = viewModel.chats.collectAsState()
+    val eventsFromServer = viewModel.events.collectAsState()
+
+    Log.d("ChatScreen", "Chats ${chats.value.size}")
     Scaffold(
+        scaffoldState = scaffoldState,
         topBar = {
             TopAppBar(
                 title = {
@@ -85,20 +100,41 @@ fun ChatsScreen(
 
         floatingActionButtonPosition = FabPosition.End,
         floatingActionButton = {
-            FloatingActionButton(onClick = { navController?.navigate("CreateChat") }) {
+            FloatingActionButton(onClick = {
+                navController?.navigate("CreateChat")
+            }) {
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Создать чат")
             }
         }
     ) { innerPadding ->
-        LazyColumn(modifier = modifier
-            .fillMaxWidth()
-            .padding(innerPadding)) {
-            items(chats?.value!!) { item ->
-                ChatsItem(chatDetails = item,
-                    OpenChat = {
-                        openChat(it)
+
+        val (showLoadingScreen, showLoadingScreenChange) = remember { mutableStateOf(false) }
+        // Почему-то снова не вызвается это место
+        when {
+            showLoadingScreen -> {
+                loadingScreen()
+            }
+            eventsFromServer.value == EventFromServer.ConnectionError() -> {
+                connectionError(
+                    retryAction = {
+                        viewModel.tryToConnect()
+                        showLoadingScreenChange.invoke(true)
                     },
-                    deleteChat = { deleteChat(it) })
+                    errorText = (eventsFromServer.value as EventFromServer.ConnectionError).data
+                )
+            }
+            else -> LazyColumn(
+                modifier = modifier
+                    .fillMaxWidth()
+                    .padding(innerPadding)
+            ) {
+                items(chats.value) { item ->
+                    ChatsItem(chatDetails = item,
+                        OpenChat = {
+                            openChat(it)
+                        },
+                        deleteChat = { deleteChat(it) })
+                }
             }
         }
     }
@@ -113,7 +149,8 @@ fun ChatsItem(
     deleteChat: (ChatDelete) -> Unit,
     OpenChat: (ChatHistory) -> Unit,
 ) {
-    Card(shape = Shapes.medium,
+    Card(
+        shape = Shapes.medium,
         onClick = { OpenChat(ChatHistory(lastId = null, limit = 10, roomId = chatDetails.roomID)) },
         modifier = Modifier
             .padding(8.dp)
@@ -122,13 +159,17 @@ fun ChatsItem(
         Row {
             Column(modifier = Modifier.padding(8.dp)) {
                 Text(text = "RoomID: ${chatDetails.roomID}")
-                Text(text = "Пользователи: ${chatDetails.usersIDs.joinToString()}",
-                    modifier = Modifier.padding())
+                Text(
+                    text = "Пользователи: ${chatDetails.usersIDs.joinToString()}",
+                    modifier = Modifier.padding()
+                )
                 Text(text = "Количество не прочитаных сообщений: ${chatDetails.roomID}")
             }
             Spacer(modifier = Modifier.weight(1f))
-            IconButton(onClick = { deleteChat(ChatDelete(roomId = chatDetails.roomID)) },
-                modifier = Modifier.padding(4.dp)) {
+            IconButton(
+                onClick = { deleteChat(ChatDelete(roomId = chatDetails.roomID)) },
+                modifier = Modifier.padding(4.dp)
+            ) {
                 Icon(Icons.Filled.Delete, contentDescription = "Delete")
             }
 
@@ -141,6 +182,6 @@ fun ChatsItem(
 @Composable
 fun ChatsScreenPreview() {
     ChatTheme {
-        ChatsScreen(deleteChat = {}, openChat = {}, navController = null, viewModel = null)
+        ChatsScreen(deleteChat = {}, openChat = {}, navController = null, viewModel = viewModel())
     }
 }

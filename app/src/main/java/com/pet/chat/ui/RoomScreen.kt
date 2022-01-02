@@ -115,9 +115,11 @@ fun ChatListPrewiew() {
             scope = rememberCoroutineScope(),
             cameraLauncher = { },
             viewModel = viewModel(),
+
             tryLoadFileAction = {},
             tryToDownLoadAction = {},
-            applyMessageAction = { _, _ -> {} }
+            applyMessageAction = { _, _ -> {} },
+            chatViewModel = viewModel()
         )
     }
 }
@@ -136,6 +138,7 @@ fun Chat(
             itemDescribe = "Camera",
             onClickAction = { cameraLauncher.invoke() })),
     viewModel: MessagesViewModel,
+    chatViewModel: ChatViewModel,
     tryLoadFileAction: (RoomMessage.SendingMessage) -> Unit,
     tryToDownLoadAction: (RoomMessage.SimpleMessage) -> Unit,
     applyMessageAction: (String, File) -> Unit,
@@ -150,6 +153,10 @@ fun Chat(
     val roomMessages = viewModel.messages.collectAsState()
 
     Log.d("Chat", "Messages $roomMessages")
+
+    if (App.states?.cameraFilePath!!.isNotEmpty()) {
+        chatViewModel.resultAfterCamera(true)
+    }
 
     Scaffold(
         topBar = {

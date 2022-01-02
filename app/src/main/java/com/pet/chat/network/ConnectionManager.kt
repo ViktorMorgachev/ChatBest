@@ -24,7 +24,7 @@ sealed class EventFromServer {
     data class UserOnlineEvent(val data: UserOnline) : EventFromServer()
 
     object ConnectionSuccess : EventFromServer()
-    object ConnectionError : EventFromServer()
+    data class ConnectionError(val data: String = "") : EventFromServer()
     object Disconnected : EventFromServer()
     object NO_INITIALIZED : EventFromServer()
 
@@ -64,6 +64,7 @@ object ConnectionManager {
     }
 
     private fun post(data: EventFromServer) {
+        println("Subscribers size = $subscribers")
         subscribers.forEach {
             it.post(eventFromServer = data)
         }
@@ -85,26 +86,33 @@ object ConnectionManager {
                 post(EventFromServer.AutorizationEvent(data = data))
             }
             socket.on("connection") {
-                Log.d("Socket",
-                    "Socket: SocketID ${socket.id()} Connected ${socket.connected()} Data $it")
+                Log.d(
+                    "Socket",
+                    "Socket: SocketID ${socket.id()} Connected ${socket.connected()} Data $it"
+                )
             }
             socket.on(Socket.EVENT_CONNECT) {
                 post(EventFromServer.ConnectionSuccess)
-                Log.d("Socket",
-                    "Socket: Connect SocketID ${socket.id()} Connected ${socket.connected()}")
+                Log.d(
+                    "Socket",
+                    "Socket: Connect SocketID ${socket.id()} Connected ${socket.connected()}"
+                )
             }
 
             socket.on(Socket.EVENT_DISCONNECT) {
-                Log.d("Socket",
-                    "Socket: Disconnect SocketID ${socket.id()} Connected ${socket.connected()}")
+                Log.d(
+                    "Socket",
+                    "Socket: Disconnect SocketID ${socket.id()} Connected ${socket.connected()}"
+                )
             }
             socket.on(Socket.EVENT_CONNECT_ERROR) {
                 //options.auth.put("authorization", "bearer 1234")
-                Log.d("Socket",
-                    "Socket: SocketID ${socket.id()} Connected ${socket.connected()} Error $it")
-                runBlocking {
-                    delay(1000)
-                }
+                Log.d(
+                    "Socket",
+                    "Socket: SocketID ${socket.id()} Connected ${socket.connected()} Error $it"
+                )
+                post(EventFromServer.NO_INITIALIZED)
+                post(EventFromServer.ConnectionError())
             }
             socket.on("on.message.new") {
                 val data = Gson().fromJson("${it[0]}", MessageNew::class.java)
@@ -145,5 +153,13 @@ object ConnectionManager {
             error.invoke(": при отправке данных")
         }
 
+    }
+
+    fun tryToConnect() {
+        try {
+            socket?.connect()
+        } catch (e: Throwable) {
+            e.printStackTrace()
+        }
     }
 }

@@ -27,6 +27,8 @@ import com.pet.chat.ui.*
 import com.pet.chat.ui.chatflow.chatFlow
 import com.pet.chat.ui.theme.ChatTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.runBlocking
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -46,27 +48,28 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 
+
         setContent {
-            val navController = rememberNavController()
-
-            NavHost(navController = navController, startDestination = Screen.Autorization.route) {
-                chatFlow(navController)
+            val viewModel = hiltViewModel<ChatViewModel>()
+                ChatTheme {
+                    MyApp(viewModel)
+                }
             }
-
-            ChatTheme {
-                MyApp(navController)
-            }
-        }
 
 
     }
 
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
-    fun MyApp(navController: NavHostController) {
-        val viewModel = hiltViewModel<ChatViewModel>()
-        val event = viewModel.events.collectAsState()
+    fun MyApp(viewModel: ChatViewModel) {
+        val navController = rememberNavController()
 
+        NavHost(navController = navController, startDestination = Screen.Autorization.route) {
+            chatFlow(navController, viewModel)
+        }
+
+
+        val event = viewModel.events.collectAsState()
         resultAfterCameraPermission = { granted ->
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 when {
@@ -97,25 +100,14 @@ class MainActivity : ComponentActivity() {
             "User autentificated: ${App.prefs?.identified()} Current Room ${App.states?.lastRooom}"
         )
 
-        observeNetworkEvent(event)
-        checkForRestoringState(navController, viewModel)
+        observeNetworkEvent(event, navController)
     }
 
     private fun checkForRestoringState(navController: NavHostController, viewModel: ChatViewModel) {
-
-        if (App.prefs?.identified() == true) {
-            navController.navigate(Screen.Chats.route)
-        }
-        if (App.states?.lastRooom != -1) {
-            navController.navigate(Screen.Room.createRoute(App.states?.lastRooom.toString()))
-            if (App.states?.cameraFilePath!!.isNotEmpty()) {
-                viewModel.resultAfterCamera(true)
-            }
-        }
     }
 
     @Composable
-    fun observeNetworkEvent(event: State<EventFromServer>) {
+    fun observeNetworkEvent(event: State<EventFromServer>, navController: NavHostController) {
         val viewModel = hiltViewModel<ChatViewModel>()
         try {
             Log.d("EventFromServer", "${event.value}")
@@ -124,6 +116,7 @@ class MainActivity : ComponentActivity() {
                     if ((event.value as EventFromServer.AutorizationEvent).data.success == true) {
                         val data = (event.value as EventFromServer.AutorizationEvent).data
                         App.prefs?.saveUser(UserAuth(data.user.id, token = data.token!!))
+                        navController.navigate(Screen.Chats.route)
                         viewModel.updateChat(data.dialogs.map { it.toChatItemInfo() })
                     }
                 }
@@ -150,6 +143,9 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
+                is EventFromServer.ConnectionError -> {
+
+                }
                 is EventFromServer.MessageNewEvent -> {
                     val data = (event.value as EventFromServer.MessageNewEvent).data
                     viewModel.updateChat(data.toChatItemInfo())
@@ -159,7 +155,7 @@ class MainActivity : ComponentActivity() {
                     data.toChatItemInfo()?.let { chatItemInfo ->
                         viewModel.updateChat(chatItemInfo)
                     }
-
+                    navController.navigate(Screen.Room.createRoute(roomID = data.room.id.toString()))
                 }
                 is EventFromServer.ChatDeleteEvent -> {
                     val data = (event.value as EventFromServer.ChatDeleteEvent).data

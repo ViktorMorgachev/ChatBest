@@ -7,5 +7,5 @@ import com.pet.chat.network.data.base.Room
 data class ChatHistory(
     val messages: ArrayList<Message>,
     val chat: Chat?,
-    val room: Room?,
+    val room: Room,
 )

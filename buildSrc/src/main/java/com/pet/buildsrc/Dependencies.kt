@@ -6,7 +6,7 @@ object Versions {
     val android_library = "7.1.0-alpha10"
     val kotlin_jvm = "1.5.10"
     val androidx_core_ktx = "1.7.0"
-    val androidx_lifecycle_runtime = "2.3.1"
+    val androidx_lifecycle_runtime = "2.4.0"
     val junit = "4.13.2"
     val ext_junit = "1.1.3"
     val android_test_espresso_core = "3.4.0"
