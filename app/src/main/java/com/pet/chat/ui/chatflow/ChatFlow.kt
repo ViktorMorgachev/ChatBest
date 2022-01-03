@@ -7,34 +7,38 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.pet.chat.App
 import com.pet.chat.network.EventToServer
-import com.pet.chat.network.data.base.File
-import com.pet.chat.network.data.send.ClearChat
-import com.pet.chat.network.data.send.DeleteMessage
+import com.pet.chat.network.data.send.ChatDelete
 import com.pet.chat.ui.*
 import com.pet.chat.ui.main.ChatViewModel
-import com.pet.chat.ui.main.MessagesViewModel
+import com.pet.chat.ui.screens.autorization.AutorizationScreen
+import com.pet.chat.ui.screens.autorization.AutorizationViewModel
+import com.pet.chat.ui.screens.chat.Room
+import com.pet.chat.ui.screens.chat.MessagesViewModel
+import com.pet.chat.ui.screens.chats.ChatsScreen
+import com.pet.chat.ui.screens.chats.ChatsViewModel
 
 fun NavGraphBuilder.chatFlow(
     navController: NavController,
     chatViewModel: ChatViewModel
 ) {
     composable(Screen.Autorization.route) {
+        val viewModel = hiltViewModel<AutorizationViewModel>()
         AutorizationScreen(
             onAuthEvent = {
-                chatViewModel.postEventToServer(EventToServer.AuthEvent(it))
+                viewModel.authorize(EventToServer.AuthEvent(it))
             },
-            viewModel = chatViewModel
+            viewModel = viewModel,
+            navController = navController
         ).also {
             App.states?.lastRooom = -1
         }
     }
     composable(Screen.Chats.route) {
+        val chatsViewModel = hiltViewModel<ChatsViewModel>()
         ChatsScreen(
             navController = navController,
-            deleteChat = { chatViewModel.postEventToServer(EventToServer.DeleteChat(it)) },
-            openChat = {
-                chatViewModel.postEventToServer(EventToServer.GetChatHistory(it))
-            }, viewModel = chatViewModel
+            deleteChat = { chatsViewModel.deleteChat(ChatDelete(it.roomId.toInt())) },
+            viewModel = chatsViewModel
         ).also {
             App.states?.lastRooom = -1
         }
@@ -52,45 +56,13 @@ fun NavGraphBuilder.chatFlow(
         val roomID = backStackEntry.arguments?.getString("roomID")
         requireNotNull(roomID) { "roomID parameter wasn't found. Please make sure it's set!" }
         messagesViewModel.curentRoomID = roomID.toInt()
-        Chat(
-            sendMessage = { chatViewModel.postEventToServer(EventToServer.SendMessageEvent(it)) },
+        Room(
             roomID = roomID.toInt(),
             navController = navController,
-            clearChat = {
-                chatViewModel.postEventToServer(EventToServer.ClearChatEvent(ClearChat(roomID.toInt())))
-            },
-            deleteMessageAction = {
-                if (it is RoomMessage.SendingMessage) {
-                    chatViewModel.deleteMessage(it, roomID.toInt())
-                } else {
-                    chatViewModel.postEventToServer(
-                        EventToServer.DeleteMessageEvent(
-                            DeleteMessage(it.messageID)
-                        )
-                    )
-                }
-            },
-            eventChatRead = { chatViewModel.postEventToServer(EventToServer.ChatReadEvent(it)) },
             scope = rememberCoroutineScope(),
             cameraLauncher = { chatViewModel.launchCamera() },
             viewModel = messagesViewModel,
-            tryLoadFileAction = {
-                val file = File(
-                    roomID = it.file!!.roomID,
-                    type = it.file.type,
-                    filePath = it.file.filePath,
-                    fileID = it.file.fileID,
-                    state = it.file.state
-                )
-                chatViewModel.startUploadFile(it.text, file)
-            },
-            tryToDownLoadAction = {
-                chatViewModel.startDownloadPhoto()
-            },
-            applyMessageAction = { text, file ->
-                chatViewModel.addTempMessage(text, file, roomID.toInt())
-            },
-            chatViewModel = chatViewModel
+            actionProvider = messagesViewModel.actionProvider
         ).also {
             App.states?.lastRooom = roomID.toInt()
         }

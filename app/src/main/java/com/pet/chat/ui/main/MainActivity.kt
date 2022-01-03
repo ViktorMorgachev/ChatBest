@@ -27,8 +27,6 @@ import com.pet.chat.ui.*
 import com.pet.chat.ui.chatflow.chatFlow
 import com.pet.chat.ui.theme.ChatTheme
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.runBlocking
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -56,7 +54,10 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-
+        Log.d(
+            "DebugInfo: ",
+            "User autentificated: ${App.prefs?.identified()} Current Room ${App.states?.lastRooom}"
+        )
     }
 
     @OptIn(ExperimentalFoundationApi::class)
@@ -68,8 +69,6 @@ class MainActivity : ComponentActivity() {
             chatFlow(navController, viewModel)
         }
 
-
-        val event = viewModel.events.collectAsState()
         resultAfterCameraPermission = { granted ->
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 when {
@@ -95,100 +94,8 @@ class MainActivity : ComponentActivity() {
             viewModel.resultAfterCamera(it)
         }
 
-        Log.d(
-            "DebugInfo: ",
-            "User autentificated: ${App.prefs?.identified()} Current Room ${App.states?.lastRooom}"
-        )
-
-        observeNetworkEvent(event, navController)
     }
 
-    private fun checkForRestoringState(navController: NavHostController, viewModel: ChatViewModel) {
-    }
-
-    @Composable
-    fun observeNetworkEvent(event: State<EventFromServer>, navController: NavHostController) {
-        val viewModel = hiltViewModel<ChatViewModel>()
-        try {
-            Log.d("EventFromServer", "${event.value}")
-            when (event.value) {
-                is EventFromServer.AutorizationEvent -> {
-                    if ((event.value as EventFromServer.AutorizationEvent).data.success == true) {
-                        val data = (event.value as EventFromServer.AutorizationEvent).data
-                        App.prefs?.saveUser(UserAuth(data.user.id, token = data.token!!))
-                        navController.navigate(Screen.Chats.route)
-                        viewModel.updateChat(data.dialogs.map { it.toChatItemInfo() })
-                    }
-                }
-                is EventFromServer.ConnectionSuccess -> {
-                    if (App.prefs?.identified() == true) {
-                        viewModel.postEventToServer(
-                            EventToServer.AuthEvent(
-                                UserAuth(
-                                    id = App.prefs?.userID!!,
-                                    token = App.prefs?.userToken!!
-                                )
-                            )
-                        )
-                        if (App.states?.lastRooom != -1) {
-                            viewModel.postEventToServer(
-                                EventToServer.GetChatHistory(
-                                    ChatHistory(
-                                        limit = 10,
-                                        roomId = App.states?.lastRooom!!,
-                                        lastId = null
-                                    )
-                                )
-                            )
-                        }
-                    }
-                }
-                is EventFromServer.ConnectionError -> {
-
-                }
-                is EventFromServer.MessageNewEvent -> {
-                    val data = (event.value as EventFromServer.MessageNewEvent).data
-                    viewModel.updateChat(data.toChatItemInfo())
-                }
-                is EventFromServer.ChatHistoryEvent -> {
-                    val data = (event.value as EventFromServer.ChatHistoryEvent).data
-                    data.toChatItemInfo()?.let { chatItemInfo ->
-                        viewModel.updateChat(chatItemInfo)
-                    }
-                    navController.navigate(Screen.Room.createRoute(roomID = data.room.id.toString()))
-                }
-                is EventFromServer.ChatDeleteEvent -> {
-                    val data = (event.value as EventFromServer.ChatDeleteEvent).data
-                    viewModel.deleteChat(ChatDelete(chat = data.chat, room = data.room))
-                }
-                is EventFromServer.ChatClearEvent -> {
-                    val data = (event.value as EventFromServer.ChatClearEvent).data
-                    viewModel.clearChat(data)
-                }
-                is EventFromServer.MessageDeleteEvent -> {
-                    val data = (event.value as EventFromServer.MessageDeleteEvent).data
-                    viewModel.deleteMessage(data, data.room.id.toInt())
-                }
-                is EventFromServer.ChatReadEvent -> {
-                    val data = (event.value as EventFromServer.ChatReadEvent).data
-                    viewModel.updateChatState(data)
-                }
-                is EventFromServer.UserOnlineEvent -> {
-                    val data = (event.value as EventFromServer.UserOnlineEvent).data
-                    viewModel.updateUserStatus(data)
-                }
-                else -> {
-                }
-            }
-        } catch (e: Throwable) {
-            e.printStackTrace()
-            Toast.makeText(
-                this,
-                stringResource(id = R.string.something_went_wrong) + ": при получении данных",
-                Toast.LENGTH_LONG
-            ).show()
-        }
-    }
 }
 
 

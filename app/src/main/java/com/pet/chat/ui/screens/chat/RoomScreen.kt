@@ -1,4 +1,4 @@
-package com.pet.chat.ui
+package com.pet.chat.ui.screens.chat
 
 import android.util.Log
 import androidx.compose.foundation.layout.*
@@ -21,13 +21,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.pet.chat.App
 import com.pet.chat.App.Companion.prefs
+import com.pet.chat.network.EventToServer
 import com.pet.chat.network.data.base.Message
-import com.pet.chat.network.data.send.ChatRead
 import com.pet.chat.network.data.base.File
 import com.pet.chat.network.data.base.FilePreview
-import com.pet.chat.network.data.send.SendMessage
-import com.pet.chat.ui.main.ChatViewModel
-import com.pet.chat.ui.main.MessagesViewModel
+import com.pet.chat.network.data.send.*
+import com.pet.chat.ui.*
 import com.pet.chat.ui.theme.ChatTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -74,17 +73,21 @@ fun Message.toSimpleMessage(): RoomMessage.SimpleMessage {
         File(this.attachment.room_id,
             type = this.attachment.type,
             null,
-            this.attachment.file_id.toInt(), state = State.Loaded)
+            this.attachment.file_id.toInt(), state = State.Loaded
+        )
     }
 
-    return RoomMessage.SimpleMessage(userID = user_id.toString(),
+    return RoomMessage.SimpleMessage(
+        userID = user_id.toString(),
         date = created_at.toString(),
         text = text,
         isOwn = prefs?.userID == user_id.toInt(), messageID = this.id.toInt(),
-        file = file)
+        file = file
+    )
 }
 
-val mockData: List<RoomMessage.SimpleMessage> = listOf(mockAliceMessage.copy(text = "Hi Bob"),
+val mockData: List<RoomMessage.SimpleMessage> = listOf(
+    mockAliceMessage.copy(text = "Hi Bob"),
     mockAliceMessage.copy(text = "Hi Alice"),
     mockAliceMessage.copy(text = "How are you?"),
     mockBobMessage.copy(text = "I.m fine"),
@@ -92,10 +95,13 @@ val mockData: List<RoomMessage.SimpleMessage> = listOf(mockAliceMessage.copy(tex
     mockBobMessage,
     mockAliceMessage,
     mockBobMessage,
-    mockAliceMessage)
+    mockAliceMessage
+)
 
-val mockDataBottomSheetItems = listOf(mockDataBottomSheetItem,
-    BottomActionData(image = Icons.Outlined.FileUpload, itemDescribe = "FileSystem", {}))
+val mockDataBottomSheetItems = listOf(
+    mockDataBottomSheetItem,
+    BottomActionData(image = Icons.Outlined.FileUpload, itemDescribe = "FileSystem", {})
+)
 
 @Preview(widthDp = 400, showSystemUi = true)
 @Composable
@@ -104,58 +110,49 @@ fun ChatListPrewiew() {
         val dataForTesting = listOf(
             BottomActionData(image = Icons.Outlined.Camera,
                 itemDescribe = "Camera",
-                onClickAction = {}))
-        Chat(
-            sendMessage = {},
+                onClickAction = {})
+        )
+        Room(
             roomID = -1,
-            clearChat = {},
             navController = null,
-            deleteMessageAction = { },
-            eventChatRead = {},
             scope = rememberCoroutineScope(),
             cameraLauncher = { },
             viewModel = viewModel(),
-
-            tryLoadFileAction = {},
-            tryToDownLoadAction = {},
-            applyMessageAction = { _, _ -> {} },
-            chatViewModel = viewModel()
+            bottomSheetActions = listOf(),
+            actionProvider = viewModel()
         )
     }
 }
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun Chat(
+fun Room(
     modifier: Modifier = Modifier,
     roomID: Int,
-    clearChat: () -> Unit,
+    actionProvider: MessagesViewModel.ActionProvider,
     navController: NavController?,
     scope: CoroutineScope,
     cameraLauncher: () -> Unit,
     bottomSheetActions: List<BottomActionData> =
-        listOf(BottomActionData(image = Icons.Outlined.Camera,
+        listOf(
+            BottomActionData(image = Icons.Outlined.Camera,
             itemDescribe = "Camera",
-            onClickAction = { cameraLauncher.invoke() })),
-    viewModel: MessagesViewModel,
-    chatViewModel: ChatViewModel,
-    tryLoadFileAction: (RoomMessage.SendingMessage) -> Unit,
-    tryToDownLoadAction: (RoomMessage.SimpleMessage) -> Unit,
-    applyMessageAction: (String, File) -> Unit,
-    deleteMessageAction: (RoomMessage) -> Unit,
-    sendMessage: (SendMessage) -> Unit,
-    eventChatRead: (ChatRead) -> Unit,
-    openDialogEvent: MutableState<FilePreview?> = remember { mutableStateOf(null) },
+            onClickAction = { cameraLauncher.invoke() })
+        ),
+    viewModel: MessagesViewModel
 ) {
-    val modalBottomSheetState =
-        rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
+    val openDialogEvent = remember { mutableStateOf<FilePreview?>(null) }
+    val modalBottomSheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
+    val messages = viewModel.messages.collectAsState()
 
-    val roomMessages = viewModel.messages.collectAsState()
+    LaunchedEffect(key1 = Unit, block = {
+        viewModel.getChatHistory(EventToServer.GetChatHistory(ChatHistory(lastId = 0, limit = 20, roomId = roomID)))
+    })
 
-    Log.d("Chat", "Messages $roomMessages")
+    Log.d("Chat", "Messages ${messages.value}")
 
     if (App.states?.cameraFilePath!!.isNotEmpty()) {
-        chatViewModel.resultAfterCamera(true)
+        actionProvider.resultAfterCamera(true)
     }
 
     Scaffold(
@@ -170,7 +167,7 @@ fun Chat(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { clearChat() }) {
+                    IconButton(onClick = { actionProvider.clearChatAction() }) {
                         Icon(Icons.Filled.ClearAll, contentDescription = "Clear")
                     }
                 }
@@ -201,28 +198,28 @@ fun Chat(
                 } else openDialogChange(false)
 
                 if (openDialog) {
+                   val  file = File(
+                       roomID = roomID,
+                       type = "photo",
+                       App.states?.cameraFilePath,
+                       state = State.None
+                   )
                     FilePreviewDialog(
-                        file = File(roomID = roomID,
-                            type = "photo",
-                            App.states?.cameraFilePath,
-                            state = State.None),
-                        roomID = roomID,
-                        applyMessage = applyMessageAction,
+                        file = file,
+                        applyMessage = { text ->  actionProvider.applyMessageAction(text = message, file = file)},
                         closeDialog = { openDialogChange.invoke(true) })
                 }
 
-                if (listState.firstVisibleItemIndex >= roomMessages.value.size - 1) {
-                    eventChatRead(ChatRead(roomId = roomID))
+                if (listState.firstVisibleItemIndex >= messages.value.size - 1) {
+                    actionProvider.chatReadEvent(ChatRead(roomId = roomID))
                 }
 
                 val sendAction = {
-                    sendMessage(SendMessage(roomId = roomID,
-                        text = message,
-                        attachmentId = null))
+                    actionProvider.sendMessageAction(SendMessage(roomId = roomID, text = message, attachmentId = null))
                     messageChange("")
                 }
 
-                /*  if (internalEvent is InternalEvent.OpenFilePreview) {
+                  /*if (internalEvent is InternalEvent.OpenFilePreview) {
                       openDialogChange(true)
                   }*/
 
@@ -232,12 +229,20 @@ fun Chat(
                         .weight(1f)
                         .padding(horizontal = 8.dp)
                         .padding(innerPadding), state = listState) {
-                        items(roomMessages.value) { data ->
+                        items(messages.value) { message ->
                             MessageItem(modifier = Modifier.padding(all = 4.dp),
-                                message = data,
-                                deleteMessageAction = deleteMessageAction,
-                                tryUploadAction = tryLoadFileAction,
-                                tryDownloadAction = tryToDownLoadAction
+                                message = message,
+                                deleteMessageAction = {
+                                when(message){
+                                    is RoomMessage.SendingMessage ->{
+                                        actionProvider.deleteMessageAction(message)
+                                    }
+                                    is RoomMessage.SimpleMessage ->{
+                                        actionProvider.deleteMessageAction(message)
+                                    }
+                                } },
+                                tryUploadAction = {actionProvider.tryUploadFileAction(data = message as RoomMessage.SendingMessage)},
+                                tryDownloadAction = {actionProvider.tryToDownLoadAction(data = message as RoomMessage.SimpleMessage)}
                             )
                         }
                     }
@@ -278,15 +283,13 @@ fun Chat(
 
 @Composable
 fun openFilePreviewDialog(
-    openDialog: MutableState<Boolean>,
     file: File,
-    applyMessage: (String, File) -> Unit,
 ) {
     ChatTheme {
         FilePreviewDialog(
             file = file,
-            applyMessage = applyMessage,
-            roomID = -1, closeDialog = {})
+            applyMessage = { },
+            closeDialog = {})
     }
 }
 

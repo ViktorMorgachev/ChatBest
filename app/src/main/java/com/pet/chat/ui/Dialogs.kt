@@ -20,13 +20,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.pet.chat.App
 import com.pet.chat.network.data.base.File
+import com.pet.chat.ui.screens.chat.State
 import com.pet.chat.ui.theme.ChatTheme
 
 @Composable
 fun FilePreviewDialog(
     file: File?,
-    applyMessage: (String, File) -> Unit,
-    roomID: Int,
+    applyMessage: (String) -> Unit,
     closeDialog: () -> Unit,
 ) {
     val (message, messageChange) = rememberSaveable { mutableStateOf("") }
@@ -50,12 +50,7 @@ fun FilePreviewDialog(
                     Button(
                         onClick = {
                             closeDialog.invoke()
-                            applyMessage(message,
-                                File(roomID = roomID,
-                                    type = "photo",
-                                    filePath = file.filePath!!,
-                                    fileID = null,
-                                    state = State.None))
+                            applyMessage(message)
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -84,8 +79,8 @@ fun FilePreviewDialogPreview() {
     ChatTheme {
         FilePreviewDialog(
             file = null,
-            applyMessage = { _, _ -> },
-            roomID = -1, closeDialog = {})
+            applyMessage = { },
+            closeDialog = {})
     }
 
 }

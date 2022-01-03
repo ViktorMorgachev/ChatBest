@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 import com.pet.chat.network.EventFromServer
 
 @Composable
-fun connectionError(
+fun ErrorScreen(
     modifier: Modifier = Modifier,
     retryAction: () -> Unit,
     errorText: String,

@@ -60,6 +60,7 @@ object Libs {
     val hilt_work = "androidx.hilt:hilt-work:${Versions.hilt_work}"
     val kapt_hilt_work = "androidx.hilt:hilt-compiler:${Versions.hilt_work}"
     val logging_interceptors = "com.squareup.okhttp3:logging-interceptor:${Versions.loggingInterceptor}"
+    val runtime_liveData_compose = "androidx.compose.runtime:runtime-livedata:${Versions.compose_version}"
 
 
 }

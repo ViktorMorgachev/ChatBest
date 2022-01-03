@@ -8,10 +8,14 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.pet.chat.helpers.*
+import com.pet.chat.network.data.DataNetworkProvider
 import com.pet.chat.network.workers.NetworkWorker
 import com.pet.chat.storage.Prefs
 import com.pet.chat.storage.States
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -23,8 +27,11 @@ class App : Application(), Configuration.Provider {
         lateinit var instance: App
             private set
     }
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
 
     @Inject lateinit var workerFactory: HiltWorkerFactory
+    @Inject lateinit var dataNetworkProvider: DataNetworkProvider
 
     override fun onCreate() {
         super.onCreate()
@@ -35,6 +42,7 @@ class App : Application(), Configuration.Provider {
         prefs = Prefs(applicationContext)
         states = States(applicationContext)
 
+        dataNetworkProvider.observe(applicationScope)
         startWorker()
 
     }

@@ -1,10 +1,6 @@
 package com.pet.chat.network.data.base
 
-import com.pet.chat.App
-import com.pet.chat.storage.Prefs
-import com.pet.chat.ui.State
-import okhttp3.MultipartBody
-import retrofit2.http.Part
+import com.pet.chat.ui.screens.chat.State
 
 enum class FileType {
     Photo, File, Video, Voice

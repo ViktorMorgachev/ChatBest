@@ -2,7 +2,7 @@ package com.pet.chat.network.data
 
 import com.pet.chat.network.data.receive.ChatHistory
 import com.pet.chat.ui.ChatItemInfo
-import com.pet.chat.ui.toSimpleMessage
+import com.pet.chat.ui.screens.chat.toSimpleMessage
 
 fun ChatHistory.toChatItemInfo(): ChatItemInfo? {
     return if (this.room != null && this.chat != null) {

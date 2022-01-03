@@ -1,12 +1,20 @@
 package com.pet.chat.di
 
+import com.pet.chat.network.EventFromServer
+import com.pet.chat.network.data.base.User
 import com.pet.chat.network.services.UploadFileService
 import com.pet.chat.providers.MultipleChatProviderImpl
-import com.pet.chat.ui.ChatItemInfo
+import com.pet.chat.providers.UsersProviderImpl
+import com.pet.chat.providers.ViewStateProviderImpl
+import com.pet.chat.providers.interfaces.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -33,9 +41,27 @@ class NetworkModule {
         retrofit.create(UploadFileService::class.java)
 
     @Provides
+    @Singleton
     fun provideMultipleChatProvider(): MultipleChatProviderImpl{
       return  MultipleChatProviderImpl(chats = MutableStateFlow(listOf()))
     }
 
+    @Provides
+    @Singleton
+    fun provideEventFromServerProvider(): EventFromServerProvider{
+        return EventFromServerProviderImpl(events = MutableStateFlow(EventFromServer.NO_INITIALIZED))
+    }
+
+    @Singleton
+    @Provides
+    fun provideUserProvider(): UsersProvider<User>{
+        return UsersProviderImpl()
+    }
+
+    @Provides
+    fun provideViewStateProvider(): ViewStateProvider{
+        return ViewStateProviderImpl(viewState = MutableStateFlow(ViewState.Display()))
+    }
 
 }
+

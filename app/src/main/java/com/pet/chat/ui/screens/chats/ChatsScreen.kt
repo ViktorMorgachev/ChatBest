@@ -1,4 +1,4 @@
-package com.pet.chat.ui
+package com.pet.chat.ui.screens.chats
 
 import android.util.Log
 import androidx.compose.foundation.layout.*
@@ -10,24 +10,29 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.pet.chat.R
-import com.pet.chat.network.EventFromServer
+import com.pet.chat.helpers.retryAction
+import com.pet.chat.network.EventToServer
 import com.pet.chat.network.data.base.Dialog
 import com.pet.chat.network.data.receive.MessageNew
 import com.pet.chat.network.data.send.ChatDelete
 import com.pet.chat.network.data.send.ChatHistory
+import com.pet.chat.providers.interfaces.ViewState
+import com.pet.chat.ui.ErrorScreen
+import com.pet.chat.ui.LoadingScreen
+import com.pet.chat.ui.NoItemsView
+import com.pet.chat.ui.Screen
 import com.pet.chat.ui.main.ChatViewModel
+import com.pet.chat.ui.screens.chat.RoomMessage
+import com.pet.chat.ui.screens.chat.toSimpleMessage
 import com.pet.chat.ui.theme.ChatTheme
 import com.pet.chat.ui.theme.Shapes
-import com.pet.chat.ui.theme.snackBarHost
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
 data class ChatItemInfo(
     val roomID: Int,
@@ -79,15 +84,15 @@ val mockRoomChats = listOf(
 fun ChatsScreen(
     modifier: Modifier = Modifier,
     deleteChat: (ChatDelete) -> Unit,
-    openChat: (ChatHistory) -> Unit,
-    navController: NavController?,
-    viewModel: ChatViewModel
+    navController: NavController,
+    viewModel: ChatsViewModel
 ) {
     val scaffoldState = rememberScaffoldState()
-    val chats = viewModel.chats.collectAsState()
-    val eventsFromServer = viewModel.events.collectAsState()
+    val chats = viewModel.chatProviderImpl.chats.collectAsState(listOf())
+    val viewState = viewModel.viewStateProvider.viewState.collectAsState(ViewState.Display())
 
     Log.d("ChatScreen", "Chats ${chats.value.size}")
+
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
@@ -97,45 +102,55 @@ fun ChatsScreen(
                 }
             )
         },
-
         floatingActionButtonPosition = FabPosition.End,
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                navController?.navigate("CreateChat")
+                navController.navigate("CreateChat")
             }) {
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Создать чат")
             }
         }
     ) { innerPadding ->
-
-        val (showLoadingScreen, showLoadingScreenChange) = remember { mutableStateOf(false) }
-        // Почему-то снова не вызвается это место
-        when {
-            showLoadingScreen -> {
-                loadingScreen()
+        // Почему-то  снова не вызвается это место
+        when (viewState.value) {
+            is ViewState.StateLoading -> {
+                LoadingScreen()
             }
-            eventsFromServer.value == EventFromServer.ConnectionError() -> {
-                connectionError(
-                    retryAction = {
-                        viewModel.tryToConnect()
-                        showLoadingScreenChange.invoke(true)
-                    },
-                    errorText = (eventsFromServer.value as EventFromServer.ConnectionError).data
+            is ViewState.Error -> {
+                ErrorScreen(
+                    retryAction = { retryAction.invoke() },
+                    errorText = (viewState.value as ViewState.Error).errorInfo
                 )
             }
-            else -> LazyColumn(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .padding(innerPadding)
-            ) {
-                items(chats.value) { item ->
-                    ChatsItem(chatDetails = item,
-                        OpenChat = {
-                            openChat(it)
-                        },
-                        deleteChat = { deleteChat(it) })
+            is ViewState.StateNoItems -> {
+                NoItemsView(message = "Чатов нет на данный момент", iconResID = null)
+            }
+            is ViewState.Display ->{
+                LazyColumn(
+                    modifier = modifier
+                        .fillMaxWidth()
+                        .padding(innerPadding)
+                ) {
+                    items(chats.value) { item ->
+                        ChatsItem(chatDetails = item,
+                            OpenChat = { chatHistory->
+                                retryAction = {
+                                    navController.navigate(Screen.Room.createRoute(roomID = chatHistory.roomId.toString()))
+                                }
+                                retryAction()
+                            },
+                            deleteChat = {
+                                retryAction = { deleteChat(it) }
+                                retryAction()
+                            }
+                        )
+                    }
                 }
             }
+        }
+
+        if(chats.value.isEmpty()){
+
         }
     }
 
@@ -182,6 +197,6 @@ fun ChatsItem(
 @Composable
 fun ChatsScreenPreview() {
     ChatTheme {
-        ChatsScreen(deleteChat = {}, openChat = {}, navController = null, viewModel = viewModel())
+        ChatsScreen(deleteChat = {}, navController = rememberNavController(), viewModel = viewModel())
     }
 }

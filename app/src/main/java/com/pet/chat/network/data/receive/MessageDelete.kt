@@ -5,7 +5,7 @@ import com.pet.chat.App
 import com.pet.chat.network.data.ui.Chat
 import com.pet.chat.network.data.base.Message
 import com.pet.chat.network.data.base.Room
-import com.pet.chat.ui.RoomMessage
+import com.pet.chat.ui.screens.chat.RoomMessage
 
 data class MessageDelete(
     @SerializedName("chat")

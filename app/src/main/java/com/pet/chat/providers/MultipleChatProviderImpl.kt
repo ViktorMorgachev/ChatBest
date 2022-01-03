@@ -6,16 +6,15 @@ import com.pet.chat.helpers.replaceWithInstance
 import com.pet.chat.network.data.receive.ChatRead
 import com.pet.chat.providers.interfaces.ChatProvider
 import com.pet.chat.providers.interfaces.MultipleMessagesProvider
-import com.pet.chat.ui.ChatItemInfo
-import com.pet.chat.ui.RoomMessage
-import com.pet.chat.ui.State
+import com.pet.chat.ui.screens.chat.RoomMessage
+import com.pet.chat.ui.screens.chat.State
+import com.pet.chat.ui.screens.chats.ChatItemInfo
 import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
-@Singleton
-class MultipleChatProviderImpl @Inject constructor(override val chats: MutableStateFlow<List<ChatItemInfo>>) :
-    ChatProvider<ChatItemInfo>, MultipleMessagesProvider<RoomMessage> {
+
+class MultipleChatProviderImpl @Inject constructor(override val chats: MutableStateFlow<List<ChatItemInfo>>) : ChatProvider<ChatItemInfo>, MultipleMessagesProvider<RoomMessage> {
 
     override fun deleteChat(chatID: Int) {
         val actualChat = getCurrentChat(roomID = chatID)

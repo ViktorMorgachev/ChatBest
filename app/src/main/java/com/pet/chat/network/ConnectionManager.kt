@@ -5,6 +5,7 @@ import com.google.gson.Gson
 import com.pet.chat.helpers.toSocketData
 import com.pet.chat.network.data.receive.*
 import com.pet.chat.network.data.send.*
+import com.pet.chat.providers.interfaces.EventFromServerProvider
 import com.pet.chat.network.data.receive.ChatRead as ChatReadReceive
 import com.pet.chat.network.data.receive.ChatDelete as ChatDeleteReceive
 import com.pet.chat.network.data.receive.ChatHistory as ChatHistoryReceive
@@ -12,6 +13,8 @@ import io.socket.client.IO
 import io.socket.client.Socket
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import javax.inject.Inject
+import javax.inject.Singleton
 
 sealed class EventFromServer {
     data class AutorizationEvent(val data: UserAutorized) : EventFromServer()
@@ -27,8 +30,6 @@ sealed class EventFromServer {
     data class ConnectionError(val data: String = "") : EventFromServer()
     object Disconnected : EventFromServer()
     object NO_INITIALIZED : EventFromServer()
-
-
 }
 
 sealed class EventToServer(val eventName: String, val any: Any) {
@@ -44,30 +45,17 @@ sealed class EventToServer(val eventName: String, val any: Any) {
     data class ChatReadEvent(val data: ChatRead) : EventToServer("chat.read", any = data)
 }
 
-interface Subscriber {
-    fun post(eventFromServer: EventFromServer)
-}
-
-object ConnectionManager {
+@Singleton
+class ConnectionManager @Inject constructor(private val eventFromServerProvider: EventFromServerProvider) {
 
     private var socket: Socket? = null
-    private val subscribers: ArrayList<Subscriber> = arrayListOf()
 
     fun connectionActive(): Boolean {
         return socket?.isActive == true
     }
 
-    fun subsribe(subscriber: Subscriber) {
-        if (!subscribers.contains(subscriber)) {
-            subscribers.add(subscriber)
-        }
-    }
-
     private fun post(data: EventFromServer) {
-        println("Subscribers size = $subscribers")
-        subscribers.forEach {
-            it.post(eventFromServer = data)
-        }
+        eventFromServerProvider.postEventFromServer(data)
     }
 
     fun initConnection(uri: String, options: IO.Options) {
@@ -112,7 +100,8 @@ object ConnectionManager {
                     "Socket: SocketID ${socket.id()} Connected ${socket.connected()} Error $it"
                 )
                 post(EventFromServer.NO_INITIALIZED)
-                post(EventFromServer.ConnectionError())
+                post(EventFromServer.ConnectionError(data = "Ошибка соединения"))
+                socket.close()
             }
             socket.on("on.message.new") {
                 val data = Gson().fromJson("${it[0]}", MessageNew::class.java)

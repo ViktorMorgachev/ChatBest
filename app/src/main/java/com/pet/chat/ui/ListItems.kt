@@ -21,6 +21,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pet.chat.R
 import com.pet.chat.network.data.base.File
+import com.pet.chat.ui.screens.chat.BottomActionData
+import com.pet.chat.ui.screens.chat.RoomMessage
+import com.pet.chat.ui.screens.chat.State
 import com.pet.chat.ui.theme.ChatTheme
 
 val mockDataBottomSheetItem = BottomActionData(image = Icons.Outlined.Camera, "Camera", {})
