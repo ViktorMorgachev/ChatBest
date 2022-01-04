@@ -6,6 +6,7 @@ import com.pet.chat.network.EventFromServer
 import com.pet.chat.network.data.base.User
 import com.pet.chat.network.data.send.UserAuth
 import com.pet.chat.providers.MultipleChatProviderImpl
+import com.pet.chat.providers.UsersProviderImpl
 import com.pet.chat.providers.interfaces.EventFromServerProvider
 import com.pet.chat.providers.interfaces.UsersProvider
 import com.pet.chat.ui.screens.chats.toChatItemInfo
@@ -20,7 +21,7 @@ import javax.inject.Singleton
 class DataNetworkProvider @Inject constructor(val eventFromServerProvider: EventFromServerProvider,
                                               val connectionManager: ConnectionManager,
                                               val chatProvider: MultipleChatProviderImpl,
-                                              val usersProviderImpl: UsersProvider<User>) {
+                                              val usersProviderImpl: UsersProvider) {
 
 
     fun observe(applicationScope: CoroutineScope) {

@@ -1,6 +1,6 @@
 package com.pet.chat.providers
 
-import com.pet.chat.providers.interfaces.ViewState
+import com.pet.chat.network.data.ViewState
 import com.pet.chat.providers.interfaces.ViewStateProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow

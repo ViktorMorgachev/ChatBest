@@ -5,13 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.pet.chat.network.ConnectionManager
 import com.pet.chat.network.EventFromServer
 import com.pet.chat.network.EventToServer
-import com.pet.chat.providers.ViewStateProviderImpl
+import com.pet.chat.network.data.ViewState
 import com.pet.chat.providers.interfaces.EventFromServerProvider
-import com.pet.chat.providers.interfaces.EventFromServerProviderImpl
-import com.pet.chat.providers.interfaces.ViewState
+import com.pet.chat.providers.interfaces.ViewStateProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -19,8 +17,8 @@ import javax.inject.Inject
 @HiltViewModel
 class AutorizationViewModel @Inject constructor(
     val connectionManager: ConnectionManager,
-    val viewStateProvider: ViewStateProviderImpl,
-    val eventFromServerProvider: EventFromServerProviderImpl
+    val viewStateProvider: ViewStateProvider,
+    val eventFromServerProvider: EventFromServerProvider
 ) : ViewModel() {
 
     init {

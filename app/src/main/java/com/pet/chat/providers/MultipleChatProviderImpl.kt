@@ -14,6 +14,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 
+// Возможно придётся обьеденить ChatProvider
 class MultipleChatProviderImpl @Inject constructor(override val chats: MutableStateFlow<List<ChatItemInfo>>) : ChatProvider<ChatItemInfo>, MultipleMessagesProvider<RoomMessage> {
 
     override fun deleteChat(chatID: Int) {

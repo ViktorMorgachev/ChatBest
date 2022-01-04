@@ -18,7 +18,7 @@ object Versions {
     val work_manager = "2.7.1"
     val google_code_gson = "2.8.5"
     val compose_navigation = "2.4.0-beta02"
-    val dagger_hilt_android = "2.39.1"
+    val dagger_hilt_android = "2.40.5"
     val squareup_retrofit = "2.9.0"
     val gson_converter = "2.5.0"
     val dexter = "6.2.3"

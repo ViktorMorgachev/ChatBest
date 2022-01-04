@@ -17,11 +17,13 @@ import com.pet.chat.providers.InternalEventsProvider
 import com.pet.chat.helpers.*
 import com.pet.chat.network.ConnectionManager
 import com.pet.chat.network.EventToServer
+import com.pet.chat.network.data.ViewState
 import com.pet.chat.network.data.base.FilePreview
 import com.pet.chat.providers.MultipleChatProviderImpl
-import com.pet.chat.providers.interfaces.ViewState
 import com.pet.chat.providers.ViewStateProviderImpl
+import com.pet.chat.providers.interfaces.EventFromServerProvider
 import com.pet.chat.providers.interfaces.EventFromServerProviderImpl
+import com.pet.chat.providers.interfaces.ViewStateProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
@@ -31,9 +33,9 @@ import javax.inject.Inject
 class ChatViewModel @Inject constructor(
     val internalEventsProvider: InternalEventsProvider,
     val chatProviderImpl: MultipleChatProviderImpl,
-    val viewStateProvider: ViewStateProviderImpl,
+    val viewStateProvider: ViewStateProvider,
     val connectionManager: ConnectionManager,
-    val eventFromServerProvider: EventFromServerProviderImpl
+    val eventFromServerProvider: EventFromServerProvider
 ) : ViewModel() {
 
     lateinit var cameraPermissionContract: ActivityResultLauncher<String>

@@ -11,6 +11,7 @@ import com.pet.chat.helpers.workDataOf
 import com.pet.chat.network.ConnectionManager
 import com.pet.chat.network.EventFromServer
 import com.pet.chat.network.EventToServer
+import com.pet.chat.network.data.ViewState
 import com.pet.chat.network.data.base.File
 import com.pet.chat.network.data.send.ChatRead
 import com.pet.chat.network.data.send.ClearChat
@@ -21,8 +22,9 @@ import com.pet.chat.network.workers.FileUploadWorker
 import com.pet.chat.providers.InternalEventsProvider
 import com.pet.chat.providers.MultipleChatProviderImpl
 import com.pet.chat.providers.ViewStateProviderImpl
+import com.pet.chat.providers.interfaces.EventFromServerProvider
 import com.pet.chat.providers.interfaces.EventFromServerProviderImpl
-import com.pet.chat.providers.interfaces.ViewState
+import com.pet.chat.providers.interfaces.ViewStateProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,8 +36,8 @@ import javax.inject.Inject
 @HiltViewModel
 class MessagesViewModel @Inject constructor(
     val chatProviderImpl: MultipleChatProviderImpl,
-    val viewStateProvider: ViewStateProviderImpl,
-    val eventFromServerProvider: EventFromServerProviderImpl,
+    val viewStateProvider: ViewStateProvider,
+    val eventFromServerProvider: EventFromServerProvider,
     val connectionManager: ConnectionManager,
     val internalEventsProvider: InternalEventsProvider
 ) : ViewModel() {

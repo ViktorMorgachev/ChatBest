@@ -80,7 +80,7 @@ dependencies {
     implementation(Libs.hilt_work)
     implementation(Libs.logging_interceptors)
     implementation(Libs.gson_converter_factory)
-Г    implementation(Libs.runtime_liveData_compose)
+    implementation(Libs.runtime_liveData_compose)
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     kapt(Libs.kapt_hilt_work)
     kapt(Libs.kapt_com_google_dagger_hilt)

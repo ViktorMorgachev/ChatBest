@@ -15,12 +15,11 @@ import androidx.navigation.compose.rememberNavController
 import com.pet.chat.App
 import com.pet.chat.R
 import com.pet.chat.network.EventToServer
+import com.pet.chat.network.data.ViewState
 import com.pet.chat.network.data.send.UserAuth
-import com.pet.chat.providers.interfaces.ViewState
 import com.pet.chat.ui.ErrorScreen
 import com.pet.chat.ui.LoadingScreen
 import com.pet.chat.ui.Screen
-import com.pet.chat.ui.main.ChatViewModel
 import com.pet.chat.ui.theme.ChatTheme
 import com.pet.chat.ui.theme.snackBarHost
 

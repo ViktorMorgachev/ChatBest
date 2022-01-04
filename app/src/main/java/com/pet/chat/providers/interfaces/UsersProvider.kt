@@ -1,6 +1,10 @@
 package com.pet.chat.providers.interfaces
 
-interface UsersProvider<T> {
+import com.pet.chat.network.data.base.User
+import kotlinx.coroutines.flow.MutableStateFlow
+
+interface UsersProvider{
+    val users :MutableStateFlow<List<User>>
     fun updateUserStatus(data: Any)
-    fun fetchAllUsers(): List<T>
+    fun fetchAllUsers(): List<User>
 }

@@ -18,28 +18,18 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.pet.chat.R
 import com.pet.chat.helpers.retryAction
-import com.pet.chat.network.EventToServer
+import com.pet.chat.network.data.ViewState
 import com.pet.chat.network.data.base.Dialog
 import com.pet.chat.network.data.receive.MessageNew
 import com.pet.chat.network.data.send.ChatDelete
 import com.pet.chat.network.data.send.ChatHistory
-import com.pet.chat.providers.interfaces.ViewState
 import com.pet.chat.ui.ErrorScreen
 import com.pet.chat.ui.LoadingScreen
 import com.pet.chat.ui.NoItemsView
 import com.pet.chat.ui.Screen
-import com.pet.chat.ui.main.ChatViewModel
-import com.pet.chat.ui.screens.chat.RoomMessage
 import com.pet.chat.ui.screens.chat.toSimpleMessage
 import com.pet.chat.ui.theme.ChatTheme
 import com.pet.chat.ui.theme.Shapes
-
-data class ChatItemInfo(
-    val roomID: Int,
-    val usersIDs: List<Int>,
-    var unreadCount: Int,
-    var roomMessages: List<RoomMessage> = listOf(),
-)
 
 fun Dialog.toChatItemInfo(): ChatItemInfo {
     val usersIDs = mutableListOf<Int>()
@@ -88,10 +78,7 @@ fun ChatsScreen(
     viewModel: ChatsViewModel
 ) {
     val scaffoldState = rememberScaffoldState()
-    val chats = viewModel.chatProviderImpl.chats.collectAsState(listOf())
     val viewState = viewModel.viewStateProvider.viewState.collectAsState(ViewState.Display())
-
-    Log.d("ChatScreen", "Chats ${chats.value.size}")
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -126,34 +113,44 @@ fun ChatsScreen(
                 NoItemsView(message = "Чатов нет на данный момент", iconResID = null)
             }
             is ViewState.Display ->{
-                LazyColumn(
-                    modifier = modifier
-                        .fillMaxWidth()
-                        .padding(innerPadding)
-                ) {
-                    items(chats.value) { item ->
-                        ChatsItem(chatDetails = item,
-                            OpenChat = { chatHistory->
-                                retryAction = {
-                                    navController.navigate(Screen.Room.createRoute(roomID = chatHistory.roomId.toString()))
-                                }
-                                retryAction()
-                            },
-                            deleteChat = {
-                                retryAction = { deleteChat(it) }
-                                retryAction()
-                            }
-                        )
-                    }
-                }
+                val chats = viewModel.chatProviderImpl.chats.collectAsState(listOf())
+
+                Log.d("ChatScreen", "Chats ${chats.value.size}")
+
+                DisplayChats(modifier = Modifier.padding(innerPadding), chats =  chats.value, deleteChatAction = deleteChat, navController = navController)
             }
-        }
-
-        if(chats.value.isEmpty()){
-
         }
     }
 
+}
+
+@Composable
+fun DisplayChats(
+    modifier: Modifier = Modifier,
+    chats: List<ChatItemInfo>,
+    deleteChatAction: (ChatDelete) -> Unit,
+    navController: NavController, ) {
+    if(chats.isNotEmpty()){
+        LazyColumn(
+            modifier = modifier
+                .fillMaxWidth()
+        ) {
+            items(chats) { item ->
+                ChatsItem(chatDetails = item,
+                    OpenChat = { chatHistory->
+                        retryAction = {
+                            navController.navigate(Screen.Room.createRoute(roomID = chatHistory.roomId.toString()))
+                        }
+                        retryAction()
+                    },
+                    deleteChat = {
+                        retryAction = { deleteChatAction(it) }
+                        retryAction()
+                    }
+                )
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterialApi::class)

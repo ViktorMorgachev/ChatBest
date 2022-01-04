@@ -8,11 +8,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class UsersProviderImpl  @Inject constructor(): UsersProvider<User> {
-    val users = MutableStateFlow<List<User>>(mutableListOf())
+class UsersProviderImpl  @Inject constructor(override val users: MutableStateFlow<List<User>>): UsersProvider {
+
     override fun updateUserStatus(data: Any) {
         if (data is UserOnline){
-
         }
     }
 
