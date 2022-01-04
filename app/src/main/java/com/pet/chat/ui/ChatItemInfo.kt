@@ -1,4 +1,4 @@
-package com.pet.chat.ui.screens.chats
+package com.pet.chat.ui
 
 import com.pet.chat.ui.screens.chat.RoomMessage
 

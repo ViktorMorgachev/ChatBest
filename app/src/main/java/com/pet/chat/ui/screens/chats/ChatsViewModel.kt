@@ -8,10 +8,9 @@ import com.pet.chat.network.EventToServer
 import com.pet.chat.network.data.ViewState
 import com.pet.chat.network.data.send.ChatDelete
 import com.pet.chat.providers.MultipleChatProviderImpl
-import com.pet.chat.providers.ViewStateProviderImpl
 import com.pet.chat.providers.interfaces.EventFromServerProvider
-import com.pet.chat.providers.interfaces.EventFromServerProviderImpl
 import com.pet.chat.providers.interfaces.ViewStateProvider
+import com.pet.chat.ui.ChatItemInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -23,10 +23,7 @@ import com.pet.chat.network.data.base.Dialog
 import com.pet.chat.network.data.receive.MessageNew
 import com.pet.chat.network.data.send.ChatDelete
 import com.pet.chat.network.data.send.ChatHistory
-import com.pet.chat.ui.ErrorScreen
-import com.pet.chat.ui.LoadingScreen
-import com.pet.chat.ui.NoItemsView
-import com.pet.chat.ui.Screen
+import com.pet.chat.ui.*
 import com.pet.chat.ui.screens.chat.toSimpleMessage
 import com.pet.chat.ui.theme.ChatTheme
 import com.pet.chat.ui.theme.Shapes

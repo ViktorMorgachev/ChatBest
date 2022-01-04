@@ -11,6 +11,7 @@ import dagger.assisted.AssistedInject
 import io.socket.client.IO
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 /**
  * For stable socket connection in future
@@ -19,9 +20,11 @@ import kotlinx.coroutines.withContext
 class NetworkWorker @AssistedInject constructor(@Assisted context: Context, @Assisted workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {
 
+    @Inject lateinit var connectionManager: ConnectionManager
+
     override suspend fun doWork() = withContext(Dispatchers.IO) {
         try {
-            if (!ConnectionManager.connectionActive()) {
+            if (!connectionManager.connectionActive()) {
                 initializeConnection()
             }
             Result.success()
@@ -40,7 +43,7 @@ class NetworkWorker @AssistedInject constructor(@Assisted context: Context, @Ass
         }
         val options = IO.Options.builder().setPath("/").setTransports(arrayOf("websocket", "polling"))
                 .setPort(port.toInt()).build()
-        ConnectionManager.initConnection(uri, options)
+        connectionManager.initConnection(uri, options)
 
     }
 

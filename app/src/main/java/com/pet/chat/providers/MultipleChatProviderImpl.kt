@@ -8,10 +8,9 @@ import com.pet.chat.providers.interfaces.ChatProvider
 import com.pet.chat.providers.interfaces.MultipleMessagesProvider
 import com.pet.chat.ui.screens.chat.RoomMessage
 import com.pet.chat.ui.screens.chat.State
-import com.pet.chat.ui.screens.chats.ChatItemInfo
+import com.pet.chat.ui.ChatItemInfo
 import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
-import javax.inject.Singleton
 
 
 // Возможно придётся обьеденить ChatProvider
