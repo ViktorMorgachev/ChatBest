@@ -67,6 +67,8 @@ val mockRoomChats = listOf(
     mockRoomChat.copy(roomID = 123, unreadCount = 2, usersIDs = listOf(145, 164))
 )
 
+val tag = "ChatsScreen"
+
 @Composable
 fun ChatsScreen(
     modifier: Modifier = Modifier,
@@ -118,6 +120,10 @@ fun ChatsScreen(
             }
         }
     }
+    
+    SideEffect {
+        Log.d("ChatsScreen", "ViewState ${viewState.value}")
+    }
 
 }
 
@@ -127,6 +133,7 @@ fun DisplayChats(
     chats: List<ChatItemInfo>,
     deleteChatAction: (ChatDelete) -> Unit,
     navController: NavController, ) {
+
     if(chats.isNotEmpty()){
         LazyColumn(
             modifier = modifier

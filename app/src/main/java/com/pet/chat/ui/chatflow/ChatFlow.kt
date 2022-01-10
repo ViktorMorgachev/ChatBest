@@ -1,5 +1,7 @@
 package com.pet.chat.ui.chatflow
 
+import android.util.Log
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -34,6 +36,9 @@ fun NavGraphBuilder.chatFlow(
         }
     }
     composable(Screen.Chats.route) {
+        SideEffect {
+           Log.d("chatFlow", "Screen.Chats.route")
+        }
         val chatsViewModel = hiltViewModel<ChatsViewModel>()
         ChatsScreen(
             navController = navController,

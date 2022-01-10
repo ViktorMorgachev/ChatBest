@@ -1,5 +1,6 @@
 package com.pet.chat.ui.screens.chats
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pet.chat.network.ConnectionManager
@@ -19,7 +20,6 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-
 @HiltViewModel
 class ChatsViewModel @Inject constructor(
     val chatProviderImpl: MultipleChatProviderImpl,
@@ -31,9 +31,10 @@ class ChatsViewModel @Inject constructor(
     val chats = MutableStateFlow<List<ChatItemInfo>>(listOf())
 
     init {
-
+        Log.d("ChatsViewModel", "Init")
         viewModelScope.launch(Dispatchers.IO) {
             eventFromServerProvider.events.collect {
+                Log.d("ChatsViewModel", "EventFromServer $it")
                 reduce(it)
             }
             val data = chatProviderImpl.chats.asStateFlow().value

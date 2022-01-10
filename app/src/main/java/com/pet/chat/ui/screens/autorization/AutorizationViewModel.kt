@@ -1,5 +1,6 @@
 package com.pet.chat.ui.screens.autorization
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pet.chat.network.ConnectionManager
@@ -14,6 +15,8 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+val tag = "AutorizationViewModel"
+
 @HiltViewModel
 class AutorizationViewModel @Inject constructor(
     val connectionManager: ConnectionManager,
@@ -21,9 +24,12 @@ class AutorizationViewModel @Inject constructor(
     val eventFromServerProvider: EventFromServerProvider
 ) : ViewModel() {
 
+
     init {
+        Log.d(tag, "Init")
         viewModelScope.launch(Dispatchers.IO) {
             eventFromServerProvider.events.collect {
+                Log.d(tag, "EventFromServer $it")
                 reduce(it)
             }
         }

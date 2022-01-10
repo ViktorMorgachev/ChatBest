@@ -1,5 +1,6 @@
 package com.pet.chat.ui.screens.autorization
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -33,6 +34,8 @@ fun AutorizationScreen(
     navController: NavController
 ) {
     val viewState = viewModel.viewStateProvider.viewState.collectAsState(ViewState.Display())
+    // Хак
+    val lasViewState = remember { mutableStateOf(viewState.value) }
 
     LaunchedEffect(key1 = Unit, block = {
         if (App.prefs?.identified() == true) {
@@ -40,6 +43,12 @@ fun AutorizationScreen(
         }
     })
 
+
+
+    SideEffect {
+        Log.d(tagForState, "ViewState: ${viewState.value}")
+    }
+    
     Scaffold(
         topBar = {
             TopAppBar(
@@ -57,43 +66,57 @@ fun AutorizationScreen(
         val authClick = {
             viewModel.authorize(EventToServer.AuthEvent(UserAuth(id.toInt(), token)))
         }
-        when(viewState.value){
-            is ViewState.StateLoading ->{
-                LoadingScreen()
-            }
-            is ViewState.Error ->{
-                ErrorScreen(retryAction = { authClick() }, errorText = (viewState.value as ViewState.Error).errorInfo)
-            }
-            is ViewState.Display -> {
-                Column(
-                    modifier = Modifier
-                        .padding(4.dp)
-                        .fillMaxWidth()
-                        .fillMaxHeight()
-                ) {
-                    Spacer(modifier = Modifier.weight(1f))
-                    val textFieldModifier = Modifier
-                        .fillMaxWidth(fraction = 0.5f)
-                        .align(Alignment.CenterHorizontally)
-                    TextField(value = id, onValueChange = idChange, modifier = textFieldModifier)
-                    TextField(value = token, onValueChange = tokenChange, modifier = textFieldModifier)
-                    Button(
-                        onClick = {authClick()},
-                        Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .padding(8.dp)
+        if (lasViewState.value != viewState.value) {
+            when (viewState.value) {
+                is ViewState.StateLoading -> {
+                    LoadingScreen()
+                }
+                is ViewState.Error -> {
+                    ErrorScreen(
+                        retryAction = { authClick() },
+                        errorText = (viewState.value as ViewState.Error).errorInfo
+                    )
+                }
+                is ViewState.Display -> {
+                    Column(
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .fillMaxWidth()
+                            .fillMaxHeight()
                     ) {
-                        Text(text = stringResource(id = R.string.auth))
+                        Spacer(modifier = Modifier.weight(1f))
+                        val textFieldModifier = Modifier
+                            .fillMaxWidth(fraction = 0.5f)
+                            .align(Alignment.CenterHorizontally)
+                        TextField(
+                            value = id,
+                            onValueChange = idChange,
+                            modifier = textFieldModifier
+                        )
+                        TextField(
+                            value = token,
+                            onValueChange = tokenChange,
+                            modifier = textFieldModifier
+                        )
+                        Button(
+                            onClick = { authClick() },
+                            Modifier
+                                .align(Alignment.CenterHorizontally)
+                                .padding(8.dp)
+                        ) {
+                            Text(text = stringResource(id = R.string.auth))
+                        }
+                        Spacer(modifier = Modifier.weight(1f))
                     }
-                    Spacer(modifier = Modifier.weight(1f))
+                }
+                is ViewState.Success -> {
+                    navController.navigate(Screen.Chats.route)
+                }
+                else -> {
+                    println("$tagForState Unsupported state ${viewState.value}")
                 }
             }
-            is ViewState.Success->{
-                navController.navigate(Screen.Chats.route)
-            }
-            else -> {
-                println("$tagForState Unsupported state ${viewState.value}")
-            }
+            lasViewState.value = viewState.value
         }
     }
 }
