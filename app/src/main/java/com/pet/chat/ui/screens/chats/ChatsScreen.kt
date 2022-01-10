@@ -1,5 +1,6 @@
 package com.pet.chat.ui.screens.chats
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -69,6 +70,7 @@ val mockRoomChats = listOf(
 
 val tag = "ChatsScreen"
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun ChatsScreen(
     modifier: Modifier = Modifier,
@@ -77,7 +79,14 @@ fun ChatsScreen(
     viewModel: ChatsViewModel
 ) {
     val scaffoldState = rememberScaffoldState()
-    val viewState = viewModel.viewStateProvider.viewState.collectAsState(ViewState.Display())
+    val viewState = viewModel.viewStateProvider.viewState.collectAsState(ViewState.StateLoading)
+    // Хак
+    val lasViewState = remember { mutableStateOf<ViewState?>(null) }
+
+    SideEffect {
+        Log.d(tag, "ViewState: ${viewState.value}")
+        Log.d(tag, "Chats: ${viewModel.chatProviderImpl.chats.value}")
+    }
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -97,30 +106,37 @@ fun ChatsScreen(
             }
         }
     ) { innerPadding ->
-        // Почему-то  снова не вызвается это место
-        when (viewState.value) {
-            is ViewState.StateLoading -> {
-                LoadingScreen()
+        if (true){
+            when (viewState.value) {
+                is ViewState.StateLoading -> {
+                    LoadingView()
+                }
+                is ViewState.Error -> {
+                    ErrorView(
+                        retryAction = { retryAction.invoke() },
+                        errorText = (viewState.value as ViewState.Error).errorInfo
+                    )
+                }
+                is ViewState.StateNoItems -> {
+                    NoItemsView(message = "Чатов нет на данный момент", iconResID = null)
+                }
+                is ViewState.Display ->{
+                    if ((viewState.value as ViewState.Display).data.isEmpty())return@Scaffold
+                    val chats = (viewState.value as ViewState.Display).data.first() as List<ChatItemInfo>
+                    Log.d("ChatScreen", "Chats ${chats.size}")
+                    DisplayChats(modifier = Modifier.padding(innerPadding), chats = chats, deleteChatAction = deleteChat, navController = navController)
+                }
             }
-            is ViewState.Error -> {
-                ErrorScreen(
-                    retryAction = { retryAction.invoke() },
-                    errorText = (viewState.value as ViewState.Error).errorInfo
-                )
-            }
-            is ViewState.StateNoItems -> {
-                NoItemsView(message = "Чатов нет на данный момент", iconResID = null)
-            }
-            is ViewState.Display ->{
-                val chats = viewModel.chatProviderImpl.chats.collectAsState(listOf())
+            lasViewState.value = viewState.value
+        }
 
-                Log.d("ChatScreen", "Chats ${chats.value.size}")
+    }
 
-                DisplayChats(modifier = Modifier.padding(innerPadding), chats =  chats.value, deleteChatAction = deleteChat, navController = navController)
-            }
+    DisposableEffect(key1 = viewModel){
+        onDispose {
+            viewModel.dismiss()
         }
     }
-    
     SideEffect {
         Log.d("ChatsScreen", "ViewState ${viewState.value}")
     }
@@ -132,7 +148,11 @@ fun DisplayChats(
     modifier: Modifier = Modifier,
     chats: List<ChatItemInfo>,
     deleteChatAction: (ChatDelete) -> Unit,
-    navController: NavController, ) {
+    navController: NavController) {
+
+    SideEffect {
+        Log.d("Screen", "ChatsView")
+    }
 
     if(chats.isNotEmpty()){
         LazyColumn(

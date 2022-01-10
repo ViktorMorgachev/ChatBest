@@ -18,8 +18,8 @@ import com.pet.chat.R
 import com.pet.chat.network.EventToServer
 import com.pet.chat.network.data.ViewState
 import com.pet.chat.network.data.send.UserAuth
-import com.pet.chat.ui.ErrorScreen
-import com.pet.chat.ui.LoadingScreen
+import com.pet.chat.ui.ErrorView
+import com.pet.chat.ui.LoadingView
 import com.pet.chat.ui.Screen
 import com.pet.chat.ui.theme.ChatTheme
 import com.pet.chat.ui.theme.snackBarHost
@@ -35,15 +35,19 @@ fun AutorizationScreen(
 ) {
     val viewState = viewModel.viewStateProvider.viewState.collectAsState(ViewState.Display())
     // Хак
-    val lasViewState = remember { mutableStateOf(viewState.value) }
+    val lasViewState = remember { mutableStateOf<ViewState?>(null) }
+
+    DisposableEffect(key1 = viewModel){
+        onDispose {
+            viewModel.dismiss()
+        }
+    }
 
     LaunchedEffect(key1 = Unit, block = {
         if (App.prefs?.identified() == true) {
             onAuthEvent(UserAuth(App.prefs!!.userID, App.prefs!!.userToken))
         }
     })
-
-
 
     SideEffect {
         Log.d(tagForState, "ViewState: ${viewState.value}")
@@ -69,10 +73,10 @@ fun AutorizationScreen(
         if (lasViewState.value != viewState.value) {
             when (viewState.value) {
                 is ViewState.StateLoading -> {
-                    LoadingScreen()
+                    LoadingView()
                 }
                 is ViewState.Error -> {
-                    ErrorScreen(
+                    ErrorView(
                         retryAction = { authClick() },
                         errorText = (viewState.value as ViewState.Error).errorInfo
                     )

@@ -11,7 +11,9 @@ import com.pet.chat.providers.interfaces.EventFromServerProvider
 import com.pet.chat.providers.interfaces.ViewStateProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -29,8 +31,11 @@ class AutorizationViewModel @Inject constructor(
         Log.d(tag, "Init")
         viewModelScope.launch(Dispatchers.IO) {
             eventFromServerProvider.events.collect {
-                Log.d(tag, "EventFromServer $it")
-                reduce(it)
+                if (isActive){
+                    Log.d(tag, "EventFromServer $it")
+                    reduce(it)
+                }
+
             }
         }
     }
@@ -38,7 +43,7 @@ class AutorizationViewModel @Inject constructor(
     private fun reduce(eventFromServer: EventFromServer) {
         when (eventFromServer) {
             is EventFromServer.AutorizationEvent -> {
-                viewStateProvider.postViewState(ViewState.Success)
+                viewStateProvider.postViewState(ViewState.Success())
             }
             is EventFromServer.ConnectionError -> {
                 viewStateProvider.postViewState(ViewState.Error(eventFromServer.data))
@@ -54,5 +59,10 @@ class AutorizationViewModel @Inject constructor(
 
     fun tryToConnect() = viewModelScope.launch(Dispatchers.IO){
         connectionManager.tryToConnect()
+    }
+
+    fun dismiss(){
+        Log.d("MessagesViewModel", "dismiss()")
+        viewModelScope.cancel()
     }
 }

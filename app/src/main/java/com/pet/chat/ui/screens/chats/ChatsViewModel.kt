@@ -1,6 +1,9 @@
 package com.pet.chat.ui.screens.chats
 
 import android.util.Log
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pet.chat.network.ConnectionManager
@@ -9,14 +12,12 @@ import com.pet.chat.network.EventToServer
 import com.pet.chat.network.data.ViewState
 import com.pet.chat.network.data.send.ChatDelete
 import com.pet.chat.providers.MultipleChatProviderImpl
-import com.pet.chat.providers.interfaces.EventFromServerProvider
 import com.pet.chat.providers.interfaces.ViewStateProvider
-import com.pet.chat.ui.ChatItemInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -24,21 +25,22 @@ import javax.inject.Inject
 class ChatsViewModel @Inject constructor(
     val chatProviderImpl: MultipleChatProviderImpl,
     val viewStateProvider: ViewStateProvider,
-    val eventFromServerProvider: EventFromServerProvider,
     val connectionManager: ConnectionManager
 ) : ViewModel() {
-
-    val chats = MutableStateFlow<List<ChatItemInfo>>(listOf())
 
     init {
         Log.d("ChatsViewModel", "Init")
         viewModelScope.launch(Dispatchers.IO) {
-            eventFromServerProvider.events.collect {
-                Log.d("ChatsViewModel", "EventFromServer $it")
-                reduce(it)
+            chatProviderImpl.chats.collect {
+                if (isActive) {
+                    Log.d("ChatsViewModel", "ChatItemsInfo $it")
+                    if (it.isEmpty()) {
+                        viewStateProvider.postViewState(ViewState.StateNoItems)
+                    } else
+                        viewStateProvider.postViewState(ViewState.Display(listOf(it)))
+                }
             }
-            val data = chatProviderImpl.chats.asStateFlow().value
-            chats.emit(data)
+
         }
     }
 
@@ -48,13 +50,9 @@ class ChatsViewModel @Inject constructor(
         }
     }
 
-    private fun reduce(eventFromServer: EventFromServer) {
-        when (eventFromServer) {
-            is EventFromServer.ChatDeleteEvent -> {
-                viewStateProvider.postViewState(ViewState.Display())
-            }
-        }
+    fun dismiss(){
+        Log.d("ChatViewModel", "dismiss()")
+        viewModelScope.cancel()
     }
-
 
 }

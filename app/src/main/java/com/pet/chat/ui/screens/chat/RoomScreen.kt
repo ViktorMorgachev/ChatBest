@@ -1,6 +1,7 @@
 package com.pet.chat.ui.screens.chat
 
 import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -14,6 +15,7 @@ import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -22,6 +24,7 @@ import androidx.navigation.NavController
 import com.pet.chat.App
 import com.pet.chat.App.Companion.prefs
 import com.pet.chat.network.EventToServer
+import com.pet.chat.network.data.ViewState
 import com.pet.chat.network.data.base.Message
 import com.pet.chat.network.data.base.File
 import com.pet.chat.network.data.base.FilePreview
@@ -114,15 +117,19 @@ fun Room(
         ),
     viewModel: MessagesViewModel
 ) {
-    val openDialogEvent = remember { mutableStateOf<FilePreview?>(null) }
-    val modalBottomSheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
-    val messages = viewModel.messages.collectAsState()
+    val viewState = viewModel.viewStateProvider.viewState.collectAsState(ViewState.StateLoading)
+    // Хак
+    val lasViewState = remember { mutableStateOf<ViewState?>(null) }
+
+    DisposableEffect(key1 = viewModel){
+        onDispose {
+            viewModel.dismiss()
+        }
+    }
 
     LaunchedEffect(key1 = Unit, block = {
         viewModel.getChatHistory(EventToServer.GetChatHistory(ChatHistory(lastId = 0, limit = 20, roomId = roomID)))
     })
-
-    Log.d("Chat", "Messages ${messages.value}")
 
     if (App.states?.cameraFilePath!!.isNotEmpty()) {
         actionProvider.resultAfterCamera(true)
@@ -147,111 +154,150 @@ fun Room(
             )
         }
     ) { innerPadding ->
-        ChatTheme {
-            ModalBottomSheetLayout(
-                sheetContent = {
-                    LazyRow() {
-                        items(bottomSheetActions) { item ->
-                            BottomSheetItem(itemData = item, closeBottomAction = {
-                                scope.launch {
-                                    modalBottomSheetState.hide()
+
+        if (lasViewState.value != viewState.value){
+            when (viewState.value) {
+                is ViewState.StateLoading -> {
+                    LoadingView()
+                }
+                is ViewState.Error -> {
+                    ErrorView(
+                        retryAction = { },
+                        errorText = (viewState.value as ViewState.Error).errorInfo
+                    )
+                }
+                is ViewState.StateNoItems -> {
+                    NoItemsView(message = "Тут пока пусто, напишите что нибудь", iconResID = null)
+                }
+                is ViewState.Display ->{
+                    if ((viewState.value as ViewState.Display).data.isEmpty())return@Scaffold
+                    val messages = (viewState.value as ViewState.Display).data as List<RoomMessage>
+
+
+                    Log.d("RoomScreen", "Messages  ${messages.size}")
+                    ChatTheme {
+                        MessagesView(modifier = Modifier.padding(innerPadding).background(color = Color.Green),
+                            bottomSheetActions = bottomSheetActions,
+                            scope = scope,
+                            roomID = roomID,
+                            actionProvider = actionProvider, messages = messages)
+                    }
+                }
+            }
+            lasViewState.value = viewState.value
+        }
+
+    }
+
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun MessagesView(modifier: Modifier = Modifier, bottomSheetActions: List<BottomActionData>,
+                 scope: CoroutineScope,  roomID: Int,
+                 actionProvider: MessagesViewModel.ActionProvider, messages: List<RoomMessage>){
+
+    SideEffect {
+        Log.d("Screen", "MessagesView")
+    }
+
+    val modalBottomSheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
+    val openDialogEvent = remember { mutableStateOf<FilePreview?>(null) }
+    ModalBottomSheetLayout(
+        sheetContent = {
+            LazyRow() {
+                items(bottomSheetActions) { item ->
+                    BottomSheetItem(itemData = item, closeBottomAction = {
+                        scope.launch {
+                            modalBottomSheetState.hide()
+                        }
+                    })
+                }
+            }
+        },
+        sheetState = modalBottomSheetState)
+    {
+        val (message, messageChange) = rememberSaveable { mutableStateOf("") }
+        val listState = rememberLazyListState()
+        val (openDialog, openDialogChange) = remember { mutableStateOf(false) }
+
+        if (openDialogEvent.value != null) {
+            openDialogChange(true)
+        } else openDialogChange(false)
+
+        if (openDialog) {
+            val  file = File(
+                roomID = roomID,
+                type = "photo",
+                App.states?.cameraFilePath,
+                state = State.None
+            )
+            FilePreviewDialog(
+                file = file,
+                applyMessage = { text ->  actionProvider.applyMessageAction(text = message, file = file)},
+                closeDialog = { openDialogChange.invoke(true) })
+        }
+
+        val sendAction = {
+            actionProvider.sendMessageAction(SendMessage(roomId = roomID, text = message, attachmentId = null))
+            messageChange("")
+        }
+
+        /*if (internalEvent is InternalEvent.OpenFilePreview) {
+            openDialogChange(true)
+        }*/
+
+        Column() {
+            LazyColumn(modifier = modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .padding(horizontal = 8.dp), state = listState) {
+                items(messages) { message ->
+                    MessageItem(modifier = Modifier.padding(all = 4.dp),
+                        message = message,
+                        deleteMessageAction = {
+                            when(message){
+                                is RoomMessage.SendingMessage ->{
+                                    actionProvider.deleteMessageAction(message)
                                 }
-                            })
-                        }
-                    }
-                },
-                sheetState = modalBottomSheetState)
-            {
-                val (message, messageChange) = rememberSaveable { mutableStateOf("") }
-                val listState = rememberLazyListState()
-                val (openDialog, openDialogChange) = remember { mutableStateOf(false) }
-
-                if (openDialogEvent.value != null) {
-                    openDialogChange(true)
-                } else openDialogChange(false)
-
-                if (openDialog) {
-                   val  file = File(
-                       roomID = roomID,
-                       type = "photo",
-                       App.states?.cameraFilePath,
-                       state = State.None
-                   )
-                    FilePreviewDialog(
-                        file = file,
-                        applyMessage = { text ->  actionProvider.applyMessageAction(text = message, file = file)},
-                        closeDialog = { openDialogChange.invoke(true) })
-                }
-
-                if (listState.firstVisibleItemIndex >= messages.value.size - 1) {
-                    actionProvider.chatReadEvent(ChatRead(roomId = roomID))
-                }
-
-                val sendAction = {
-                    actionProvider.sendMessageAction(SendMessage(roomId = roomID, text = message, attachmentId = null))
-                    messageChange("")
-                }
-
-                  /*if (internalEvent is InternalEvent.OpenFilePreview) {
-                      openDialogChange(true)
-                  }*/
-
-                Column() {
-                    LazyColumn(modifier = modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .padding(horizontal = 8.dp)
-                        .padding(innerPadding), state = listState) {
-                        items(messages.value) { message ->
-                            MessageItem(modifier = Modifier.padding(all = 4.dp),
-                                message = message,
-                                deleteMessageAction = {
-                                when(message){
-                                    is RoomMessage.SendingMessage ->{
-                                        actionProvider.deleteMessageAction(message)
-                                    }
-                                    is RoomMessage.SimpleMessage ->{
-                                        actionProvider.deleteMessageAction(message)
-                                    }
-                                } },
-                                tryUploadAction = {actionProvider.tryUploadFileAction(data = message as RoomMessage.SendingMessage)},
-                                tryDownloadAction = {actionProvider.tryToDownLoadAction(data = message as RoomMessage.SimpleMessage)}
-                            )
-                        }
-                    }
-                    Column(modifier = Modifier.padding(all = 4.dp)) {
-                        Row() {
-                            TextField(modifier = Modifier,
-                                value = message,
-                                onValueChange = messageChange)
-                            IconButton(onClick = { sendAction() }, enabled = message.isNotEmpty()) {
-                                Icon(Icons.Filled.Send, contentDescription = "Send")
-                            }
-                            IconButton(onClick = {
-                                scope.launch {
-                                    if (!modalBottomSheetState.isVisible)
-                                        modalBottomSheetState.show()
-                                    else modalBottomSheetState.hide()
+                                is RoomMessage.SimpleMessage ->{
+                                    actionProvider.deleteMessageAction(message)
                                 }
-                            }) {
-                                Icon(Icons.Filled.Attachment, contentDescription = "AttachFile")
-                            }
-
+                            } },
+                        tryUploadAction = {actionProvider.tryUploadFileAction(data = message as RoomMessage.SendingMessage)},
+                        tryDownloadAction = {actionProvider.tryToDownLoadAction(data = message as RoomMessage.SimpleMessage)}
+                    )
+                }
+            }
+            Column(modifier = Modifier.padding(all = 4.dp)) {
+                Row() {
+                    TextField(modifier = Modifier,
+                        value = message,
+                        onValueChange = messageChange)
+                    IconButton(onClick = { sendAction() }, enabled = message.isNotEmpty()) {
+                        Icon(Icons.Filled.Send, contentDescription = "Send")
+                    }
+                    IconButton(onClick = {
+                        scope.launch {
+                            if (!modalBottomSheetState.isVisible)
+                                modalBottomSheetState.show()
+                            else modalBottomSheetState.hide()
                         }
-
-                        Button(onClick = { sendAction() },
-                            modifier = modifier.fillMaxWidth(),
-                            enabled = message.isNotEmpty()) {
-                            Text(text = "Отправить")
-                        }
+                    }) {
+                        Icon(Icons.Filled.Attachment, contentDescription = "AttachFile")
                     }
 
+                }
+
+                Button(onClick = { sendAction() },
+                    modifier = modifier.fillMaxWidth(),
+                    enabled = message.isNotEmpty()) {
+                    Text(text = "Отправить")
                 }
             }
 
         }
     }
-
 }
 
 @Composable

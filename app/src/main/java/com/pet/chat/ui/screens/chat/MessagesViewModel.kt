@@ -1,5 +1,6 @@
 package com.pet.chat.ui.screens.chat
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.OneTimeWorkRequestBuilder
@@ -27,9 +28,11 @@ import com.pet.chat.providers.interfaces.EventFromServerProviderImpl
 import com.pet.chat.providers.interfaces.ViewStateProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -37,46 +40,27 @@ import javax.inject.Inject
 class MessagesViewModel @Inject constructor(
     val chatProviderImpl: MultipleChatProviderImpl,
     val viewStateProvider: ViewStateProvider,
-    val eventFromServerProvider: EventFromServerProvider,
     val connectionManager: ConnectionManager,
     val internalEventsProvider: InternalEventsProvider
 ) : ViewModel() {
 
     var curentRoomID = -1
-    val messages = MutableStateFlow<List<RoomMessage>>(listOf())
     var actionProvider: ActionProvider
     init {
         actionProvider = ActionProvider()
         viewModelScope.launch(Dispatchers.IO) {
-
-            eventFromServerProvider.events.collect {
-                viewStateProvider.postViewState(reduce(it))
+            chatProviderImpl.chats.collect {
+                if (isActive){
+                    Log.d("MessagesViewModel", "ChatsInfo $it")
+                    val currentChat = it.firstOrNull{it.roomID == curentRoomID}?.roomMessages ?: listOf()
+                    if (currentChat.isEmpty()){
+                        viewStateProvider.postViewState(ViewState.StateNoItems)
+                    } else{
+                        viewStateProvider.postViewState(ViewState.Display(listOf(currentChat)))
+                    }
+                }
             }
 
-            val data =
-                chatProviderImpl.chats.asStateFlow().value.firstOrNull { it.roomID == curentRoomID }?.roomMessages
-                    ?: listOf()
-            messages.emit(data)
-        }
-    }
-
-    private fun reduce(eventFromServer: EventFromServer): ViewState {
-        return when (eventFromServer) {
-            is EventFromServer.ChatHistoryEvent -> {
-                val data = eventFromServer.data
-                if (data.messages.isEmpty()) {
-                    ViewState.StateNoItems
-                } else ViewState.Display(data)
-            }
-            is EventFromServer.ChatClearEvent -> {
-                val data = eventFromServer.data
-                if (data.room.id.toInt() == curentRoomID) {
-                    return ViewState.StateNoItems
-                } else return ViewState.Display(data = chatProviderImpl.chats)
-            }
-            else -> {
-                return ViewState.StateLoading
-            }
         }
     }
 
@@ -155,6 +139,11 @@ class MessagesViewModel @Inject constructor(
 
     fun resultAfterCamera(){
 
+    }
+
+    fun dismiss(){
+        Log.d("MessagesViewModel", "dismiss()")
+        viewModelScope.cancel()
     }
 
     // Уменьшаем количество action которые можно отправить в composable

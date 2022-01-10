@@ -1,5 +1,6 @@
 package com.pet.chat.providers
 
+import android.util.Log
 import com.pet.chat.helpers.addLast
 import com.pet.chat.helpers.removeWithInstance
 import com.pet.chat.helpers.replaceWithInstance
@@ -10,17 +11,24 @@ import com.pet.chat.ui.screens.chat.RoomMessage
 import com.pet.chat.ui.screens.chat.State
 import com.pet.chat.ui.ChatItemInfo
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
 import javax.inject.Inject
+import javax.inject.Singleton
 
 
-// Возможно придётся обьеденить ChatProvider
+@Singleton
 class MultipleChatProviderImpl @Inject constructor(override val chats: MutableStateFlow<List<ChatItemInfo>>) : ChatProvider<ChatItemInfo>, MultipleMessagesProvider<RoomMessage> {
+
+    init {
+        Log.d("ChatProviderImpl", "Init")
+    }
 
     override fun deleteChat(chatID: Int) {
         val actualChat = getCurrentChat(roomID = chatID)
         if (actualChat != null) {
             chats.value = chats.value.removeWithInstance(actualChat)
         }
+        Log.d("ChatProviderImpl", "deleteChat Chats ${chats.value}")
     }
 
     override fun createChat(chat: ChatItemInfo) {
@@ -32,6 +40,7 @@ class MultipleChatProviderImpl @Inject constructor(override val chats: MutableSt
         if (actualChat != null) {
             actualChat.roomMessages = listOf()
         }
+        Log.d("ChatProviderImpl", "clearChat Chats ${chats.value}")
     }
 
     override fun updateChat(chat: ChatItemInfo) {
@@ -42,6 +51,8 @@ class MultipleChatProviderImpl @Inject constructor(override val chats: MutableSt
         } else {
             chats.value = chats.value.addLast(chat)
         }
+        Log.d("ChatProviderImpl", "updateChat Chats ${chats.value}")
+
     }
 
     override fun addMessage(message: RoomMessage, roomID: Int) {
@@ -49,6 +60,7 @@ class MultipleChatProviderImpl @Inject constructor(override val chats: MutableSt
         if (currentChat != null) {
             currentChat.roomMessages = currentChat.roomMessages.addLast(message)
         }
+        Log.d("ChatProviderImpl", "addMessage Chats ${chats.value}")
     }
 
     override fun deleteMessageByID(messageID: Int, roomID: Int) {
@@ -65,6 +77,7 @@ class MultipleChatProviderImpl @Inject constructor(override val chats: MutableSt
         if (currentChat != null) {
             currentChat.roomMessages = currentChat.roomMessages.addLast(data)
         }
+        Log.d("ChatProviderImpl", "addTempMessage Chats ${chats.value}")
     }
 
     private fun getCurrentChat(roomID: Int): ChatItemInfo? {
