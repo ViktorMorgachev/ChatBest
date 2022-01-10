@@ -55,7 +55,7 @@ fun AutorizationScreen(
         val (token, tokenChange) = rememberSaveable { mutableStateOf("andr1") }
 
         val authClick = {
-            viewModel.authorize(EventToServer.AuthEvent(UserAuth(App.prefs!!.userID, App.prefs!!.userToken)))
+            viewModel.authorize(EventToServer.AuthEvent(UserAuth(id.toInt(), token)))
         }
         when(viewState.value){
             is ViewState.StateLoading ->{

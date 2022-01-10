@@ -15,7 +15,7 @@ object Versions {
     val activity_compose = "1.4.0"
     val constraintlayout_compose = "1.0.0-rc01"
     val socket_io_client = "2.0.1"
-    val work_manager = "2.7.1"
+    val work_manager = "2.6.0-alpha01"
     val google_code_gson = "2.8.5"
     val compose_navigation = "2.4.0-beta02"
     val dagger_hilt_android = "2.40.5"

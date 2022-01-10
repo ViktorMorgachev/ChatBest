@@ -8,6 +8,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.pet.chat.helpers.*
+import com.pet.chat.network.ConnectionManager
 import com.pet.chat.network.data.DataNetworkProvider
 import com.pet.chat.network.workers.NetworkWorker
 import com.pet.chat.storage.Prefs
@@ -32,6 +33,7 @@ class App : Application(), Configuration.Provider {
 
     @Inject lateinit var workerFactory: HiltWorkerFactory
     @Inject lateinit var dataNetworkProvider: DataNetworkProvider
+    @Inject lateinit var connectionManager: ConnectionManager
 
     override fun onCreate() {
         super.onCreate()
@@ -43,8 +45,8 @@ class App : Application(), Configuration.Provider {
         states = States(applicationContext)
 
         dataNetworkProvider.observe(applicationScope)
-        startWorker()
-
+        //startWorker()
+        connectionManager.initConnection()
     }
 
     private fun startWorker() {

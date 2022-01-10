@@ -41,7 +41,6 @@ sealed class EventToServer(val eventName: String, val any: Any) {
     data class ClearChatEvent(val data: ClearChat) : EventToServer("chat.clear", any = data)
     data class DeleteMessageEvent(val data: DeleteMessage) :
         EventToServer("message.delete", any = data)
-
     data class ChatReadEvent(val data: ChatRead) : EventToServer("chat.read", any = data)
 }
 
@@ -58,7 +57,7 @@ class ConnectionManager @Inject constructor(private val eventFromServerProvider:
         eventFromServerProvider.postEventFromServer(data)
     }
 
-    fun initConnection(uri: String, options: IO.Options) {
+    fun initConnection(uri: String? = null, options: IO.Options? = null) {
         try {
             socket = IO.socket("ws://185.26.121.63:3000").connect()
             registratingEvents()
