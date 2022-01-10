@@ -8,6 +8,7 @@ import com.pet.chat.helpers.*
 import com.pet.chat.network.ConnectionManager
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import dagger.hilt.android.AndroidEntryPoint
 import io.socket.client.IO
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -20,11 +21,9 @@ import javax.inject.Inject
 class NetworkWorker @AssistedInject constructor(@Assisted context: Context, @Assisted workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {
 
-    @Inject lateinit var connectionManager: ConnectionManager
-
     override suspend fun doWork() = withContext(Dispatchers.IO) {
         try {
-            if (!connectionManager.connectionActive()) {
+            if (true/*!connectionManagerProvider.connectionManager.connectionActive()*/) {
                 initializeConnection()
             }
             Result.success()
@@ -43,7 +42,7 @@ class NetworkWorker @AssistedInject constructor(@Assisted context: Context, @Ass
         }
         val options = IO.Options.builder().setPath("/").setTransports(arrayOf("websocket", "polling"))
                 .setPort(port.toInt()).build()
-        connectionManager.initConnection(uri, options)
+      //  connectionManagerProvider.connectionManager.initConnection(uri, options)
 
     }
 
