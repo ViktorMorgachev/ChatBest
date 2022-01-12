@@ -2,9 +2,7 @@ package com.pet.chat.di
 
 import com.pet.chat.network.EventFromServer
 import com.pet.chat.network.data.ViewState
-import com.pet.chat.network.data.base.User
 import com.pet.chat.network.services.UploadFileService
-import com.pet.chat.providers.InternalEventsProvider
 import com.pet.chat.providers.MultipleChatProviderImpl
 import com.pet.chat.providers.UsersProviderImpl
 import com.pet.chat.providers.ViewStateProviderImpl
@@ -45,7 +43,7 @@ class NetworkModule {
     }
 
     @Provides
-    fun provideViewStateProvider(): ViewStateProvider{
+    fun provideViewStateProvider(): ViewStateProvider {
         return ViewStateProviderImpl(viewState = MutableStateFlow(ViewState.Display()))
     }
 

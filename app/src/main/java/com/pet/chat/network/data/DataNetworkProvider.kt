@@ -30,9 +30,11 @@ class DataNetworkProvider @Inject constructor(val eventFromServerProvider: Event
                 when(eventFromServer){
                     is EventFromServer.AutorizationEvent->{
                         val data = eventFromServer.data
+                       data.dialogs = data.dialogs.filter { it.room.id != null }
                         val chats = data.dialogs.map{it.toChatItemInfo()}
                         App.prefs?.saveUser(UserAuth(data.user.id, token = data.token!!))
-                        chats.forEach { chatItemInfo->
+
+                        chats.forEach { chatItemInfo-> return@collect
                             chatProvider.updateChat(chatItemInfo)
                         }
                     }
@@ -46,25 +48,31 @@ class DataNetworkProvider @Inject constructor(val eventFromServerProvider: Event
                     }
                     is EventFromServer.MessageNewEvent ->{
                         val data = eventFromServer.data
+                        if (data.room.id == null) return@collect
                         chatProvider.updateChat(data.toChatItemInfo())
                     }
                     is EventFromServer.ChatHistoryEvent -> {
                         val data = eventFromServer.data
-                        data.toChatItemInfo()?.let { chatItemInfo ->
+                        if (data.room.id == null) return@collect
+                        data.toChatItemInfo().let { chatItemInfo ->
                             chatProvider.updateChat(chatItemInfo)
                         }
                     }
                     is EventFromServer.ChatDeleteEvent ->{
                         val data = eventFromServer.data
-                        chatProvider.deleteChat(chatID = data.room.id.toInt())
+                        if (data.room.id == null) return@collect
+                        chatProvider.deleteChat(chatID = data.room.id!!.toInt())
                     }
                     is EventFromServer.ChatClearEvent->{
                         val data = eventFromServer.data
-                        chatProvider.clearChat(chatID = data.room.id.toInt())
+                        if (data.room.id == null) return@collect
+
+                        chatProvider.clearChat(chatID = data.room.id!!.toInt())
                     }
                     is EventFromServer.MessageDeleteEvent->{
                         val data = eventFromServer.data
-                        chatProvider.deleteMessageByID(messageID = data.message.id.toInt(), roomID = data.room.id.toInt())
+                        if (data.room.id == null) return@collect
+                        chatProvider.deleteMessageByID(messageID = data.message.id.toInt(), roomID = data.room.id!!.toInt())
                     }
                     is EventFromServer.ChatReadEvent->{
                         val data = eventFromServer.data

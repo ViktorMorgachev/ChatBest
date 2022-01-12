@@ -11,6 +11,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.pet.chat.App
@@ -64,12 +65,7 @@ fun AutorizationScreen(
             snackBarHost(snackbarHostState = it)
         }
     ) { innerPadding ->
-        val (id, idChange) = rememberSaveable { mutableStateOf("155") }
-        val (token, tokenChange) = rememberSaveable { mutableStateOf("andr1") }
 
-        val authClick = {
-            viewModel.authorize(EventToServer.AuthEvent(UserAuth(id.toInt(), token)))
-        }
         if (lasViewState.value != viewState.value) {
             when (viewState.value) {
                 is ViewState.StateLoading -> {
@@ -77,42 +73,17 @@ fun AutorizationScreen(
                 }
                 is ViewState.Error -> {
                     ErrorView(
-                        retryAction = { authClick() },
+                        retryAction = { viewModel.lastAction },
                         errorText = (viewState.value as ViewState.Error).errorInfo
                     )
                 }
                 is ViewState.Display -> {
-                    Column(
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .fillMaxWidth()
-                            .fillMaxHeight()
-                    ) {
-                        Spacer(modifier = Modifier.weight(1f))
-                        val textFieldModifier = Modifier
-                            .fillMaxWidth(fraction = 0.5f)
-                            .align(Alignment.CenterHorizontally)
-                        TextField(
-                            value = id,
-                            onValueChange = idChange,
-                            modifier = textFieldModifier
-                        )
-                        TextField(
-                            value = token,
-                            onValueChange = tokenChange,
-                            modifier = textFieldModifier
-                        )
-                        Button(
-                            onClick = { authClick() },
-                            Modifier
-                                .align(Alignment.CenterHorizontally)
-                                .padding(8.dp)
-                        ) {
-                            Text(text = stringResource(id = R.string.auth))
-                        }
-                        Spacer(modifier = Modifier.weight(1f))
+                    ChatTheme() {
+                        AuthView(authAction = {  viewModel.authorize(EventToServer.AuthEvent(it))})
                     }
+
                 }
+                //TODO Не работает
                 is ViewState.Success -> {
                     navController.navigate(Screen.Chats.route)
                 }
@@ -125,8 +96,57 @@ fun AutorizationScreen(
     }
 }
 
-
 @Preview(widthDp = 400, showSystemUi = true)
+@Composable
+fun AuthViewPreview(){
+    ChatTheme() {
+        AuthView(authAction = {})
+    }
+}
+
+@Composable
+fun AuthView(modifier: Modifier = Modifier, authAction: (UserAuth)->Unit) {
+
+    val (id, idChange) = rememberSaveable { mutableStateOf("155") }
+    val (token, tokenChange) = rememberSaveable { mutableStateOf("andr1") }
+
+    val authClick = {
+        authAction(UserAuth(id.toInt(), token))
+    }
+    Column(
+        modifier = Modifier
+            .padding(4.dp)
+            .fillMaxWidth()
+            .fillMaxHeight()
+    ) {
+        Spacer(modifier = Modifier.weight(1f))
+        val textFieldModifier = Modifier
+            .fillMaxWidth(fraction = 0.5f)
+            .align(Alignment.CenterHorizontally)
+        TextField(
+            value = id,
+            onValueChange = idChange,
+            modifier = textFieldModifier
+        )
+        TextField(
+            value = token,
+            onValueChange = tokenChange,
+            modifier = textFieldModifier
+        )
+        Button(
+            onClick = { authClick() },
+            Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(8.dp)
+        ) {
+            Text(text = stringResource(id = R.string.auth))
+        }
+        Spacer(modifier = Modifier.weight(1f))
+    }
+}
+
+
+
 @Composable
 fun AutorizationScreenPrewiew() {
     ChatTheme {

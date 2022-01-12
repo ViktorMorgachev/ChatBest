@@ -12,7 +12,7 @@ import javax.inject.Singleton
 class EventFromServerProviderImpl @Inject constructor(override val events: MutableStateFlow<EventFromServer>) : EventFromServerProvider {
     override fun postEventFromServer(eventFromServer: EventFromServer) {
         runBlocking(Dispatchers.IO) {
-            Log.d("ViewStateProviderImpl", "EventFromServer $eventFromServer")
+            Log.d("EventFromServerProvider", "EventFromServer $eventFromServer")
             events.emit(eventFromServer)
         }
     }

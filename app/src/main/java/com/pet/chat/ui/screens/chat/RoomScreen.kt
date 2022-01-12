@@ -99,7 +99,7 @@ fun Room(
         ),
     viewModel: MessagesViewModel
 ) {
-    val viewState = viewModel.viewStateProvider.viewState.collectAsState(ViewState.Display())
+    val viewState = viewModel.viewStateProvider.viewState.collectAsState(ViewState.StateLoading)
     // Хак
     val lasViewState = remember { mutableStateOf<ViewState?>(null) }
 
@@ -107,6 +107,10 @@ fun Room(
         onDispose {
             viewModel.dismiss()
         }
+    }
+
+    SideEffect {
+        Log.d("RoomScreen", "ViewState ${viewState.value}")
     }
 
     LaunchedEffect(key1 = Unit, block = {
@@ -160,21 +164,23 @@ fun Room(
                     NoItemsView(message = "Тут пока пусто, напишите что нибудь", iconResID = null)
                 }
                 is ViewState.Display -> {
-                    if ((viewState.value as ViewState.Display).data.isEmpty()) return@Scaffold
-                    val messages = (viewState.value as ViewState.Display).data.first() as List<RoomMessage>
-
-
-                    Log.d("RoomScreen", "Messages  ${messages.size}")
-                    ChatTheme {
-                        MessagesView(
-                           modifier = Modifier
-                               .padding(innerPadding),
-                            bottomSheetActions = bottomSheetActions,
-                            scope = scope,
-                            roomID = roomID,
-                            actionProvider = actionProvider, messages = messages
-                        )
+                    val firstItem = (viewState.value as ViewState.Display).data.firstOrNull() as List<*>
+                    if (firstItem.firstOrNull() is RoomMessage){
+                        Log.d("RoomScreen", "Messages  ${firstItem.size}")
+                        ChatTheme {
+                            MessagesView(
+                                modifier = Modifier
+                                    .padding(innerPadding),
+                                bottomSheetActions = bottomSheetActions,
+                                scope = scope,
+                                roomID = roomID,
+                                actionProvider = actionProvider, messages = firstItem as List<RoomMessage>
+                            )
+                        }
+                    } else {
+                        Log.d("RoomScreen", "Cast Exception need RoomMessage was ${firstItem.first()}")
                     }
+
                 }
             }
             lasViewState.value = viewState.value
@@ -328,7 +334,9 @@ fun MessagesView(
                     }
                 }
             }
-            Column(modifier = Modifier.fillMaxWidth().padding(4.dp)) {
+            Column(modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp)) {
                 Row() {
                     TextField(
                         modifier = Modifier,

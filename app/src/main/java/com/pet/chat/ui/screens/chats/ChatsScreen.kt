@@ -25,6 +25,7 @@ import com.pet.chat.network.data.receive.MessageNew
 import com.pet.chat.network.data.send.ChatDelete
 import com.pet.chat.network.data.send.ChatHistory
 import com.pet.chat.ui.*
+import com.pet.chat.ui.screens.chat.RoomMessage
 import com.pet.chat.ui.screens.chat.toSimpleMessage
 import com.pet.chat.ui.theme.ChatTheme
 import com.pet.chat.ui.theme.Shapes
@@ -36,7 +37,7 @@ fun Dialog.toChatItemInfo(): ChatItemInfo {
     }
     val messages = if (this.message != null) listOf(this.message.toSimpleMessage()) else listOf()
     return ChatItemInfo(
-        roomID = this.room.id.toInt(),
+        roomID = this.room.id!!.toInt(),
         usersIDs = usersIDs,
         unreadCount = this.chat.unread_count.toInt(),
         roomMessages = messages.toMutableList()
@@ -49,7 +50,7 @@ fun MessageNew.toChatItemInfo(): ChatItemInfo {
         usersIDs.add(it.id.toInt())
     }
     return ChatItemInfo(
-        roomID = this.room.id.toInt(),
+        roomID = this.room.id!!.toInt(),
         usersIDs = usersIDs,
         unreadCount = this.chat.unread_count.toInt(),
         roomMessages = mutableListOf(this.message.toSimpleMessage())
@@ -109,10 +110,11 @@ fun ChatsScreen(
         if (true){
             when (viewState.value) {
                 is ViewState.StateLoading -> {
-                    LoadingView()
+                    LoadingView(modifier = Modifier.padding(paddingValues = innerPadding))
                 }
                 is ViewState.Error -> {
                     ErrorView(
+                        modifier = Modifier.padding(paddingValues = innerPadding),
                         retryAction = { retryAction.invoke() },
                         errorText = (viewState.value as ViewState.Error).errorInfo
                     )
@@ -121,10 +123,13 @@ fun ChatsScreen(
                     NoItemsView(message = "Чатов нет на данный момент", iconResID = null)
                 }
                 is ViewState.Display ->{
-                    if ((viewState.value as ViewState.Display).data.isEmpty())return@Scaffold
-                    val chats = (viewState.value as ViewState.Display).data.first() as List<ChatItemInfo>
-                    Log.d("ChatScreen", "Chats ${chats.size}")
-                    DisplayChats(modifier = Modifier.padding(innerPadding), chats = chats, deleteChatAction = deleteChat, navController = navController)
+                    val firstItem = (viewState.value as ViewState.Display).data.firstOrNull() as List<*>
+                    if (firstItem.firstOrNull() is ChatItemInfo){
+                        val chats = firstItem as List<ChatItemInfo>
+                        Log.d("ChatScreen", "Chats ${chats.size}")
+                        DisplayChats(modifier = Modifier.padding(innerPadding), chats = chats, deleteChatAction = deleteChat, navController = navController)
+                    }
+
                 }
             }
             lasViewState.value = viewState.value

@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.collect
 import javax.inject.Inject
 import javax.inject.Singleton
 
-
 @Singleton
 class MultipleChatProviderImpl @Inject constructor(override val chats: MutableStateFlow<List<ChatItemInfo>>) : ChatProvider<ChatItemInfo>, MultipleMessagesProvider<RoomMessage> {
 
@@ -40,7 +39,7 @@ class MultipleChatProviderImpl @Inject constructor(override val chats: MutableSt
         if (actualChat != null) {
             actualChat.roomMessages = listOf()
         }
-        Log.d("ChatProviderImpl", "clearChat Chats ${chats.value}")
+        Log.d("ChatProviderImpl", "clearChat Messages ${actualChat?.roomMessages} Size ${actualChat?.roomMessages?.size}")
     }
 
     override fun updateChat(chat: ChatItemInfo) {
@@ -51,7 +50,7 @@ class MultipleChatProviderImpl @Inject constructor(override val chats: MutableSt
         } else {
             chats.value = chats.value.addLast(chat)
         }
-        Log.d("ChatProviderImpl", "updateChat Chats ${chats.value}")
+        Log.d("ChatProviderImpl", "updateChat Chats ${chats.value} Size ${chats.value.size}")
 
     }
 
@@ -60,7 +59,7 @@ class MultipleChatProviderImpl @Inject constructor(override val chats: MutableSt
         if (currentChat != null) {
             currentChat.roomMessages = currentChat.roomMessages.addLast(message)
         }
-        Log.d("ChatProviderImpl", "addMessage Chats ${chats.value}")
+        Log.d("ChatProviderImpl", "addMessage Messages ${currentChat?.roomMessages} Size ${currentChat?.roomMessages?.size}")
     }
 
     override fun deleteMessageByID(messageID: Int, roomID: Int) {
@@ -70,6 +69,7 @@ class MultipleChatProviderImpl @Inject constructor(override val chats: MutableSt
                 currentChat.roomMessages = currentChat.roomMessages.removeWithInstance(it)
             }
         }
+        Log.d("ChatProviderImpl", "deleteMessageByID Messages ${currentChat?.roomMessages} Size ${currentChat?.roomMessages?.size}")
     }
 
     override fun addTempMessage(data: RoomMessage, roomID: Int) {
@@ -77,7 +77,7 @@ class MultipleChatProviderImpl @Inject constructor(override val chats: MutableSt
         if (currentChat != null) {
             currentChat.roomMessages = currentChat.roomMessages.addLast(data)
         }
-        Log.d("ChatProviderImpl", "addTempMessage Chats ${chats.value}")
+        Log.d("ChatProviderImpl", "addTempMessage Messages ${currentChat?.roomMessages} Size ${currentChat?.roomMessages?.size}")
     }
 
     private fun getCurrentChat(roomID: Int): ChatItemInfo? {
@@ -87,7 +87,8 @@ class MultipleChatProviderImpl @Inject constructor(override val chats: MutableSt
 
     override fun updateChatState(data: Any) {
         if (data is ChatRead){
-            chats.value.find { it.roomID == data.room.id.toInt() }?.let {
+            if (data.room.id == null) return
+            chats.value.find { it.roomID == data.room.id!!.toInt() }?.let {
                 it.unreadCount = 0
             }
         }

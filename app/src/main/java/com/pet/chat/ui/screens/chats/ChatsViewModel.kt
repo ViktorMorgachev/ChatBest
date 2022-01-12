@@ -31,13 +31,15 @@ class ChatsViewModel @Inject constructor(
     init {
         Log.d("ChatsViewModel", "Init")
         viewModelScope.launch(Dispatchers.IO) {
-            chatProviderImpl.chats.collect {
-                if (isActive) {
-                    Log.d("ChatsViewModel", "ChatItemsInfo $it")
-                    if (it.isEmpty()) {
-                        viewStateProvider.postViewState(ViewState.StateNoItems)
-                    } else
-                        viewStateProvider.postViewState(ViewState.Display(listOf(it)))
+            if (isActive) {
+                chatProviderImpl.chats.collect {
+                    if (isActive) {
+                        Log.d("ChatsViewModel", "ChatItemsInfo $it")
+                        if (it.isEmpty()) {
+                            viewStateProvider.postViewState(ViewState.StateNoItems)
+                        } else
+                            viewStateProvider.postViewState(ViewState.Display(listOf(it)))
+                    }
                 }
             }
 

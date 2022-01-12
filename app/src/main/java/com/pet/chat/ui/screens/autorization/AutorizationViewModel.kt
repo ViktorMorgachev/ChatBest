@@ -27,6 +27,9 @@ class AutorizationViewModel @Inject constructor(
 ) : ViewModel() {
 
 
+    var lastAction = {
+    }
+
     init {
         Log.d(tag, "Init")
         viewModelScope.launch(Dispatchers.IO) {
@@ -52,8 +55,10 @@ class AutorizationViewModel @Inject constructor(
     }
 
     fun authorize(authEvent: EventToServer.AuthEvent) = viewModelScope.launch(Dispatchers.IO) {
-        connectionManager.postEventToServer(authEvent) {
-            viewStateProvider.postViewState(ViewState.Error(it))
+        lastAction = {
+            connectionManager.postEventToServer(
+                authEvent,
+                error = { viewStateProvider.postViewState(ViewState.Error(it)) })
         }
     }
 

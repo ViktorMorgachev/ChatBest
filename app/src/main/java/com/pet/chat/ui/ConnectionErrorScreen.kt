@@ -13,8 +13,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.pet.chat.network.EventFromServer
+
+
+@Preview(widthDp = 400, showSystemUi = true)
+@Composable
+fun ErrorViewPreview(){
+    ErrorView(retryAction = { }, errorText = "Ошибка")
+}
 
 @Composable
 fun ErrorView(
@@ -28,10 +36,9 @@ fun ErrorView(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(4.dp)
-            .background(color = Color.Red), contentAlignment = Alignment.Center
+            .padding(4.dp), contentAlignment = Alignment.Center
     ) {
-        Column() {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
             if (errorText.isNotEmpty()) {
                 Text(text = errorText, modifier = Modifier)
             }

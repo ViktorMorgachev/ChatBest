@@ -60,6 +60,11 @@ class MessagesViewModel @Inject constructor(
                     }
                 }
             }
+            viewStateProvider.viewState.collect {
+                if (isActive) {
+                    Log.d("MessagesViewModel", "ViewState $it")
+                }
+            }
 
         }
     }
