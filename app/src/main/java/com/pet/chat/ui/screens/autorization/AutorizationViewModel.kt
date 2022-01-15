@@ -3,10 +3,12 @@ package com.pet.chat.ui.screens.autorization
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pet.chat.App
 import com.pet.chat.network.ConnectionManager
 import com.pet.chat.network.EventFromServer
 import com.pet.chat.network.EventToServer
 import com.pet.chat.network.data.ViewState
+import com.pet.chat.network.data.send.UserAuth
 import com.pet.chat.providers.interfaces.EventFromServerProvider
 import com.pet.chat.providers.interfaces.ViewStateProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,7 +29,10 @@ class AutorizationViewModel @Inject constructor(
 ) : ViewModel() {
 
 
-    var lastAction = {
+    var lastAction: (()->Unit)? = null
+    get() {
+        Log.d(tag, "lastAction $field")
+        return field
     }
 
     init {
@@ -40,6 +45,9 @@ class AutorizationViewModel @Inject constructor(
                 }
 
             }
+        }
+        if (App.prefs?.identified() == true) {
+            authorize(EventToServer.AuthEvent(UserAuth(App.prefs!!.userID, App.prefs!!.userToken)))
         }
     }
 
@@ -55,15 +63,13 @@ class AutorizationViewModel @Inject constructor(
     }
 
     fun authorize(authEvent: EventToServer.AuthEvent) = viewModelScope.launch(Dispatchers.IO) {
+
         lastAction = {
-            connectionManager.postEventToServer(
-                authEvent,
+            viewStateProvider.postViewState(ViewState.StateLoading)
+            connectionManager.postEventToServer(authEvent,
                 error = { viewStateProvider.postViewState(ViewState.Error(it)) })
         }
-    }
-
-    fun tryToConnect() = viewModelScope.launch(Dispatchers.IO){
-        connectionManager.tryToConnect()
+        lastAction!!.invoke()
     }
 
     fun dismiss(){

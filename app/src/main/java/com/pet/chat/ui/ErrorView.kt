@@ -2,10 +2,7 @@ package com.pet.chat.ui
 
 import android.util.Log
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Text
@@ -28,26 +25,25 @@ fun ErrorViewPreview(){
 fun ErrorView(
     modifier: Modifier = Modifier,
     retryAction: () -> Unit,
-    errorText: String,
+    errorText: String
 ) {
     SideEffect {
         Log.d("Screen", "ErrorViewScreen")
     }
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(4.dp), contentAlignment = Alignment.Center
+        modifier = modifier
+            .padding(32.dp), contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             if (errorText.isNotEmpty()) {
-                Text(text = errorText, modifier = Modifier)
+                Text(text = errorText, modifier = Modifier.padding(bottom = 4.dp))
             }
-            Button(onClick = {
-                retryAction.invoke()
-            }) {
+            Button(
+                onClick =  retryAction ) {
                 Text(text = "Повторить")
             }
         }
 
     }
+
 }

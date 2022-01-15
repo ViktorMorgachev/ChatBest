@@ -26,9 +26,6 @@ fun NavGraphBuilder.chatFlow(
     composable(Screen.Autorization.route) {
         val viewModel = hiltViewModel<AutorizationViewModel>()
         AutorizationScreen(
-            onAuthEvent = {
-                viewModel.authorize(EventToServer.AuthEvent(it))
-            },
             viewModel = viewModel,
             navController = navController
         ).also {

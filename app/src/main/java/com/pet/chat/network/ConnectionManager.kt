@@ -135,6 +135,8 @@ class ConnectionManager @Inject constructor(private val eventFromServerProvider:
 
     fun postEventToServer(event: EventToServer, error: (String) -> Unit) {
         try {
+            if (socket?.connected() == false)
+                socket?.connect()
             socket?.emit(event.eventName, event.any.toSocketData())
         } catch (e: Throwable) {
             e.printStackTrace()
