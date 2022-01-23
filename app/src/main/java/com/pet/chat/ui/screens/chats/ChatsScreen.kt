@@ -58,8 +58,6 @@ fun ChatsScreen(
 ) {
     val scaffoldState = rememberScaffoldState()
     val viewState = viewModel.viewStateProvider.viewState.observeAsState(ViewState.StateLoading)
-    // Хак
-    val lasViewState = remember { mutableStateOf<ViewState?>(null) }
 
     SideEffect {
         Log.d(tag, "ViewState: ${viewState.value}")
@@ -109,7 +107,6 @@ fun ChatsScreen(
 
                 }
             }
-            lasViewState.value = viewState.value
         }
 
     }
@@ -118,9 +115,6 @@ fun ChatsScreen(
         onDispose {
             viewModel.dismiss()
         }
-    }
-    SideEffect {
-        Log.d("ChatsScreen", "ViewState ${viewState.value}")
     }
 
 }

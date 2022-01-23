@@ -30,16 +30,13 @@ fun AutorizationScreen(
     viewModel: AutorizationViewModel,
     navController: NavController
 ) {
-    val viewState = viewModel.viewStateProvider.viewState.observeAsState(ViewState.Display())
-    // Хак
-    val lasViewState = remember { mutableStateOf<ViewState?>(null) }
+    val viewState = viewModel.viewStateProvider.viewState.observeAsState(ViewState.StateLoading)
 
     DisposableEffect(key1 = viewModel){
         onDispose {
             viewModel.dismiss()
         }
     }
-
     SideEffect {
         Log.d(tagForState, "ViewState: ${viewState.value}")
     }
@@ -56,7 +53,7 @@ fun AutorizationScreen(
         }
     ) { innerPadding ->
 
-        if (lasViewState.value != viewState.value) {
+        if (true) {
             when (viewState.value) {
                 is ViewState.StateLoading -> {
                     LoadingView( modifier = Modifier
@@ -97,13 +94,14 @@ fun AutorizationScreen(
                     }
                 }
                 is ViewState.Success -> {
-                    navController.navigate(Screen.Chats.route)
+                    LaunchedEffect(key1 = Unit){
+                        navController.navigate(Screen.Chats.route)
+                    }
                 }
                 else -> {
                     println("$tagForState Unsupported state ${viewState.value}")
                 }
             }
-            lasViewState.value = viewState.value
         }
     }
 }

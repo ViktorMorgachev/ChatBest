@@ -54,10 +54,13 @@ class AutorizationViewModel @Inject constructor(
     private fun reduce(eventFromServer: EventFromServer) {
         when (eventFromServer) {
             is EventFromServer.AutorizationEvent -> {
-                viewStateProvider.postViewState(ViewState.Success())
+               viewStateProvider.postViewState(ViewState.Success())
             }
             is EventFromServer.ConnectionError -> {
                 viewStateProvider.postViewState(ViewState.Error(eventFromServer.data))
+            }
+            is EventFromServer.ConnectionSuccess ->{
+               viewStateProvider.postViewState(ViewState.Display())
             }
         }
     }
@@ -73,7 +76,7 @@ class AutorizationViewModel @Inject constructor(
     }
 
     fun dismiss(){
-        Log.d("MessagesViewModel", "dismiss()")
+        Log.d("AutorizationViewModel", "dismiss()")
         viewModelScope.cancel()
     }
 }
