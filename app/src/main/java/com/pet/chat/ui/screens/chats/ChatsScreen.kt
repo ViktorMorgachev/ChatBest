@@ -57,7 +57,8 @@ fun ChatsScreen(
     viewModel: ChatsViewModel
 ) {
     val scaffoldState = rememberScaffoldState()
-    val viewState = viewModel.viewStateProvider.viewState.observeAsState(ViewState.StateLoading)
+    val firstViewState = if(viewModel.chatProviderImpl.chats.value.isNotEmpty()){ ViewState.Display(listOf(viewModel.chatProviderImpl.chats.value)) } else ViewState.StateLoading
+    val viewState = viewModel.viewStateProvider.viewState.observeAsState(firstViewState)
 
     SideEffect {
         Log.d(tag, "ViewState: ${viewState.value}")

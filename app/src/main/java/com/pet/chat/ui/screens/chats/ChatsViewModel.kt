@@ -42,8 +42,8 @@ class ChatsViewModel @Inject constructor(
                     }
                 }
             }
-
         }
+
     }
 
     fun deleteChat(chatDelete: ChatDelete) = viewModelScope.launch(Dispatchers.IO) {
