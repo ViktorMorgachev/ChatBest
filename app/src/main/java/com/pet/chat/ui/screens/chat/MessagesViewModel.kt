@@ -14,6 +14,7 @@ import com.pet.chat.network.EventFromServer
 import com.pet.chat.network.EventToServer
 import com.pet.chat.network.data.ViewState
 import com.pet.chat.network.data.base.File
+import com.pet.chat.network.data.currentRoomID
 import com.pet.chat.network.data.send.ChatRead
 import com.pet.chat.network.data.send.ClearChat
 import com.pet.chat.network.data.send.DeleteMessage
@@ -45,6 +46,10 @@ class MessagesViewModel @Inject constructor(
 ) : ViewModel() {
 
     var curentRoomID = -1
+    set(value) {
+        currentRoomID = value
+        field = value
+    }
     var actionProvider: ActionProvider
         private set
 
@@ -54,8 +59,7 @@ class MessagesViewModel @Inject constructor(
             chatProviderImpl.chats.collect {
                 if (isActive) {
                     Log.d("MessagesViewModel", "ChatsInfo $it")
-                    val currentChat =
-                        it.firstOrNull { it.roomID == curentRoomID }?.roomMessages ?: listOf()
+                    val currentChat = it.firstOrNull { it.roomID == curentRoomID }?.roomMessages ?: listOf()
                     if (currentChat.isEmpty()) {
                         viewStateProvider.postViewState(ViewState.StateNoItems)
                     } else {

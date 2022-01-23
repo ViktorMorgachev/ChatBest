@@ -31,7 +31,7 @@ class DataNetworkProvider @Inject constructor(val eventFromServerProvider: Event
                         val chats = data.dialogs.map{it.toChatItemInfo()}
                         App.prefs?.saveUser(UserAuth(data.user.id, token = data.token!!))
 
-                        chats.forEach { chatItemInfo-> return@collect
+                        chats.forEach { chatItemInfo->
                             chatProvider.updateChat(chatItemInfo)
                         }
                     }
@@ -50,8 +50,8 @@ class DataNetworkProvider @Inject constructor(val eventFromServerProvider: Event
                     }
                     is EventFromServer.ChatHistoryEvent -> {
                         val data = eventFromServer.data
-                        if (data.room.id == null) return@collect
-                        data.toChatItemInfo().let { chatItemInfo ->
+                        val roomID: Int = data.room?.id?.toInt() ?: currentRoomID ?: return@collect
+                        data.toChatItemInfo(currentRoomID = roomID).let { chatItemInfo ->
                             chatProvider.updateChat(chatItemInfo)
                         }
                     }

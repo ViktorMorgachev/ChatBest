@@ -6,15 +6,18 @@ import com.pet.chat.network.data.receive.MessageNew
 import com.pet.chat.ui.ChatItemInfo
 import com.pet.chat.ui.screens.chat.toSimpleMessage
 
-fun ChatHistory.toChatItemInfo(): ChatItemInfo {
+// Delete in future? its bad
+var currentRoomID : Int? = null
+
+fun ChatHistory.toChatItemInfo(currentRoomID: Int): ChatItemInfo {
 
     return run {
         val userIds: MutableList<Int> = mutableListOf()
-        val roomID = room.id!!.toInt()
-        room.users.forEach {
+        val roomID: Int = currentRoomID
+        room?.users?.forEach {
             userIds.add(it.id.toInt())
         }
-        val unreadCount = this.chat.unread_count
+        val unreadCount = this.chat?.unread_count ?: 0
         ChatItemInfo(roomID = roomID,
             usersIDs = userIds,
             unreadCount = unreadCount.toInt(),

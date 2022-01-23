@@ -102,8 +102,6 @@ fun Room(
     viewModel: MessagesViewModel
 ) {
     val viewState = viewModel.viewStateProvider.viewState.observeAsState(ViewState.StateLoading)
-    // Хак
-    val lasViewState = remember { mutableStateOf<ViewState?>(null) }
 
     DisposableEffect(key1 = viewModel) {
         onDispose {
@@ -185,7 +183,6 @@ fun Room(
 
                 }
             }
-            lasViewState.value = viewState.value
         }
 
     }
