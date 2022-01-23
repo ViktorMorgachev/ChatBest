@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -18,6 +19,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.pet.chat.R
+import com.pet.chat.helpers.observeAsState
 import com.pet.chat.helpers.retryAction
 import com.pet.chat.network.data.ViewState
 import com.pet.chat.network.data.base.Dialog
@@ -30,32 +32,7 @@ import com.pet.chat.ui.screens.chat.toSimpleMessage
 import com.pet.chat.ui.theme.ChatTheme
 import com.pet.chat.ui.theme.Shapes
 
-fun Dialog.toChatItemInfo(): ChatItemInfo {
-    val usersIDs = mutableListOf<Int>()
-    this.room.users.forEach {
-        usersIDs.add(it.id.toInt())
-    }
-    val messages = if (this.message != null) listOf(this.message.toSimpleMessage()) else listOf()
-    return ChatItemInfo(
-        roomID = this.room.id!!.toInt(),
-        usersIDs = usersIDs,
-        unreadCount = this.chat.unread_count.toInt(),
-        roomMessages = messages.toMutableList()
-    )
-}
 
-fun MessageNew.toChatItemInfo(): ChatItemInfo {
-    val usersIDs = mutableListOf<Int>()
-    this.room.users.forEach {
-        usersIDs.add(it.id.toInt())
-    }
-    return ChatItemInfo(
-        roomID = this.room.id!!.toInt(),
-        usersIDs = usersIDs,
-        unreadCount = this.chat.unread_count.toInt(),
-        roomMessages = mutableListOf(this.message.toSimpleMessage())
-    )
-}
 
 val mockRoomChat = ChatItemInfo(
     roomID = 122,
@@ -80,7 +57,7 @@ fun ChatsScreen(
     viewModel: ChatsViewModel
 ) {
     val scaffoldState = rememberScaffoldState()
-    val viewState = viewModel.viewStateProvider.viewState.collectAsState(ViewState.StateLoading)
+    val viewState = viewModel.viewStateProvider.viewState.observeAsState(ViewState.StateLoading)
     // Хак
     val lasViewState = remember { mutableStateOf<ViewState?>(null) }
 

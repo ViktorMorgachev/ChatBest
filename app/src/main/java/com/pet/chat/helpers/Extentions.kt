@@ -1,5 +1,10 @@
 package com.pet.chat.helpers
 
+import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
 import androidx.work.Data
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
@@ -7,6 +12,11 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.pet.chat.App
 import com.pet.chat.network.data.base.Message
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.InternalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.isActive
 import org.json.JSONObject
 import java.util.concurrent.ExecutionException
 
@@ -79,6 +89,28 @@ inline fun <reified E> List<E>.addAll(list: List<E>): List<E> {
     }
     newList.addAll(list)
     return newList
+}
+
+@OptIn(InternalCoroutinesApi::class)
+public suspend inline fun <T> Flow<T>.collect(scope: CoroutineScope, crossinline action: suspend (value: T) -> Unit): Unit =
+    collect(object : FlowCollector<T> {
+        override suspend fun emit(value: T) {
+            if (scope.isActive){
+                action(value)
+            }
+        }
+    })
+
+@Composable
+fun <R, T : R> SingleLiveEvent<T>.observeAsState(initial: R): State<R> {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val state = remember { mutableStateOf(initial) }
+    DisposableEffect(this, lifecycleOwner) {
+        val observer = Observer<T> { state.value = it }
+        observe(lifecycleOwner, observer)
+        onDispose { removeObserver(observer) }
+    }
+    return state
 }
 
 inline fun <reified E> List<E>.removeWithInstance(it: E): List<E> {

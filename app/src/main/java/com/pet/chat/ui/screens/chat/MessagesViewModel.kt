@@ -46,33 +46,32 @@ class MessagesViewModel @Inject constructor(
 
     var curentRoomID = -1
     var actionProvider: ActionProvider
+        private set
+
     init {
         actionProvider = ActionProvider()
         viewModelScope.launch(Dispatchers.IO) {
             chatProviderImpl.chats.collect {
-                if (isActive){
+                if (isActive) {
                     Log.d("MessagesViewModel", "ChatsInfo $it")
-                    val currentChat = it.firstOrNull{it.roomID == curentRoomID}?.roomMessages ?: listOf()
-                    if (currentChat.isEmpty()){
+                    val currentChat =
+                        it.firstOrNull { it.roomID == curentRoomID }?.roomMessages ?: listOf()
+                    if (currentChat.isEmpty()) {
                         viewStateProvider.postViewState(ViewState.StateNoItems)
-                    } else{
+                    } else {
                         viewStateProvider.postViewState(ViewState.Display(listOf(currentChat)))
                     }
                 }
             }
-            viewStateProvider.viewState.collect {
-                if (isActive) {
-                    Log.d("MessagesViewModel", "ViewState $it")
-                }
-            }
-
         }
     }
 
     fun deleteSimpleMessage(message: RoomMessage) = viewModelScope.launch(Dispatchers.IO) {
-        connectionManager.postEventToServer(EventToServer.DeleteMessageEvent(DeleteMessage(message.messageID)), error = {
-            viewStateProvider.postViewState(ViewState.Error(it))
-        })
+        connectionManager.postEventToServer(
+            EventToServer.DeleteMessageEvent(DeleteMessage(message.messageID)),
+            error = {
+                viewStateProvider.postViewState(ViewState.Error(it))
+            })
     }
 
 
@@ -81,13 +80,15 @@ class MessagesViewModel @Inject constructor(
     }
 
     fun clearChat(roomID: Int = curentRoomID) = viewModelScope.launch(Dispatchers.IO) {
-        connectionManager.postEventToServer(EventToServer.ClearChatEvent(ClearChat(roomID = curentRoomID)), error = {
-            viewStateProvider.postViewState(ViewState.Error(it))
-        })
+        connectionManager.postEventToServer(
+            EventToServer.ClearChatEvent(ClearChat(roomID = curentRoomID)),
+            error = {
+                viewStateProvider.postViewState(ViewState.Error(it))
+            })
     }
 
-    fun charReadEvent(chatRead: ChatRead) = viewModelScope.launch(Dispatchers.IO){
-        connectionManager.postEventToServer(EventToServer.ChatReadEvent(chatRead)){
+    fun charReadEvent(chatRead: ChatRead) = viewModelScope.launch(Dispatchers.IO) {
+        connectionManager.postEventToServer(EventToServer.ChatReadEvent(chatRead)) {
             viewStateProvider.postViewState(ViewState.Error(it))
         }
     }
@@ -100,7 +101,9 @@ class MessagesViewModel @Inject constructor(
 
     fun addTempMessage(messageText: String, file: File, roomID: Int) =
         viewModelScope.launch(Dispatchers.IO) {
-            val lastMessageID = chatProviderImpl.chats.value.firstOrNull { it.roomID == roomID }?.roomMessages?.last()?.messageID ?: 0
+            val lastMessageID =
+                chatProviderImpl.chats.value.firstOrNull { it.roomID == roomID }?.roomMessages?.last()?.messageID
+                    ?: 0
             chatProviderImpl.addTempMessage(
                 RoomMessage.SendingMessage(
                     isOwn = true,
@@ -117,7 +120,7 @@ class MessagesViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             connectionManager.postEventToServer(event = eventToServer, error = {
                 viewModelScope.launch(Dispatchers.Main) {
-                    viewStateProvider.viewState.emit(ViewState.Error(it))
+                    viewStateProvider.viewState.postValue(ViewState.Error(it))
                 }
             })
         }
@@ -142,11 +145,11 @@ class MessagesViewModel @Inject constructor(
 
     }
 
-    fun resultAfterCamera(){
+    fun resultAfterCamera() {
 
     }
 
-    fun dismiss(){
+    fun dismiss() {
         Log.d("MessagesViewModel", "dismiss()")
         viewModelScope.cancel()
     }
@@ -176,15 +179,17 @@ class MessagesViewModel @Inject constructor(
 
         fun clearChatAction() = clearChat(roomID = curentRoomID)
 
-        fun deleteMessageAction(data: RoomMessage.SimpleMessage)= deleteSimpleMessage(message =data)
+        fun deleteMessageAction(data: RoomMessage.SimpleMessage) =
+            deleteSimpleMessage(message = data)
 
-        fun deleteMessageAction(data: RoomMessage.SendingMessage)= deleteSendingMessage(message = data)
+        fun deleteMessageAction(data: RoomMessage.SendingMessage) =
+            deleteSendingMessage(message = data)
 
         fun tryToDownLoadAction(data: RoomMessage.SimpleMessage) = startDownloadFile()
 
         fun chatReadEvent(data: ChatRead) = charReadEvent(data)
 
-        fun resultAfterCamera(resultAction: Boolean = true){
+        fun resultAfterCamera(resultAction: Boolean = true) {
 
         }
     }

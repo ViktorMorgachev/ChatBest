@@ -39,8 +39,7 @@ sealed class EventToServer(val eventName: String, val any: Any) {
     data class GetChatHistory(val data: ChatHistory) : EventToServer("chat.history", any = data)
     data class DeleteChat(val data: ChatDelete) : EventToServer("chat.delete", any = data)
     data class ClearChatEvent(val data: ClearChat) : EventToServer("chat.clear", any = data)
-    data class DeleteMessageEvent(val data: DeleteMessage) :
-        EventToServer("message.delete", any = data)
+    data class DeleteMessageEvent(val data: DeleteMessage) : EventToServer("message.delete", any = data)
     data class ChatReadEvent(val data: ChatRead) : EventToServer("chat.read", any = data)
 }
 
@@ -59,7 +58,13 @@ class ConnectionManager @Inject constructor(private val eventFromServerProvider:
 
     fun initConnection(uri: String? = null, options: IO.Options? = null) {
         try {
-            socket = IO.socket("ws://185.26.121.63:3000").connect()
+            val optionsNew = IO.Options.builder()
+                .setPath("/socket/")
+                .setTransports(arrayOf("websocket", "polling"))
+                .setPort(3001).build()
+
+            val connectionUrlNew = "wss://vskvortsov.ru"
+            socket = IO.socket(connectionUrlNew, optionsNew).connect()
             registratingEvents()
         } catch (error: Throwable) {
             error.printStackTrace()

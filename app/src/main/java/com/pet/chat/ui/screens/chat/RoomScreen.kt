@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Camera
 import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -24,6 +25,7 @@ import androidx.navigation.compose.rememberNavController
 import com.pet.chat.App
 import com.pet.chat.App.Companion.prefs
 import com.pet.chat.R
+import com.pet.chat.helpers.observeAsState
 import com.pet.chat.network.EventToServer
 import com.pet.chat.network.data.ViewState
 import com.pet.chat.network.data.base.Message
@@ -99,7 +101,7 @@ fun Room(
         ),
     viewModel: MessagesViewModel
 ) {
-    val viewState = viewModel.viewStateProvider.viewState.collectAsState(ViewState.StateLoading)
+    val viewState = viewModel.viewStateProvider.viewState.observeAsState(ViewState.StateLoading)
     // Хак
     val lasViewState = remember { mutableStateOf<ViewState?>(null) }
 
@@ -300,10 +302,6 @@ fun MessagesView(
             )
             messageChange("")
         }
-
-     /*   if (internalEvent is InternalEvent.OpenFilePreview) {
-            openDialogChange(true)
-        }*/
 
         Column() {
             if (messages.isEmpty()){

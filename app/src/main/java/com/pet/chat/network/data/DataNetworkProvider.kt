@@ -3,13 +3,10 @@ package com.pet.chat.network.data
 import com.pet.chat.App
 import com.pet.chat.network.ConnectionManager
 import com.pet.chat.network.EventFromServer
-import com.pet.chat.network.data.base.User
 import com.pet.chat.network.data.send.UserAuth
 import com.pet.chat.providers.MultipleChatProviderImpl
-import com.pet.chat.providers.UsersProviderImpl
 import com.pet.chat.providers.interfaces.EventFromServerProvider
 import com.pet.chat.providers.interfaces.UsersProvider
-import com.pet.chat.ui.screens.chats.toChatItemInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect

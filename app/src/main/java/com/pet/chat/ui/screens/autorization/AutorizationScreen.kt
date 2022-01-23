@@ -12,6 +12,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.pet.chat.R
+import com.pet.chat.helpers.observeAsState
 import com.pet.chat.network.EventToServer
 import com.pet.chat.network.data.ViewState
 import com.pet.chat.network.data.send.UserAuth
@@ -29,7 +30,7 @@ fun AutorizationScreen(
     viewModel: AutorizationViewModel,
     navController: NavController
 ) {
-    val viewState = viewModel.viewStateProvider.viewState.collectAsState(ViewState.Display())
+    val viewState = viewModel.viewStateProvider.viewState.observeAsState(ViewState.Display())
     // Хак
     val lasViewState = remember { mutableStateOf<ViewState?>(null) }
 

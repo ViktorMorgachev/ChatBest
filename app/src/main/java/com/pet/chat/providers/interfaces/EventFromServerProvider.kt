@@ -6,6 +6,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 interface EventFromServerProvider {
-    val events :  MutableStateFlow<EventFromServer>
+    val events : MutableStateFlow<EventFromServer>
     fun postEventFromServer(eventFromServer: EventFromServer)
 }
