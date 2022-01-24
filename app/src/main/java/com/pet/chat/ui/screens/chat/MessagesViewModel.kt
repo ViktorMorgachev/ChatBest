@@ -52,8 +52,9 @@ class MessagesViewModel @Inject constructor(
         actionProvider = ActionProvider()
         viewModelScope.launch(Dispatchers.IO) {
             eventFromServerProvider.events.collect {
-                if (it is EventFromServer.MessageNewEvent)
+                if (it is EventFromServer.MessageNewEvent || it is EventFromServer.ChatClearEvent || it is EventFromServer.MessageDeleteEvent){
                     fetchMessages()
+                }
             }
         }
     }

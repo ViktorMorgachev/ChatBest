@@ -97,9 +97,6 @@ fun Room(
 ) {
     val viewState = viewModel.viewStateProvider.viewState.observeAsState(ViewState.StateLoading)
 
-    val messages = viewModel.chatProviderImpl.chats.collectAsState()
-
-
     DisposableEffect(key1 = viewModel) {
         viewModel.onStart()
         onDispose {
@@ -159,7 +156,17 @@ fun Room(
                     )
                 }
                 is ViewState.StateNoItems -> {
-                    NoItemsView(message = "Тут пока пусто, напишите что нибудь", iconResID = null)
+                    ChatTheme {
+                        MessagesView(
+                            modifier = Modifier
+                                .padding(innerPadding),
+                            bottomSheetActions = bottomSheetActions,
+                            scope = scope,
+                            roomID = roomID,
+                            actionProvider = actionProvider,
+                            messages = listOf()
+                        )
+                    }
                 }
                 is ViewState.Display -> {
                     val firstItem = (viewState.value as ViewState.Display).data.firstOrNull() as List<*>
@@ -300,7 +307,7 @@ fun MessagesView(
 
         Column() {
             if (messages.isEmpty()){
-                NoItemsView(message = "Напишите одно сообщение", iconResID = null, modifier = Modifier.weight(1f))
+                NoItemsView(message = "Напишите хотя-бы одно сообщение", iconResID = null, modifier = Modifier.weight(1f))
             } else {
                 LazyColumn(
                     modifier = modifier

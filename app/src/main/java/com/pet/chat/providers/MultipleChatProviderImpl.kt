@@ -44,6 +44,11 @@ class MultipleChatProviderImpl @Inject constructor(override val chats: MutableSt
         if (actualChat != null) {
             actualChat.roomMessages = listOf()
         }
+
+        GlobalScope.launch(Dispatchers.IO) {
+            chats.emit(listOf<ChatItemInfo>().addAll(chats.value))
+        }
+
         Log.d("ChatProviderImpl", "clearChat Messages ${actualChat?.roomMessages} Size ${actualChat?.roomMessages?.size}")
     }
 

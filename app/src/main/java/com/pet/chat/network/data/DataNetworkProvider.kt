@@ -63,7 +63,6 @@ class DataNetworkProvider @Inject constructor(val eventFromServerProvider: Event
                     is EventFromServer.ChatClearEvent->{
                         val data = eventFromServer.data
                         if (data.room.id == null) return@collect
-
                         chatProvider.clearChat(chatID = data.room.id!!.toInt())
                     }
                     is EventFromServer.MessageDeleteEvent->{
