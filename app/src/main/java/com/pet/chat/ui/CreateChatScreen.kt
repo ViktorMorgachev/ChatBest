@@ -30,18 +30,15 @@ fun CreateChatScreen(
     modifier: Modifier = Modifier,
     createChat: (ChatStart) -> Unit,
     navController: NavController,
+    toolbar: Toolbar
 ) {
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(text = stringResource(id = R.string.createChat))
-                }
-            )
-        }
     ) { innerPadding ->
         val (userID, userIDChange) = rememberSaveable { mutableStateOf("156") }
         val (text, textChange) = rememberSaveable { mutableStateOf("Привет $userID") }
+        Column(Modifier.fillMaxWidth()) {
+            toolbar.invoke()
+        }
         Column(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.Center,

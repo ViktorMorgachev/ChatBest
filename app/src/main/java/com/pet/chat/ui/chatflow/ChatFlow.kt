@@ -1,18 +1,19 @@
 package com.pet.chat.ui.chatflow
 
-import android.util.Log
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ClearAll
-import androidx.compose.runtime.SideEffect
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.pet.chat.App
+import com.pet.chat.R
 import com.pet.chat.network.EventToServer
 import com.pet.chat.network.data.send.ChatDelete
 import com.pet.chat.ui.*
@@ -42,7 +43,12 @@ fun NavGraphBuilder.chatFlow(
         ChatsScreen(
             navController = navController,
             deleteChat = { chatsViewModel.deleteChat(ChatDelete(it.roomId.toInt())) },
-            viewModel = chatsViewModel
+            viewModel = chatsViewModel,
+            toolbar = defaultMockToolbar.copy(text = "Список чатов", leftActions = listOf(){
+                IconButton(onClick = { }) {
+                    Icon(Icons.Filled.Menu, contentDescription = "Menu")
+                }
+            })
         ).also {
             App.states?.lastRooom = -1
         }
@@ -50,7 +56,8 @@ fun NavGraphBuilder.chatFlow(
     composable(Screen.CreateChat.route) {
         CreateChatScreen(
             createChat = { chatViewModel.postEventToServer(EventToServer.CreateChatEvent(it)) },
-            navController = navController
+            navController = navController,
+            toolbar = defaultMockToolbar.copy(text =  stringResource(id = R.string.createChat))
         ).also {
             App.states?.lastRooom = -1
         }
@@ -68,12 +75,17 @@ fun NavGraphBuilder.chatFlow(
             cameraLauncher = { chatViewModel.launchCamera() },
             viewModel = messagesViewModel,
             actionProvider = messagesViewModel.actionProvider,
-            toolbar = defaultMockToolbar.copy(onBackPressed = {navController.navigateUp()},
-                actions = listOf(){
+            toolbar = defaultMockToolbar.copy(
+                rightActions = listOf(){
                 IconButton(onClick = { messagesViewModel.actionProvider.clearChatAction() }) {
                     Icon(Icons.Filled.ClearAll, contentDescription = "Clear")
                 }
-            }, text = "Пользователь $roommateID")
+            }, text = "Пользователь $roommateID",
+                leftActions = listOf(){
+                    IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                })
         ).also {
             App.states?.lastRooom = roomID.toInt()
         }

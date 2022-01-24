@@ -1,14 +1,15 @@
 package com.pet.chat.ui
 
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ClearAll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.pet.chat.ui.theme.ChatTheme
@@ -36,14 +37,14 @@ fun alert() {
 
 @Composable
 fun ToolbarAction(content: @Composable () -> Unit) {
-    Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(4.dp)) {
+    Box(contentAlignment = Alignment.Center) {
         content()
     }
 }
 
 val defaultMockToolbar = Toolbar(modifier = Modifier
     .fillMaxWidth()
-    .height(20.dp))
+    .height(46.dp).padding(4.dp))
 
 @Preview(widthDp = 400, showSystemUi = false)
 @Composable
@@ -54,10 +55,10 @@ fun ToolbarPreview() {
 
 }
 
-data class Toolbar(val modifier: Modifier = Modifier, val text: String = "", val onBackPressed: (() -> Unit)? = null, val actions: List<@Composable () -> Unit> = listOf()){
+data class Toolbar(val modifier: Modifier = Modifier, val text: String = "",val leftActions: List<@Composable () -> Unit> = listOf(), val rightActions: List<@Composable () -> Unit> = listOf()){
    @Composable
     fun invoke(){
-       ToolbarView(modifier= modifier, text = text, onBackPressed = onBackPressed, actions = actions)
+       ToolbarView(modifier= modifier, text = text, leftActions = leftActions, rightActions = rightActions)
    }
 }
 
@@ -65,24 +66,28 @@ data class Toolbar(val modifier: Modifier = Modifier, val text: String = "", val
 fun ToolbarView(
     modifier: Modifier = Modifier,
     text: String = "",
-    onBackPressed: (() -> Unit)? = null,
-    actions: List<@Composable () -> Unit>
+    leftActions: List<@Composable () -> Unit>,
+    rightActions: List<@Composable () -> Unit>,
 ) {
-    Row() {
-        onBackPressed?.let {
-            IconButton(onClick = { onBackPressed() }, modifier = Modifier.align(alignment = Alignment.CenterVertically)) {
-                Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
-            }
+    Row(modifier = modifier.height(46.dp)) {
+        leftActions.forEach { action->
+            ToolbarAction(action)
+        }
+        if(leftActions.isEmpty()){
+            Box(modifier = Modifier.weight(1f))
         }
         if (!text.isNullOrEmpty()) {
             Text(
                 text = text, modifier = Modifier
                     .align(alignment = Alignment.CenterVertically)
-                    .weight(1f)
+                    .weight(1f).padding(8.dp)
             )
         }
-        actions.forEach { action ->
+        rightActions.forEach { action ->
             ToolbarAction(action)
+        }
+        if(rightActions.isEmpty()){
+            Box(modifier = Modifier.weight(1f))
         }
 
     }

@@ -2,6 +2,7 @@ package com.pet.chat.ui.screens.chats
 
 import android.annotation.SuppressLint
 import android.util.Log
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -54,7 +55,8 @@ fun ChatsScreen(
     modifier: Modifier = Modifier,
     deleteChat: (ChatDelete) -> Unit,
     navController: NavController,
-    viewModel: ChatsViewModel
+    viewModel: ChatsViewModel,
+    toolbar: Toolbar
 ) {
     val scaffoldState = rememberScaffoldState()
     val firstViewState = if(viewModel.chatProviderImpl.chats.value.isNotEmpty()){ ViewState.Display(listOf(viewModel.chatProviderImpl.chats.value)) } else ViewState.StateLoading
@@ -67,13 +69,6 @@ fun ChatsScreen(
 
     Scaffold(
         scaffoldState = scaffoldState,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(text = stringResource(id = R.string.chats))
-                }
-            )
-        },
         floatingActionButtonPosition = FabPosition.End,
         floatingActionButton = {
             FloatingActionButton(onClick = {
@@ -102,7 +97,11 @@ fun ChatsScreen(
                     if (firstItem.firstOrNull() is ChatItemInfo){
                         val chats = firstItem as List<ChatItemInfo>
                         Log.d("ChatScreen", "Chats ${chats.size}")
-                        DisplayChats(modifier = Modifier.padding(innerPadding), chats = chats, deleteChatAction = deleteChat, navController = navController)
+                        DisplayChats(
+                            modifier = Modifier.padding(innerPadding),
+                            chats = chats,
+                            deleteChatAction = deleteChat,
+                            navController = navController, toolbar = toolbar)
                     }
 
                 }
@@ -120,22 +119,25 @@ fun ChatsScreen(
 
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DisplayChats(
     modifier: Modifier = Modifier,
     chats: List<ChatItemInfo>,
     deleteChatAction: (ChatDelete) -> Unit,
-    navController: NavController) {
+    navController: NavController, toolbar: Toolbar) {
 
     SideEffect {
         Log.d("Screen", "ChatsView")
     }
-
     if(chats.isNotEmpty()){
         LazyColumn(
             modifier = modifier
                 .fillMaxWidth()
         ) {
+            stickyHeader {
+                toolbar.invoke()
+            }
             items(chats) { item ->
                 ChatsItem(chatDetails = item,
                     OpenChat = { chatHistory->
@@ -195,6 +197,6 @@ fun ChatsItem(
 @Composable
 fun ChatsScreenPreview() {
     ChatTheme {
-        ChatsScreen(deleteChat = {}, navController = rememberNavController(), viewModel = viewModel())
+        ChatsScreen(deleteChat = {}, navController = rememberNavController(), viewModel = viewModel(), toolbar = defaultMockToolbar)
     }
 }
