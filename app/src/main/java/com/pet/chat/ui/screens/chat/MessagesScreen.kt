@@ -97,6 +97,8 @@ fun Room(
 ) {
     val viewState = viewModel.viewStateProvider.viewState.observeAsState(ViewState.StateLoading)
 
+    val messages = viewModel.chatProviderImpl.chats.collectAsState()
+
 
     DisposableEffect(key1 = viewModel) {
         viewModel.onStart()
@@ -170,7 +172,7 @@ fun Room(
                                 bottomSheetActions = bottomSheetActions,
                                 scope = scope,
                                 roomID = roomID,
-                                actionProvider = actionProvider, messages = firstItem as List<RoomMessage>
+                                actionProvider = actionProvider, messages = (firstItem as List<RoomMessage>).sortedBy { it.messageID }
                             )
                         }
                     } else {

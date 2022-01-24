@@ -11,6 +11,7 @@ import com.pet.chat.helpers.fileUploadWorkerTag
 import com.pet.chat.helpers.isWorkScheduled
 import com.pet.chat.helpers.workDataOf
 import com.pet.chat.network.ConnectionManager
+import com.pet.chat.network.EventFromServer
 import com.pet.chat.network.EventToServer
 import com.pet.chat.network.data.ViewState
 import com.pet.chat.network.data.base.File
@@ -23,13 +24,11 @@ import com.pet.chat.network.workers.FileUploadConverter
 import com.pet.chat.network.workers.FileUploadWorker
 import com.pet.chat.providers.InternalEventsProvider
 import com.pet.chat.providers.MultipleChatProviderImpl
+import com.pet.chat.providers.interfaces.EventFromServerProvider
 import com.pet.chat.providers.interfaces.ViewStateProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -37,7 +36,8 @@ class MessagesViewModel @Inject constructor(
     val chatProviderImpl: MultipleChatProviderImpl,
     val viewStateProvider: ViewStateProvider,
     val connectionManager: ConnectionManager,
-    val internalEventsProvider: InternalEventsProvider
+    val internalEventsProvider: InternalEventsProvider,
+    val eventFromServerProvider: EventFromServerProvider
 ) : ComposeViewModel() {
 
     var curentRoomID = -1
@@ -50,6 +50,12 @@ class MessagesViewModel @Inject constructor(
 
     init {
         actionProvider = ActionProvider()
+        viewModelScope.launch(Dispatchers.IO) {
+            eventFromServerProvider.events.collect {
+                if (it is EventFromServer.MessageNewEvent)
+                    fetchMessages()
+            }
+        }
     }
 
     fun fetchMessages() {
@@ -200,6 +206,7 @@ class MessagesViewModel @Inject constructor(
                     }
                 }
             }
+
         }
     }
 

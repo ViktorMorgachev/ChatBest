@@ -8,7 +8,7 @@ import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import javax.inject.Singleton
 
-
+@Singleton
 class EventFromServerProviderImpl @Inject constructor(override val events: MutableStateFlow<EventFromServer>) : EventFromServerProvider {
     override fun postEventFromServer(eventFromServer: EventFromServer) {
         runBlocking(Dispatchers.IO) {

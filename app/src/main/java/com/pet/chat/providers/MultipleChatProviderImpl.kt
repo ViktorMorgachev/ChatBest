@@ -13,11 +13,9 @@ import com.pet.chat.providers.interfaces.MultipleMessagesProvider
 import com.pet.chat.ui.screens.chat.RoomMessage
 import com.pet.chat.ui.screens.chat.State
 import com.pet.chat.ui.ChatItemInfo
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -50,10 +48,15 @@ class MultipleChatProviderImpl @Inject constructor(override val chats: MutableSt
     }
 
     override fun updateChat(chat: ChatItemInfo) {
-        val actualChat = getCurrentChat(roomID = chat.roomID)
+        var actualChat = getCurrentChat(roomID = chat.roomID)
         if (actualChat != null) {
-            val newList = actualChat.roomMessages.plus(chat.roomMessages)
-            actualChat.roomMessages = newList
+            chat.roomMessages.forEach { roomMessage ->
+                if (!actualChat!!.roomMessages.map { it.messageID }.contains(roomMessage.messageID)){
+                    actualChat!!.roomMessages = actualChat!!.roomMessages.addLast(roomMessage)
+                    actualChat = actualChat!!.copy()
+                }
+            }
+
         } else {
             chats.value = chats.value.addLast(chat)
         }
@@ -61,10 +64,7 @@ class MultipleChatProviderImpl @Inject constructor(override val chats: MutableSt
             Log.d("ChatProviderImpl", "Chat: ${it.roomID} Messages: ${it.roomMessages.size}")
         }
         GlobalScope.launch(Dispatchers.IO) {
-           val successEmit = chats.tryEmit(chats.value)
-            if (successEmit){
-                Log.d("ChatProviderImpl", "Emit chat success")
-            }
+            chats.emit(listOf<ChatItemInfo>().addAll(chats.value))
         }
 
     }
