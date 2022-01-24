@@ -9,20 +9,23 @@ import androidx.compose.ui.graphics.Color
 
 
 var toolbarBackground = Color.Unspecified
+var messageOwnBackGround = Color.Unspecified
+var messageBackGround = Color.Unspecified
+var contentColor = Color.Unspecified
 
 
 private val DarkColorPalette = darkColors(
     surface = Blue,
-    onSurface = Navy,
-    primary = Navy,
-    onPrimary = Chartreuse
+    onSurface =  Color.Black,
+    primary = Blue,
+    onPrimary = Color.Black
 )
 
 private val LightColorPalette = lightColors(
     surface = Blue,
     onSurface = Color.White,
     primary = LightBlue,
-    onPrimary = Navy
+    onPrimary = Color.White
 )
 
 
@@ -37,8 +40,14 @@ fun ChatTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable (
 
     if (darkTheme){
         toolbarBackground = Color(40, 43, 46, 1)
+        messageOwnBackGround = Color(31, 57, 71)
+        messageBackGround = Color(54, 54, 54)
+        contentColor = Color.White
     } else {
         toolbarBackground = Color(255, 255, 255, 1)
+        messageOwnBackGround = Color(183, 229, 255)
+        messageBackGround = Color(250, 250, 250)
+        contentColor = Color.Black
     }
 
     MaterialTheme(

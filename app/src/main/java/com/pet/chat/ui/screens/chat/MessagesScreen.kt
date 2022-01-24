@@ -1,6 +1,7 @@
 package com.pet.chat.ui.screens.chat
 
 import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -28,6 +30,7 @@ import com.pet.chat.network.data.base.FilePreview
 import com.pet.chat.network.data.send.*
 import com.pet.chat.ui.*
 import com.pet.chat.ui.theme.ChatTheme
+import com.pet.chat.ui.theme.toolbarBackground
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -152,8 +155,9 @@ fun Room(
                     }
                 }
                 is ViewState.Display -> {
-                    val firstItem = (viewState.value as ViewState.Display).data.firstOrNull() as List<*>
-                    if (firstItem.firstOrNull() is RoomMessage){
+                    val firstItem =
+                        (viewState.value as ViewState.Display).data.firstOrNull() as List<*>
+                    if (firstItem.firstOrNull() is RoomMessage) {
                         Log.d("RoomScreen", "Messages  ${firstItem.size}")
                         ChatTheme {
                             MessagesView(
@@ -162,12 +166,16 @@ fun Room(
                                 bottomSheetActions = bottomSheetActions,
                                 scope = scope,
                                 roomID = roomID,
-                                actionProvider = actionProvider, messages = (firstItem as List<RoomMessage>).sortedBy { it.messageID },
-                                toolbar =  toolbar
+                                actionProvider = actionProvider,
+                                messages = (firstItem as List<RoomMessage>).sortedBy { it.messageID },
+                                toolbar = toolbar
                             )
                         }
                     } else {
-                        Log.d("RoomScreen", "Cast Exception need RoomMessage was ${firstItem.first()}")
+                        Log.d(
+                            "RoomScreen",
+                            "Cast Exception need RoomMessage was ${firstItem.first()}"
+                        )
                     }
 
                 }
@@ -197,7 +205,7 @@ fun MessagesViewPreview() {
                 scope = rememberCoroutineScope(),
                 roomID = -1,
                 actionProvider = null,
-                messages = listOf(),
+                messages = mockData,
                 toolbar = defaultMockToolbar
             )
         }
@@ -208,7 +216,7 @@ fun MessagesViewPreview() {
 @OptIn(ExperimentalMaterialApi::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun MessagesView(
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier.background(color = Color.Green),
     bottomSheetActions: List<BottomActionData>,
     scope: CoroutineScope,
     roomID: Int,
@@ -221,7 +229,8 @@ fun MessagesView(
         Log.d("Screen", "MessagesView")
     }
 
-    val modalBottomSheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
+    val modalBottomSheetState =
+        rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
     val openDialogEvent = remember { mutableStateOf<FilePreview?>(null) }
     ModalBottomSheetLayout(
         sheetContent = {
@@ -275,8 +284,12 @@ fun MessagesView(
         }
 
         Column() {
-            if (messages.isEmpty()){
-                NoItemsView(message = "Напишите хотя-бы одно сообщение", iconResID = null, modifier = Modifier.weight(1f))
+            if (messages.isEmpty()) {
+                NoItemsView(
+                    message = "Напишите хотя-бы одно сообщение",
+                    iconResID = null,
+                    modifier = Modifier.weight(1f)
+                )
             } else {
                 LazyColumn(
                     modifier = modifier
@@ -284,11 +297,10 @@ fun MessagesView(
                         .weight(1f)
                 ) {
                     stickyHeader {
-                       toolbar.invoke()
+                        toolbar.invoke()
                     }
                     items(messages) { message ->
-                        MessageItem(modifier = modifier.padding(all = 4.dp),
-                            message = message,
+                        MessageItem(message = message,
                             deleteMessageAction = {
                                 when (message) {
                                     is RoomMessage.SendingMessage -> {
@@ -305,9 +317,13 @@ fun MessagesView(
                     }
                 }
             }
-            Column(modifier = Modifier
-                .fillMaxWidth()
-                .padding(4.dp)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(4.dp)
+                    .background(color = toolbarBackground)
+            ) {
+                Spacer(modifier = Modifier.fillMaxWidth().height(2.dp).background(Color.LightGray))
                 Row() {
                     TextField(
                         modifier = Modifier,

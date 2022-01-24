@@ -2,6 +2,7 @@ package com.pet.chat.ui
 
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
@@ -11,6 +12,7 @@ import androidx.compose.material.icons.outlined.Camera
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -25,6 +27,9 @@ import com.pet.chat.ui.screens.chat.BottomActionData
 import com.pet.chat.ui.screens.chat.RoomMessage
 import com.pet.chat.ui.screens.chat.State
 import com.pet.chat.ui.theme.ChatTheme
+import com.pet.chat.ui.theme.contentColor
+import com.pet.chat.ui.theme.messageBackGround
+import com.pet.chat.ui.theme.messageOwnBackGround
 
 val mockDataBottomSheetItem = BottomActionData(image = Icons.Outlined.Camera, "Camera", {})
 
@@ -85,7 +90,6 @@ fun MessageItemPreview(modifier: Modifier = Modifier) {
 
 @Composable
 fun MessageItem(
-    modifier: Modifier = Modifier,
     message: RoomMessage,
     deleteMessageAction: (RoomMessage) -> Unit,
     tryUploadAction: (RoomMessage.SendingMessage) -> Unit,
@@ -94,15 +98,19 @@ fun MessageItem(
     val isMe = message.isOwn
     var expandedMenu by remember() { mutableStateOf(false) }
 
-    Row(horizontalArrangement = Arrangement.SpaceEvenly) {
+    Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.padding(4.dp)) {
         if (isMe) {
             Spacer(modifier = Modifier.weight(1f))
         }
-        Card(modifier = modifier.fillMaxSize(0.7f)) {
-            Column() {
+        val messageBackGround = remember {
+            if(isMe) messageOwnBackGround else messageBackGround
+        }
+        Card(modifier = Modifier.fillMaxWidth(0.7f), contentColor = contentColor) {
+
+            Column(modifier = Modifier.background(color = messageBackGround)) {
                 Row {
                     if (isMe) {
-                        IconButton(onClick = { expandedMenu = !expandedMenu }) {
+                        IconButton(onClick = { expandedMenu = !expandedMenu }, modifier = Modifier.size(18.dp)) {
                             Icon(Icons.Filled.MoreVert, contentDescription = "Menu")
                         }
                         DropdownMenu(
@@ -110,7 +118,7 @@ fun MessageItem(
                             onDismissRequest = { expandedMenu = false }
                         ) {
                             Text(text = stringResource(id = R.string.delete),
-                                fontSize = 14.sp,
+                                fontSize = 8.sp,
                                 modifier = Modifier
                                     .clickable(onClick = {
                                         deleteMessageAction(message)
@@ -119,110 +127,9 @@ fun MessageItem(
                         }
                         Spacer(modifier = Modifier.weight(1f))
                     }
-                    Text(text = message.userID,
-                        Modifier
-                            .padding(4.dp)
-                            .align(Alignment.CenterVertically))
                 }
-
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    when (message) {
-                        is RoomMessage.SendingMessage -> {
-                            message.file?.let { file ->
-                                if (file.type == "photo") {
-                                    Image(bitmap = BitmapFactory.decodeFile(file.filePath)
-                                        .asImageBitmap(),
-                                        contentDescription = "Image",
-                                        modifier = Modifier.fillMaxWidth())
-                                }
-                                when (file.state) {
-                                    State.Loading -> {
-                                        CircularProgressIndicator(modifier = Modifier
-                                            .fillMaxSize(0.5f)
-                                            .padding(4.dp), strokeWidth = 4.dp)
-                                    }
-                                    State.Error -> {
-                                        Button(
-                                            onClick = { tryUploadAction(message) },
-                                            modifier = Modifier
-                                                .fillMaxSize(0.5f)
-                                                .padding(4.dp)) {
-                                            Text(text = "Заново отправить")
-                                        }
-                                    }
-                                    State.Loaded -> {
-                                        Icon(modifier = Modifier
-                                            .fillMaxSize(0.5f)
-                                            .padding(4.dp),
-                                            imageVector = ImageVector.vectorResource(R.drawable.done),
-                                            contentDescription = "Loaded")
-                                    }
-                                    else -> {}
-                                }
-                            }
-
-                        }
-                        is RoomMessage.SimpleMessage -> {
-                            message.file?.let { attachment ->
-                                when (attachment.state) {
-                                    State.Loading -> {
-                                        CircularProgressIndicator(modifier = Modifier
-                                            .fillMaxSize(0.5f)
-                                            .padding(4.dp))
-                                        if (attachment.type == "photo") {
-                                            Icon(imageVector = Icons.Default.PhotoCamera,
-                                                contentDescription = "PhotoLoad",
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .height(20.dp))
-                                        }
-                                    }
-                                    State.Error -> {
-                                        Button(
-                                            onClick = { tryDownloadAction(message) },
-                                            modifier = Modifier
-                                                .fillMaxSize(0.5f)
-                                                .padding(4.dp)) {
-                                            Text(text = "Заново отправить")
-                                        }
-                                    }
-                                    State.Loaded -> {
-                                        if (attachment.filePath != null) {
-                                            Icon(bitmap = BitmapFactory.decodeFile(attachment.filePath)
-                                                .asImageBitmap(),
-                                                contentDescription = "PhotoLoad",
-                                                modifier = Modifier
-                                                    .fillMaxSize(0.5f)
-                                                    .padding(4.dp)
-                                                    .height(20.dp))
-                                        }
-                                    }
-                                    State.None -> {
-                                        IconButton(onClick = { tryDownloadAction(message) }) {
-                                            Icon(modifier = Modifier
-                                                .fillMaxSize(0.5f)
-                                                .padding(4.dp),
-                                                imageVector = ImageVector.vectorResource(R.drawable.arrow_downward),
-                                                contentDescription = "Download")
-                                        }
-                                    }
-                                }
-                            }
-
-                        }
-                    }
-                }
-                Text(text = message.text,
-                    style = TextStyle.Default,
-                    modifier = modifier
-                        .padding(horizontal = 4.dp))
-                Row {
-                    if (isMe) {
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
-                    Text(text = "${message.date}",
-                        style = TextStyle.Default,
-                        modifier = modifier.padding(horizontal = 4.dp))
+                   Text(text = message.text, fontSize = 16.sp, modifier = Modifier.padding(4.dp))
                 }
             }
         }
