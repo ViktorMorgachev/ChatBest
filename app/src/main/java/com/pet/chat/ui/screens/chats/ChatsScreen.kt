@@ -83,7 +83,6 @@ fun ChatsScreen(
             }
         }
     ) { innerPadding ->
-        if (true){
             when (viewState.value) {
                 is ViewState.StateLoading -> {
                     LoadingView(modifier = Modifier.padding(paddingValues = innerPadding))
@@ -108,13 +107,14 @@ fun ChatsScreen(
 
                 }
             }
-        }
+
 
     }
 
     DisposableEffect(key1 = viewModel){
+        viewModel.onStart()
         onDispose {
-            viewModel.dismiss()
+            viewModel.onStop()
         }
     }
 

@@ -80,7 +80,7 @@ class ConnectionManager @Inject constructor(private val eventFromServerProvider:
             socket.on("connection") {
                 Log.d(
                     "Socket",
-                    "Socket: SocketID ${socket.id()} Connected ${socket.connected()} Data $it"
+                    "Socket: SocketID ${socket.id()} Connected ${socket.connected()} Data ${it.toSocketData()}"
                 )
             }
             socket.on(Socket.EVENT_CONNECT) {

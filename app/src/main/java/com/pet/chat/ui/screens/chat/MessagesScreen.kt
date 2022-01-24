@@ -5,26 +5,20 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Camera
 import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.pet.chat.App
 import com.pet.chat.App.Companion.prefs
-import com.pet.chat.R
 import com.pet.chat.helpers.observeAsState
 import com.pet.chat.network.EventToServer
 import com.pet.chat.network.data.ViewState
@@ -103,9 +97,11 @@ fun Room(
 ) {
     val viewState = viewModel.viewStateProvider.viewState.observeAsState(ViewState.StateLoading)
 
+
     DisposableEffect(key1 = viewModel) {
+        viewModel.onStart()
         onDispose {
-            viewModel.dismiss()
+            viewModel.onStop()
         }
     }
 

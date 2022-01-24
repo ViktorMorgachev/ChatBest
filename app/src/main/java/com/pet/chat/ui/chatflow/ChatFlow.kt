@@ -33,9 +33,6 @@ fun NavGraphBuilder.chatFlow(
         }
     }
     composable(Screen.Chats.route) {
-        SideEffect {
-           Log.d("chatFlow", "Screen.Chats.route")
-        }
         val chatsViewModel = hiltViewModel<ChatsViewModel>()
         ChatsScreen(
             navController = navController,

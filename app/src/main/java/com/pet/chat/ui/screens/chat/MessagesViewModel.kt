@@ -6,11 +6,11 @@ import androidx.lifecycle.viewModelScope
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.pet.chat.App
+import com.pet.chat.base.ComposeViewModel
 import com.pet.chat.helpers.fileUploadWorkerTag
 import com.pet.chat.helpers.isWorkScheduled
 import com.pet.chat.helpers.workDataOf
 import com.pet.chat.network.ConnectionManager
-import com.pet.chat.network.EventFromServer
 import com.pet.chat.network.EventToServer
 import com.pet.chat.network.data.ViewState
 import com.pet.chat.network.data.base.File
@@ -23,15 +23,10 @@ import com.pet.chat.network.workers.FileUploadConverter
 import com.pet.chat.network.workers.FileUploadWorker
 import com.pet.chat.providers.InternalEventsProvider
 import com.pet.chat.providers.MultipleChatProviderImpl
-import com.pet.chat.providers.ViewStateProviderImpl
-import com.pet.chat.providers.interfaces.EventFromServerProvider
-import com.pet.chat.providers.interfaces.EventFromServerProviderImpl
 import com.pet.chat.providers.interfaces.ViewStateProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -43,30 +38,27 @@ class MessagesViewModel @Inject constructor(
     val viewStateProvider: ViewStateProvider,
     val connectionManager: ConnectionManager,
     val internalEventsProvider: InternalEventsProvider
-) : ViewModel() {
+) : ComposeViewModel() {
 
     var curentRoomID = -1
-    set(value) {
-        currentRoomID = value
-        field = value
-    }
+        set(value) {
+            currentRoomID = value
+            field = value
+        }
     var actionProvider: ActionProvider
         private set
 
     init {
         actionProvider = ActionProvider()
-        viewModelScope.launch(Dispatchers.IO) {
-            chatProviderImpl.chats.collect {
-                if (isActive) {
-                    Log.d("MessagesViewModel", "ChatsInfo $it")
-                    val currentChat = it.firstOrNull { it.roomID == curentRoomID }?.roomMessages ?: listOf()
-                    if (currentChat.isEmpty()) {
-                        viewStateProvider.postViewState(ViewState.StateNoItems)
-                    } else {
-                        viewStateProvider.postViewState(ViewState.Display(listOf(currentChat)))
-                    }
-                }
-            }
+    }
+
+    fun fetchMessages() {
+        val it = chatProviderImpl.chats.value
+        val currentChat = it.firstOrNull { it.roomID == curentRoomID }?.roomMessages ?: listOf()
+        if (currentChat.isEmpty()) {
+            viewStateProvider.postViewState(ViewState.StateNoItems)
+        } else {
+            viewStateProvider.postViewState(ViewState.Display(listOf(currentChat)))
         }
     }
 
@@ -153,11 +145,6 @@ class MessagesViewModel @Inject constructor(
 
     }
 
-    fun dismiss() {
-        Log.d("MessagesViewModel", "dismiss()")
-        viewModelScope.cancel()
-    }
-
     // Уменьшаем количество action которые можно отправить в composable
     inner class ActionProvider {
         fun sendMessageAction(message: SendMessage) {
@@ -197,4 +184,23 @@ class MessagesViewModel @Inject constructor(
 
         }
     }
+
+    override fun onStart() {
+        viewModelScope.launch(Dispatchers.IO) {
+            fetchMessages()
+            chatProviderImpl.chats.collect {
+                if (isActive) {
+                    Log.d("MessagesViewModel", "ChatsInfo $it")
+                    val currentChat =
+                        it.firstOrNull { it.roomID == curentRoomID }?.roomMessages ?: listOf()
+                    if (currentChat.isEmpty()) {
+                        viewStateProvider.postViewState(ViewState.StateNoItems)
+                    } else {
+                        viewStateProvider.postViewState(ViewState.Display(listOf(currentChat)))
+                    }
+                }
+            }
+        }
+    }
+
 }

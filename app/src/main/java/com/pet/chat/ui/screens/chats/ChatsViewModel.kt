@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pet.chat.base.ComposeViewModel
 import com.pet.chat.network.ConnectionManager
 import com.pet.chat.network.EventFromServer
 import com.pet.chat.network.EventToServer
@@ -26,10 +27,19 @@ class ChatsViewModel @Inject constructor(
     val chatProviderImpl: MultipleChatProviderImpl,
     val viewStateProvider: ViewStateProvider,
     val connectionManager: ConnectionManager
-) : ViewModel() {
+) : ComposeViewModel() {
 
     init {
         Log.d("ChatsViewModel", "Init")
+    }
+
+    fun deleteChat(chatDelete: ChatDelete) = viewModelScope.launch(Dispatchers.IO) {
+        connectionManager.postEventToServer(EventToServer.DeleteChat(chatDelete)) {
+         //   viewStateProvider.postViewState(ViewState.Error(it))
+        }
+    }
+
+    override fun onStart() {
         viewModelScope.launch(Dispatchers.IO) {
             if (isActive) {
                 chatProviderImpl.chats.collect {
@@ -43,18 +53,6 @@ class ChatsViewModel @Inject constructor(
                 }
             }
         }
-
-    }
-
-    fun deleteChat(chatDelete: ChatDelete) = viewModelScope.launch(Dispatchers.IO) {
-        connectionManager.postEventToServer(EventToServer.DeleteChat(chatDelete)) {
-         //   viewStateProvider.postViewState(ViewState.Error(it))
-        }
-    }
-
-    fun dismiss(){
-        Log.d("ChatViewModel", "dismiss()")
-        viewModelScope.cancel()
     }
 
 }

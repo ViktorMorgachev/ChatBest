@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pet.chat.App
+import com.pet.chat.base.ComposeViewModel
 import com.pet.chat.network.ConnectionManager
 import com.pet.chat.network.EventFromServer
 import com.pet.chat.network.EventToServer
@@ -26,7 +27,7 @@ class AutorizationViewModel @Inject constructor(
     val connectionManager: ConnectionManager,
     val viewStateProvider: ViewStateProvider,
     val eventFromServerProvider: EventFromServerProvider
-) : ViewModel() {
+) : ComposeViewModel() {
 
 
     var lastAction: (()->Unit)? = null
@@ -37,18 +38,7 @@ class AutorizationViewModel @Inject constructor(
 
     init {
         Log.d(tag, "Init")
-        viewModelScope.launch(Dispatchers.IO) {
-            eventFromServerProvider.events.collect {
-                if (isActive){
-                    Log.d(tag, "EventFromServer $it")
-                    reduce(it)
-                }
 
-            }
-        }
-        if (App.prefs?.identified() == true) {
-            authorize(EventToServer.AuthEvent(UserAuth(App.prefs!!.userID, App.prefs!!.userToken)))
-        }
     }
 
     private fun reduce(eventFromServer: EventFromServer) {
@@ -75,8 +65,18 @@ class AutorizationViewModel @Inject constructor(
         lastAction!!.invoke()
     }
 
-    fun dismiss(){
-        Log.d("AutorizationViewModel", "dismiss()")
-        viewModelScope.cancel()
+    override fun onStart() {
+        viewModelScope.launch(Dispatchers.IO) {
+            if (App.prefs?.identified() == true) {
+                authorize(EventToServer.AuthEvent(UserAuth(App.prefs!!.userID, App.prefs!!.userToken)))
+            }
+            eventFromServerProvider.events.collect {
+                if (isActive){
+                    Log.d(tag, "EventFromServer $it")
+                    reduce(it)
+                }
+            }
+
+        }
     }
 }
