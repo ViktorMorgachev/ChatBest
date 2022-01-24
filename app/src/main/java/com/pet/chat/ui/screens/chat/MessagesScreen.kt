@@ -125,23 +125,6 @@ fun Room(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(text = "Room $roomID")
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController?.navigateUp() }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { actionProvider?.clearChatAction() }) {
-                        Icon(Icons.Filled.ClearAll, contentDescription = "Clear")
-                    }
-                }
-            )
-        }
     ) { innerPadding ->
 
         if (true) {
