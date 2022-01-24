@@ -1,9 +1,14 @@
 package com.pet.chat.ui.chatflow
 
 import android.util.Log
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ClearAll
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -61,7 +66,12 @@ fun NavGraphBuilder.chatFlow(
             scope = rememberCoroutineScope(),
             cameraLauncher = { chatViewModel.launchCamera() },
             viewModel = messagesViewModel,
-            actionProvider = messagesViewModel.actionProvider
+            actionProvider = messagesViewModel.actionProvider,
+            toolbar = defaultMockToolbar.copy(onBackPressed = {navController.navigateUp()}, actions = listOf(){
+                IconButton(onClick = { messagesViewModel.actionProvider.clearChatAction() }) {
+                    Icon(Icons.Filled.ClearAll, contentDescription = "Clear")
+                }
+            })
         ).also {
             App.states?.lastRooom = roomID.toInt()
         }

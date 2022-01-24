@@ -93,7 +93,8 @@ fun Room(
                 itemDescribe = "Camera",
                 onClickAction = { cameraLauncher.invoke() })
         ),
-    viewModel: MessagesViewModel
+    viewModel: MessagesViewModel,
+    toolbar: Toolbar
 ) {
     val viewState = viewModel.viewStateProvider.viewState.observeAsState(ViewState.StateLoading)
 
@@ -126,7 +127,6 @@ fun Room(
 
     Scaffold(
     ) { innerPadding ->
-
         if (true) {
             when (viewState.value) {
                 is ViewState.StateLoading -> {
@@ -147,7 +147,8 @@ fun Room(
                             scope = scope,
                             roomID = roomID,
                             actionProvider = actionProvider,
-                            messages = listOf()
+                            messages = listOf(),
+                            toolbar = defaultMockToolbar
                         )
                     }
                 }
@@ -162,7 +163,8 @@ fun Room(
                                 bottomSheetActions = bottomSheetActions,
                                 scope = scope,
                                 roomID = roomID,
-                                actionProvider = actionProvider, messages = (firstItem as List<RoomMessage>).sortedBy { it.messageID }
+                                actionProvider = actionProvider, messages = (firstItem as List<RoomMessage>).sortedBy { it.messageID },
+                                toolbar =  toolbar
                             )
                         }
                     } else {
@@ -182,23 +184,6 @@ fun Room(
 @Composable
 fun MessagesViewPreview() {
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(text = "Room $")
-                },
-                navigationIcon = {
-                    IconButton(onClick = {}) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = {  }) {
-                        Icon(Icons.Filled.ClearAll, contentDescription = "Clear")
-                    }
-                }
-            )
-        }
     ) { innerPadding ->
         ChatTheme {
             MessagesView(
@@ -213,14 +198,15 @@ fun MessagesViewPreview() {
                 scope = rememberCoroutineScope(),
                 roomID = -1,
                 actionProvider = null,
-                messages = listOf()
+                messages = listOf(),
+                toolbar = defaultMockToolbar
             )
         }
     }
 }
 
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun MessagesView(
     modifier: Modifier = Modifier,
@@ -228,7 +214,8 @@ fun MessagesView(
     scope: CoroutineScope,
     roomID: Int,
     actionProvider: MessagesViewModel.ActionProvider?,
-    messages: List<RoomMessage>
+    messages: List<RoomMessage>,
+    toolbar: Toolbar
 ) {
 
     SideEffect {
@@ -298,6 +285,9 @@ fun MessagesView(
                         .weight(1f)
                         .padding(horizontal = 8.dp)
                 ) {
+                    stickyHeader {
+                       toolbar.invoke()
+                    }
                     items(messages) { message ->
                         MessageItem(modifier = modifier.padding(all = 4.dp),
                             message = message,

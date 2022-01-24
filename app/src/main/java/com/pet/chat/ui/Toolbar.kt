@@ -41,25 +41,24 @@ fun ToolbarAction(content: @Composable () -> Unit) {
     }
 }
 
+val defaultMockToolbar = Toolbar(modifier = Modifier
+    .fillMaxWidth()
+    .height(20.dp))
 
 @Preview(widthDp = 400, showSystemUi = false)
 @Composable
 fun ToolbarPreview() {
-    ChatTheme() {
-        ToolbarView(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(20.dp),
-            text = "Toolbar",
-            onBackPressed = { },
-            actions = listOf {
-                IconButton(onClick = {  }) {
-                    Icon(Icons.Filled.ClearAll, contentDescription = "Clear")
-                }
-            }
-        )
+    ChatTheme {
+        defaultMockToolbar.invoke()
     }
 
+}
+
+data class Toolbar(val modifier: Modifier = Modifier, val text: String = "", val onBackPressed: (() -> Unit)? = null, val actions: List<@Composable () -> Unit> = listOf()){
+   @Composable
+    fun invoke(){
+       ToolbarView(modifier= modifier, text = text, onBackPressed = onBackPressed, actions = actions)
+   }
 }
 
 @Composable
