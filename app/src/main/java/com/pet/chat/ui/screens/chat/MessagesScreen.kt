@@ -282,7 +282,6 @@ fun MessagesView(
                     modifier = modifier
                         .fillMaxWidth()
                         .weight(1f)
-                        .padding(horizontal = 8.dp)
                 ) {
                     stickyHeader {
                        toolbar.invoke()

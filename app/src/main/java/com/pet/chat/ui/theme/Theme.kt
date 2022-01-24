@@ -7,6 +7,10 @@ import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
+
+var toolbarBackground = Color.Unspecified
+
+
 private val DarkColorPalette = darkColors(
     surface = Blue,
     onSurface = Navy,
@@ -21,12 +25,20 @@ private val LightColorPalette = lightColors(
     onPrimary = Navy
 )
 
+
+
 @Composable
 fun ChatTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     val colors = if (darkTheme) {
         DarkColorPalette
     } else {
         LightColorPalette
+    }
+
+    if (darkTheme){
+        toolbarBackground = Color(40, 43, 46, 1)
+    } else {
+        toolbarBackground = Color(255, 255, 255, 1)
     }
 
     MaterialTheme(

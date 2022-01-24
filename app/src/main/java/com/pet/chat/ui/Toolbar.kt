@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.pet.chat.ui.theme.ChatTheme
+import com.pet.chat.ui.theme.toolbarBackground
 
 @Composable
 fun alert() {
@@ -42,9 +43,7 @@ fun ToolbarAction(content: @Composable () -> Unit) {
     }
 }
 
-val defaultMockToolbar = Toolbar(modifier = Modifier
-    .fillMaxWidth()
-    .height(46.dp).padding(4.dp))
+val defaultMockToolbar = Toolbar()
 
 @Preview(widthDp = 400, showSystemUi = false)
 @Composable
@@ -69,26 +68,32 @@ fun ToolbarView(
     leftActions: List<@Composable () -> Unit>,
     rightActions: List<@Composable () -> Unit>,
 ) {
-    Row(modifier = modifier.height(46.dp)) {
-        leftActions.forEach { action->
-            ToolbarAction(action)
-        }
-        if(leftActions.isEmpty()){
-            Box(modifier = Modifier.weight(1f))
-        }
-        if (!text.isNullOrEmpty()) {
-            Text(
-                text = text, modifier = Modifier
-                    .align(alignment = Alignment.CenterVertically)
-                    .weight(1f).padding(8.dp)
-            )
-        }
-        rightActions.forEach { action ->
-            ToolbarAction(action)
-        }
-        if(rightActions.isEmpty()){
-            Box(modifier = Modifier.weight(1f))
-        }
+    Column(modifier = modifier.height(50.dp).fillMaxWidth().background(color = toolbarBackground)) {
+        Row() {
+            leftActions.forEach { action->
+                ToolbarAction(action)
+            }
+            if(leftActions.isEmpty()){
+                Box(modifier = Modifier.weight(1f))
+            }
+            if (!text.isNullOrEmpty()) {
+                Text(
+                    text = text, modifier = Modifier
+                        .align(alignment = Alignment.CenterVertically)
+                        .weight(1f)
+                        .padding(8.dp)
+                )
+            }
+            rightActions.forEach { action ->
+                ToolbarAction(action)
+            }
+            if(rightActions.isEmpty()){
+                Box(modifier = Modifier.weight(1f))
+            }
 
+        }
+        Spacer(modifier = Modifier.fillMaxWidth().height(2.dp).background(Color.LightGray))
     }
+
+
 }
