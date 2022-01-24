@@ -12,17 +12,18 @@ var toolbarBackground = Color.Unspecified
 var messageOwnBackGround = Color.Unspecified
 var messageBackGround = Color.Unspecified
 var contentColor = Color.Unspecified
+var chatBackground = Color.Unspecified
+var chatSecondaryTextColor = Color.Unspecified
+var chatSplitterColor = Color.Unspecified
 
 
 private val DarkColorPalette = darkColors(
-    surface = Blue,
     onSurface =  Color.Black,
     primary = Blue,
     onPrimary = Color.Black
 )
 
 private val LightColorPalette = lightColors(
-    surface = Blue,
     onSurface = Color.White,
     primary = LightBlue,
     onPrimary = Color.White
@@ -38,16 +39,24 @@ fun ChatTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable (
         LightColorPalette
     }
 
+    chatSecondaryTextColor = Color(142, 142, 147)
+
     if (darkTheme){
         toolbarBackground = Color(40, 43, 46, 1)
         messageOwnBackGround = Color(31, 57, 71)
         messageBackGround = Color(54, 54, 54)
         contentColor = Color.White
+        chatBackground = Color(35, 37, 39)
+        chatSplitterColor = Color(60, 60, 67)
+
     } else {
         toolbarBackground = Color(255, 255, 255, 1)
         messageOwnBackGround = Color(183, 229, 255)
         messageBackGround = Color(250, 250, 250)
         contentColor = Color.Black
+        chatBackground = Color(248, 248, 248)
+        chatSplitterColor = Color(60, 60, 67)
+        chatSplitterColor = Color(0, 0, 0)
     }
 
     MaterialTheme(

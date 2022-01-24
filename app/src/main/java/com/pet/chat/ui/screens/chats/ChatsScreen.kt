@@ -3,6 +3,7 @@ package com.pet.chat.ui.screens.chats
 import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,28 +12,21 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.pet.chat.R
 import com.pet.chat.helpers.observeAsState
 import com.pet.chat.helpers.retryAction
 import com.pet.chat.network.data.ViewState
-import com.pet.chat.network.data.base.Dialog
-import com.pet.chat.network.data.receive.MessageNew
 import com.pet.chat.network.data.send.ChatDelete
 import com.pet.chat.network.data.send.ChatHistory
 import com.pet.chat.ui.*
-import com.pet.chat.ui.screens.chat.RoomMessage
-import com.pet.chat.ui.screens.chat.toSimpleMessage
 import com.pet.chat.ui.theme.ChatTheme
 import com.pet.chat.ui.theme.Shapes
-
+import com.pet.chat.ui.theme.chatBackground
 
 
 val mockRoomChat = ChatItemInfo(
@@ -69,7 +63,7 @@ fun ChatsScreen(
 
     Scaffold(
         scaffoldState = scaffoldState,
-        floatingActionButtonPosition = FabPosition.End,
+        floatingActionButtonPosition = FabPosition.Center,
         floatingActionButton = {
             FloatingActionButton(onClick = {
                 navController.navigate("CreateChat")
@@ -119,6 +113,22 @@ fun ChatsScreen(
 
 }
 
+@Preview(widthDp = 400, showSystemUi = false)
+@Composable
+fun DisplayChatsPreview(){
+    ChatTheme() {
+        Column(modifier = Modifier.fillMaxSize().background(color = chatBackground)) {
+            DisplayChats(
+                modifier = Modifier.fillMaxSize().background(color = chatBackground),
+                chats = mockRoomChats,
+                deleteChatAction = {},
+                navController = rememberNavController(),
+                toolbar = defaultMockToolbar)
+        }
+    }
+
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DisplayChats(
@@ -139,8 +149,10 @@ fun DisplayChats(
                 toolbar.invoke()
             }
             items(chats) { item ->
-                ChatsItem(chatDetails = item,
-                    OpenChat = { chatHistory->
+                ChatItemMaterial(
+                    modifier = modifier,
+                    chatDetails = item,
+                    openChat = { chatHistory->
                         retryAction = {
                             navController.navigate(Screen.Room.createRoute(roomID = chatHistory.roomId.toString()))
                         }
@@ -155,6 +167,7 @@ fun DisplayChats(
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -198,5 +211,19 @@ fun ChatsItem(
 fun ChatsScreenPreview() {
     ChatTheme {
         ChatsScreen(deleteChat = {}, navController = rememberNavController(), viewModel = viewModel(), toolbar = defaultMockToolbar)
+    }
+}
+
+@Preview(widthDp = 400, showSystemUi = false)
+@Composable
+fun DisplayChatsMaterialPreview(){
+    Column(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth()
+        ){
+            item{
+                ChatItemMaterial(chatDetails = mockRoomChat, deleteChat = {}, openChat = {})
+            }
+        }
     }
 }

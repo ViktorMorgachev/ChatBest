@@ -216,7 +216,7 @@ fun MessagesViewPreview() {
 @OptIn(ExperimentalMaterialApi::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun MessagesView(
-    modifier: Modifier = Modifier.background(color = Color.Green),
+    modifier: Modifier = Modifier,
     bottomSheetActions: List<BottomActionData>,
     scope: CoroutineScope,
     roomID: Int,
@@ -294,7 +294,7 @@ fun MessagesView(
                 LazyColumn(
                     modifier = modifier
                         .fillMaxWidth()
-                        .weight(1f)
+                        .weight(1f).background(color = Color(239, 239, 244))
                 ) {
                     stickyHeader {
                         toolbar.invoke()
@@ -317,42 +317,35 @@ fun MessagesView(
                     }
                 }
             }
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(4.dp)
-                    .background(color = toolbarBackground)
-            ) {
-                Spacer(modifier = Modifier.fillMaxWidth().height(2.dp).background(Color.LightGray))
-                Row() {
-                    TextField(
-                        modifier = Modifier,
-                        value = message,
-                        onValueChange = messageChange
-                    )
-                    IconButton(onClick = { sendAction() }, enabled = message.isNotEmpty()) {
-                        Icon(Icons.Filled.Send, contentDescription = "Send")
-                    }
-                    IconButton(onClick = {
-                        scope.launch {
-                            if (!modalBottomSheetState.isVisible)
-                                modalBottomSheetState.show()
-                            else modalBottomSheetState.hide()
-                        }
-                    }) {
-                        Icon(Icons.Filled.Attachment, contentDescription = "AttachFile")
-                    }
-
-                }
-
-                Button(
-                    onClick = { sendAction() },
-                    enabled = message.isNotEmpty(),
-                    modifier = Modifier.fillMaxWidth()
+            Card(modifier = Modifier.fillMaxWidth().background(color = toolbarBackground), backgroundColor = toolbarBackground) {
+                Column(
+                    modifier = modifier
+                        .padding(4.dp)
                 ) {
-                    Text(text = "Отправить")
+                    Spacer(modifier = modifier
+                        .height(2.dp))
+                    Row() {
+                        OutlinedTextField(
+                            modifier = Modifier,
+                            value = message,
+                            onValueChange = messageChange
+                        )
+                        IconButton(onClick = { sendAction() }, enabled = message.isNotEmpty()) {
+                            Icon(Icons.Filled.Send, contentDescription = "Send")
+                        }
+                        IconButton(onClick = {
+                            scope.launch {
+                                if (!modalBottomSheetState.isVisible)
+                                    modalBottomSheetState.show()
+                                else modalBottomSheetState.hide()
+                            }
+                        }) {
+                            Icon(Icons.Filled.Attachment, contentDescription = "AttachFile")
+                        }
+                    }
                 }
             }
+
 
         }
     }
