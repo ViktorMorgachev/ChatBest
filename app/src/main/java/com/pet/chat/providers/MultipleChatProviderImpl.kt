@@ -37,6 +37,7 @@ class MultipleChatProviderImpl @Inject constructor(override val chats: MutableSt
 
     override fun createChat(chat: ChatItemInfo) {
         chats.value = chats.value.plus(chat)
+        update()
     }
 
     override fun clearChat(chatID: Int) {
@@ -44,12 +45,14 @@ class MultipleChatProviderImpl @Inject constructor(override val chats: MutableSt
         if (actualChat != null) {
             actualChat.roomMessages = listOf()
         }
+        update()
+        Log.d("ChatProviderImpl", "clearChat Messages ${actualChat?.roomMessages} Size ${actualChat?.roomMessages?.size}")
+    }
 
+    private fun update(){
         GlobalScope.launch(Dispatchers.IO) {
             chats.emit(listOf<ChatItemInfo>().addAll(chats.value))
         }
-
-        Log.d("ChatProviderImpl", "clearChat Messages ${actualChat?.roomMessages} Size ${actualChat?.roomMessages?.size}")
     }
 
     override fun updateChat(chat: ChatItemInfo) {
@@ -68,9 +71,7 @@ class MultipleChatProviderImpl @Inject constructor(override val chats: MutableSt
         chats.value.forEach {
             Log.d("ChatProviderImpl", "Chat: ${it.roomID} Messages: ${it.roomMessages.size}")
         }
-        GlobalScope.launch(Dispatchers.IO) {
-            chats.emit(listOf<ChatItemInfo>().addAll(chats.value))
-        }
+        update()
 
     }
 
