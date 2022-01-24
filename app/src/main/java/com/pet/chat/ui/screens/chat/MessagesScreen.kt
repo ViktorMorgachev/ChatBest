@@ -84,7 +84,6 @@ fun Room(
     modifier: Modifier = Modifier,
     roomID: Int,
     actionProvider: MessagesViewModel.ActionProvider?,
-    navController: NavController?,
     scope: CoroutineScope,
     cameraLauncher: () -> Unit,
     bottomSheetActions: List<BottomActionData> =

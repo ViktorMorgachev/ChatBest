@@ -57,21 +57,23 @@ fun NavGraphBuilder.chatFlow(
     }
     composable(Screen.Room.route) { backStackEntry ->
         val messagesViewModel = hiltViewModel<MessagesViewModel>()
-        val roomID = backStackEntry.arguments?.getString("roomID")
+        val roomID = backStackEntry.arguments?.getString("roomID")?.toInt()
         requireNotNull(roomID) { "roomID parameter wasn't found. Please make sure it's set!" }
         messagesViewModel.curentRoomID = roomID.toInt()
+        val roommateID = messagesViewModel.chatProviderImpl.chats.value.firstOrNull { it.roomID == roomID.toInt() }?.usersIDs?.firstOrNull { App.prefs?.userID != it }
+        requireNotNull(roommateID) { "roommateID parameter wasn't found. Please make sure it's set!" }
         Room(
-            roomID = roomID.toInt(),
-            navController = navController,
+            roomID = roomID,
             scope = rememberCoroutineScope(),
             cameraLauncher = { chatViewModel.launchCamera() },
             viewModel = messagesViewModel,
             actionProvider = messagesViewModel.actionProvider,
-            toolbar = defaultMockToolbar.copy(onBackPressed = {navController.navigateUp()}, actions = listOf(){
+            toolbar = defaultMockToolbar.copy(onBackPressed = {navController.navigateUp()},
+                actions = listOf(){
                 IconButton(onClick = { messagesViewModel.actionProvider.clearChatAction() }) {
                     Icon(Icons.Filled.ClearAll, contentDescription = "Clear")
                 }
-            })
+            }, text = "Пользователь $roommateID")
         ).also {
             App.states?.lastRooom = roomID.toInt()
         }
