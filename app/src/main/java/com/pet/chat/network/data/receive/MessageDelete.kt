@@ -5,6 +5,7 @@ import com.pet.chat.App
 import com.pet.chat.network.data.ui.Chat
 import com.pet.chat.network.data.base.Message
 import com.pet.chat.network.data.base.Room
+import com.pet.chat.ui.MainChatModule
 import com.pet.chat.ui.screens.chat.RoomMessage
 
 data class MessageDelete(
@@ -18,7 +19,7 @@ data class MessageDelete(
 
 fun MessageDelete.toRoomMessage(): RoomMessage {
     return RoomMessage.SimpleMessage(
-        isOwn = App.prefs?.userID == message.user_id.toInt(),
+        isOwn = MainChatModule.chatsPrefs?.userID == message.user_id.toInt(),
         messageID = message.id.toInt(),
         userID = message.user_id.toString(),
         text = message.text,

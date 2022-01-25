@@ -18,9 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.pet.chat.App
-import com.pet.chat.App.Companion.prefs
 import com.pet.chat.helpers.observeAsState
 import com.pet.chat.network.EventToServer
 import com.pet.chat.network.data.ViewState
@@ -58,7 +56,7 @@ fun Message.toSimpleMessage(): RoomMessage.SimpleMessage {
         userID = user_id.toString(),
         date = created_at.toString(),
         text = text,
-        isOwn = prefs?.userID == user_id.toInt(), messageID = this.id.toInt(),
+        isOwn = MainChatModule.chatsPrefs?.userID == user_id.toInt(), messageID = this.id.toInt(),
         file = file
     )
 }
@@ -123,7 +121,7 @@ fun Room(
         )
     })
 
-    if (App.states?.cameraFilePath!!.isNotEmpty()) {
+    if (MainChatModule.chatsPrefs?.cameraFilePath!!.isNotEmpty()) {
         actionProvider?.resultAfterCamera(true)
     }
 
@@ -258,7 +256,7 @@ fun MessagesView(
             val file = File(
                 roomID = roomID,
                 type = "photo",
-                App.states?.cameraFilePath,
+                MainChatModule.chatsPrefs?.cameraFilePath,
                 state = State.None
             )
             FilePreviewDialog(

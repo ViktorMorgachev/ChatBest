@@ -10,6 +10,7 @@ import androidx.work.WorkerParameters
 import com.pet.chat.App
 import com.pet.chat.providers.InternalEvent
 import com.pet.chat.providers.InternalEventsProvider
+import com.pet.chat.ui.MainChatModule
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
@@ -108,9 +109,9 @@ class FileUploadWorker @AssistedInject constructor(
 
         val requestBuilder = StringBuilder()
         requestBuilder
-            .append("token=${App.prefs!!.userToken}&")
+            .append("token=${MainChatModule.chatsPrefs?.userToken}&")
             .append("type=${file.fileType}&")
-            .append("user_id=${App.prefs!!.userID}&")
+            .append("user_id=${MainChatModule.chatsPrefs?.userID}&")
             .append("room_id=${file.roomID.toInt()}")
 
         val request = Request.Builder()

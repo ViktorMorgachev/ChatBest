@@ -19,6 +19,8 @@ import com.pet.chat.network.ConnectionManager
 import com.pet.chat.network.EventToServer
 import com.pet.chat.network.data.ViewState
 import com.pet.chat.network.data.base.FilePreview
+import com.pet.chat.network.data.base.User
+import com.pet.chat.network.data.send.UserAuth
 import com.pet.chat.providers.MultipleChatProviderImpl
 import com.pet.chat.providers.ViewStateProviderImpl
 import com.pet.chat.providers.interfaces.EventFromServerProvider
@@ -35,7 +37,6 @@ class ChatViewModel @Inject constructor(
     val chatProviderImpl: MultipleChatProviderImpl,
     val viewStateProvider: ViewStateProvider,
     val connectionManager: ConnectionManager,
-    val eventFromServerProvider: EventFromServerProvider
 ) : ViewModel() {
 
     lateinit var cameraPermissionContract: ActivityResultLauncher<String>
@@ -45,27 +46,18 @@ class ChatViewModel @Inject constructor(
         Log.d("EventToServer", "$eventToServer")
         viewModelScope.launch(Dispatchers.IO) {
             connectionManager.postEventToServer(event = eventToServer, error = {
-                viewModelScope.launch(Dispatchers.Main) {
-                    val resultText =
-                        App.instance.applicationContext.getText(R.string.something_went_wrong)
-                            .toString() + it
-                    Toast.makeText(App.instance.applicationContext, resultText, Toast.LENGTH_LONG)
-                        .show()
-                }
+                viewStateProvider.postViewState(ViewState.Error("Что-то пошло не так"))
             })
             viewStateProvider.postViewState(ViewState.StateLoading)
         }
     }
 
-    init {
+    fun autorize(userID: Int, socketToken: String){
         viewModelScope.launch(Dispatchers.IO) {
-            eventFromServerProvider.events.collect {
-                viewModelScope.launch(Dispatchers.Main) {
-
-                }
+            connectionManager.postEventToServer(EventToServer.AuthEvent(UserAuth(userID, socketToken))){
+                viewStateProvider.postViewState(ViewState.Error("Авторизация не прошла, попробуйте ещё раз"))
             }
         }
-
     }
 
     fun takePicture(context: Context, launchCamera: (Uri) -> Unit) = viewModelScope.launch {

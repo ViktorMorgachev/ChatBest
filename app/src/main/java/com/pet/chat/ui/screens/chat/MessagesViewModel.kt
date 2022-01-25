@@ -1,7 +1,6 @@
 package com.pet.chat.ui.screens.chat
 
 import android.util.Log
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
@@ -26,6 +25,7 @@ import com.pet.chat.providers.InternalEventsProvider
 import com.pet.chat.providers.MultipleChatProviderImpl
 import com.pet.chat.providers.interfaces.EventFromServerProvider
 import com.pet.chat.providers.interfaces.ViewStateProvider
+import com.pet.chat.ui.MainChatModule
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
@@ -112,7 +112,7 @@ class MessagesViewModel @Inject constructor(
                 RoomMessage.SendingMessage(
                     isOwn = true,
                     messageID = lastMessageID + 1,
-                    userID = App.prefs!!.userID.toString(),
+                    userID = MainChatModule.chatsPrefs!!.userID.toString(),
                     text = messageText,
                     date = "current date",
                     file = file
@@ -138,11 +138,11 @@ class MessagesViewModel @Inject constructor(
         )
         val workBuilder = OneTimeWorkRequestBuilder<FileUploadWorker>().addTag(fileUploadWorkerTag)
             .setInputData(workData).build()
-        val workManager = WorkManager.getInstance(App.instance)
-        workManager.enqueue(workBuilder)
+       // val workManager = WorkManager.getInstance(App.instance)
+       /* workManager.enqueue(workBuilder)
         if (!workManager.isWorkScheduled(fileUploadWorkerTag)) {
             workManager.enqueue(workBuilder)
-        }
+        }*/
     }
 
     fun startDownloadFile() = viewModelScope.launch(Dispatchers.Default) {

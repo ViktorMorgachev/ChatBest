@@ -52,7 +52,7 @@ fun ChatItemMaterial(modifier: Modifier = Modifier,
                         .clip(CircleShape)
                 )
                 Column(modifier = Modifier.padding(start = 16.dp)) {
-                    Text(text = "Пользователь ${chatDetails.usersIDs.first { it != App.prefs?.userID }}", fontStyle = FontStyle.Normal, fontSize = 16.sp, modifier = Modifier.padding(bottom = 11.dp))
+                    Text(text = "Пользователь ${chatDetails.usersIDs.first { it != MainChatModule.chatsPrefs?.userID }}", fontStyle = FontStyle.Normal, fontSize = 16.sp, modifier = Modifier.padding(bottom = 11.dp))
                     Text(text = chatDetails.roomMessages.lastOrNull()?.text ?: "", color = chatSecondaryTextColor, fontSize = 14.sp)
                 }
                 Spacer(modifier = Modifier.weight(1f))

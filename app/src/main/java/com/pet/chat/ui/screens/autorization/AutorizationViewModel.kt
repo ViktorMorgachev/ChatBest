@@ -1,7 +1,6 @@
 package com.pet.chat.ui.screens.autorization
 
 import android.util.Log
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pet.chat.App
 import com.pet.chat.base.ComposeViewModel
@@ -12,9 +11,9 @@ import com.pet.chat.network.data.ViewState
 import com.pet.chat.network.data.send.UserAuth
 import com.pet.chat.providers.interfaces.EventFromServerProvider
 import com.pet.chat.providers.interfaces.ViewStateProvider
+import com.pet.chat.ui.MainChatModule
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -67,8 +66,8 @@ class AutorizationViewModel @Inject constructor(
 
     override fun onStart() {
         viewModelScope.launch(Dispatchers.IO) {
-            if (App.prefs?.identified() == true) {
-                authorize(EventToServer.AuthEvent(UserAuth(App.prefs!!.userID, App.prefs!!.userToken)))
+            if (MainChatModule.chatsPrefs?.identified() == true) {
+                authorize(EventToServer.AuthEvent(UserAuth(MainChatModule.chatsPrefs!!.userID, MainChatModule.chatsPrefs!!.userToken)))
             }
             eventFromServerProvider.events.collect {
                 if (isActive){

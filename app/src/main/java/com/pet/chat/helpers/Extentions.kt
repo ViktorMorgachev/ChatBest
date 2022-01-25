@@ -1,9 +1,7 @@
 package com.pet.chat.helpers
 
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.work.Data
 import androidx.work.WorkInfo
@@ -12,6 +10,7 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.pet.chat.App
 import com.pet.chat.network.data.base.Message
+import com.pet.chat.ui.MainChatModule
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -70,7 +69,7 @@ fun Any.toSocketData(): JSONObject {
 }
 
 fun Message.isOwn(): Boolean {
-    return App.prefs?.userID == this.user_id
+    return MainChatModule.chatsPrefs?.userID == this.user_id
 }
 
 inline fun <reified E> List<E>.addLast(data: E): List<E> {

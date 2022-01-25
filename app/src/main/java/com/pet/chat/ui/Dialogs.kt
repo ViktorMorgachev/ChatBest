@@ -32,7 +32,7 @@ fun FilePreviewDialog(
     val (message, messageChange) = rememberSaveable { mutableStateOf("") }
     Dialog(
         onDismissRequest = {
-            App.states?.cameraFilePath = ""
+            MainChatModule.chatsPrefs?.cameraFilePath = ""
             closeDialog.invoke()
             // viewModel.postInternalAction(InternalEvent.OpenFilePreview(fileUri, filePath, false))
         }

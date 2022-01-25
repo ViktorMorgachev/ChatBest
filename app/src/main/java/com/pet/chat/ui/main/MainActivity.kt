@@ -5,16 +5,12 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.WindowManager
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.*
-import androidx.compose.runtime.State
-import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
 import com.pet.chat.App
 import com.pet.chat.ui.*
@@ -24,6 +20,7 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
 
     var resultAfterCamera: ((Boolean) -> Unit)? = null
     var resultAfterCameraPermission: ((Boolean) -> Unit)? = null
@@ -50,7 +47,7 @@ class MainActivity : ComponentActivity() {
 
         Log.d(
             "DebugInfo: ",
-            "User autentificated: ${App.prefs?.identified()} Current Room ${App.states?.lastRooom}"
+            "User autentificated: ${MainChatModule.chatsPrefs?.identified()} Current Room ${MainChatModule.chatsPrefs?.lastRoom}"
         )
     }
 

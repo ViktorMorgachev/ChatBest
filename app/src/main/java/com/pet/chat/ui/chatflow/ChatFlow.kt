@@ -1,6 +1,5 @@
 package com.pet.chat.ui.chatflow
 
-import androidx.compose.foundation.background
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
@@ -8,7 +7,6 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ClearAll
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -26,7 +24,6 @@ import com.pet.chat.ui.screens.chat.Room
 import com.pet.chat.ui.screens.chat.MessagesViewModel
 import com.pet.chat.ui.screens.chats.ChatsScreen
 import com.pet.chat.ui.screens.chats.ChatsViewModel
-import com.pet.chat.ui.theme.toolbarBackground
 
 fun NavGraphBuilder.chatFlow(
     navController: NavController,
@@ -38,7 +35,7 @@ fun NavGraphBuilder.chatFlow(
             viewModel = viewModel,
             navController = navController
         ).also {
-            App.states?.lastRooom = -1
+            MainChatModule.chatsPrefs?.lastRoom = -1
         }
     }
     composable(Screen.Chats.route) {
@@ -53,7 +50,7 @@ fun NavGraphBuilder.chatFlow(
                 }
             })
         ).also {
-            App.states?.lastRooom = -1
+            MainChatModule.chatsPrefs?.lastRoom = -1
         }
     }
     composable(Screen.CreateChat.route) {
@@ -62,7 +59,7 @@ fun NavGraphBuilder.chatFlow(
             navController = navController,
             toolbar = defaultMockToolbar.copy(text =  stringResource(id = R.string.createChat))
         ).also {
-            App.states?.lastRooom = -1
+            MainChatModule.chatsPrefs?.lastRoom = -1
         }
     }
     composable(Screen.Room.route) { backStackEntry ->
@@ -70,7 +67,7 @@ fun NavGraphBuilder.chatFlow(
         val roomID = backStackEntry.arguments?.getString("roomID")?.toInt()
         requireNotNull(roomID) { "roomID parameter wasn't found. Please make sure it's set!" }
         messagesViewModel.curentRoomID = roomID.toInt()
-        val roommateID = messagesViewModel.chatProviderImpl.chats.value.firstOrNull { it.roomID == roomID.toInt() }?.usersIDs?.firstOrNull { App.prefs?.userID != it }
+        val roommateID = messagesViewModel.chatProviderImpl.chats.value.firstOrNull { it.roomID == roomID.toInt() }?.usersIDs?.firstOrNull { MainChatModule.chatsPrefs?.userID != it }
         requireNotNull(roommateID) { "roommateID parameter wasn't found. Please make sure it's set!" }
         Room(
             roomID = roomID,
@@ -90,7 +87,7 @@ fun NavGraphBuilder.chatFlow(
                     }
                 })
         ).also {
-            App.states?.lastRooom = roomID.toInt()
+            MainChatModule.chatsPrefs?.lastRoom = roomID.toInt()
         }
     }
 }

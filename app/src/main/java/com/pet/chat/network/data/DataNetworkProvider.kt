@@ -7,6 +7,7 @@ import com.pet.chat.network.data.send.UserAuth
 import com.pet.chat.providers.MultipleChatProviderImpl
 import com.pet.chat.providers.interfaces.EventFromServerProvider
 import com.pet.chat.providers.interfaces.UsersProvider
+import com.pet.chat.ui.MainChatModule
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
@@ -29,7 +30,7 @@ class DataNetworkProvider @Inject constructor(val eventFromServerProvider: Event
                         val data = eventFromServer.data
                        data.dialogs = data.dialogs.filter { it.room.id != null }
                         val chats = data.dialogs.map{it.toChatItemInfo()}
-                        App.prefs?.saveUser(UserAuth(data.user.id, token = data.token!!))
+                        MainChatModule.chatsPrefs?.saveUser(UserAuth(data.user.id, token = data.token!!))
 
                         chats.forEach { chatItemInfo->
                             chatProvider.updateChat(chatItemInfo)
