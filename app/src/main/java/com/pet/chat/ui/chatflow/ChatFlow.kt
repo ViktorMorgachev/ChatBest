@@ -12,8 +12,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import com.pet.chat.App
 import com.pet.chat.R
+import com.pet.chat.configuration.ChatCongifurator
 import com.pet.chat.network.EventToServer
 import com.pet.chat.network.data.send.ChatDelete
 import com.pet.chat.ui.*
@@ -40,24 +40,30 @@ fun NavGraphBuilder.chatFlow(
     }
     composable(Screen.Chats.route) {
         val chatsViewModel = hiltViewModel<ChatsViewModel>()
-        ChatsScreen(
-            navController = navController,
-            deleteChat = { chatsViewModel.deleteChat(ChatDelete(it.roomId.toInt())) },
-            viewModel = chatsViewModel,
-            toolbar = defaultMockToolbar.copy(text = "Список чатов", leftActions = listOf(){
+        val toolbar = if (ChatCongifurator.enableToolbarChats) {
+            defaultMockToolbar.copy(text = "Список чатов", leftActions = listOf(){
                 IconButton(onClick = { }) {
                     Icon(Icons.Filled.Menu, contentDescription = "Menu")
                 }
             })
+        } else null
+        ChatsScreen(
+            navController = navController,
+            deleteChat = { chatsViewModel.deleteChat(ChatDelete(it.roomId.toInt())) },
+            viewModel = chatsViewModel,
+            toolbar = toolbar
         ).also {
             MainChatModule.chatsPrefs?.lastRoom = -1
         }
     }
     composable(Screen.CreateChat.route) {
+        val toolbar = if (ChatCongifurator.enableToolbarChats) {
+            defaultMockToolbar.copy(text =  stringResource(id = R.string.createChat))
+        } else null
         CreateChatScreen(
             createChat = { chatViewModel.postEventToServer(EventToServer.CreateChatEvent(it)) },
             navController = navController,
-            toolbar = defaultMockToolbar.copy(text =  stringResource(id = R.string.createChat))
+            toolbar = toolbar
         ).also {
             MainChatModule.chatsPrefs?.lastRoom = -1
         }

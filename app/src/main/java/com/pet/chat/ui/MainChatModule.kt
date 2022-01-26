@@ -2,11 +2,9 @@ package com.pet.chat.ui
 
 
 import android.content.Context
-import com.pet.chat.App
 import com.pet.chat.network.ConnectionManager
 import com.pet.chat.network.data.DataNetworkProvider
 import com.pet.chat.storage.ChatsPrefs
-import com.pet.chat.storage.States
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

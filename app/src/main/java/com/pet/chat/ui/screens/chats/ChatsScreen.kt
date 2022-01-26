@@ -50,7 +50,7 @@ fun ChatsScreen(
     deleteChat: (ChatDelete) -> Unit,
     navController: NavController,
     viewModel: ChatsViewModel,
-    toolbar: Toolbar
+    toolbar: Toolbar? = null
 ) {
     val scaffoldState = rememberScaffoldState()
     val firstViewState = if(viewModel.chatProviderImpl.chats.value.isNotEmpty()){ ViewState.Display(listOf(viewModel.chatProviderImpl.chats.value)) } else ViewState.StateLoading
@@ -135,7 +135,7 @@ fun DisplayChats(
     modifier: Modifier = Modifier,
     chats: List<ChatItemInfo>,
     deleteChatAction: (ChatDelete) -> Unit,
-    navController: NavController, toolbar: Toolbar) {
+    navController: NavController, toolbar: Toolbar?) {
 
     SideEffect {
         Log.d("Screen", "ChatsView")
@@ -146,7 +146,7 @@ fun DisplayChats(
                 .fillMaxWidth()
         ) {
             stickyHeader {
-                toolbar.invoke()
+                toolbar?.invoke()
             }
             items(chats) { item ->
                 ChatItemMaterial(
