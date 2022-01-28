@@ -1,7 +1,6 @@
 package com.pet.chat.network.data
 
 import android.util.Log
-import com.pet.chat.App
 import com.pet.chat.helpers.toSocketData
 import com.pet.chat.network.ConnectionManager
 import com.pet.chat.network.EventFromServer
