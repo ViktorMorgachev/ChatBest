@@ -36,7 +36,7 @@ sealed class EventToServer(val eventName: String, val any: Any) {
     data class AuthEvent(val data: UserAuth) : EventToServer("user.auth", any = data)
     data class CreateChatEvent(val data: ChatStart) : EventToServer("chat.start", any = data)
     data class SendMessageEvent(val data: SendMessage) : EventToServer("message.send", any = data)
-    data class GetChatHistory(val data: ChatHistory) : EventToServer("chat.history", any = data)
+    data class GetChatHistory(var data: ChatHistory) : EventToServer("chat.history", any = data)
     data class DeleteChat(val data: ChatDelete) : EventToServer("chat.delete", any = data)
     data class ClearChatEvent(val data: ClearChat) : EventToServer("chat.clear", any = data)
     data class DeleteMessageEvent(val data: DeleteMessage) : EventToServer("message.delete", any = data)
@@ -142,6 +142,7 @@ class ConnectionManager @Inject constructor(private val eventFromServerProvider:
         try {
             if (socket?.connected() == false)
                 socket?.connect()
+            Log.d("DataNetworkProvider", "postEventToServer ${event.any.toSocketData()}")
             socket?.emit(event.eventName, event.any.toSocketData())
         } catch (e: Throwable) {
             e.printStackTrace()

@@ -56,12 +56,11 @@ class MultipleChatProviderImpl @Inject constructor(override val chats: MutableSt
     }
 
     override fun updateChat(chat: ChatItemInfo) {
-        var actualChat = getCurrentChat(roomID = chat.roomID)
+        val actualChat = getCurrentChat(roomID = chat.roomID)
         if (actualChat != null) {
             chat.roomMessages.forEach { roomMessage ->
-                if (!actualChat!!.roomMessages.map { it.messageID }.contains(roomMessage.messageID)){
-                    actualChat!!.roomMessages = actualChat!!.roomMessages.addLast(roomMessage)
-                    actualChat = actualChat!!.copy()
+                if (!actualChat.roomMessages.map { it.messageID }.contains(roomMessage.messageID)){
+                    actualChat.roomMessages = actualChat.roomMessages.addLast(roomMessage).sortedBy { it.messageID }
                 }
             }
 

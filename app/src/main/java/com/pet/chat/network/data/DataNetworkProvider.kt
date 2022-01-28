@@ -1,6 +1,8 @@
 package com.pet.chat.network.data
 
+import android.util.Log
 import com.pet.chat.App
+import com.pet.chat.helpers.toSocketData
 import com.pet.chat.network.ConnectionManager
 import com.pet.chat.network.EventFromServer
 import com.pet.chat.network.data.send.UserAuth
@@ -28,6 +30,7 @@ class DataNetworkProvider @Inject constructor(val eventFromServerProvider: Event
                 when(eventFromServer){
                     is EventFromServer.AutorizationEvent->{
                         val data = eventFromServer.data
+                        Log.d("DataNetworkProvider", "AutorizationEvent ${data.toSocketData()}")
                        data.dialogs = data.dialogs.filter { it.room.id != null }
                         val chats = data.dialogs.map{it.toChatItemInfo()}
                         MainChatModule.chatsPrefs?.saveUser(UserAuth(data.user.id, token = data.token!!))
@@ -46,11 +49,13 @@ class DataNetworkProvider @Inject constructor(val eventFromServerProvider: Event
                     }
                     is EventFromServer.MessageNewEvent ->{
                         val data = eventFromServer.data
+                        Log.d("DataNetworkProvider", "MessageNewEvent ${data.toSocketData()}")
                         if (data.room.id == null) return@collect
                         chatProvider.updateChat(data.toChatItemInfo())
                     }
                     is EventFromServer.ChatHistoryEvent -> {
                         val data = eventFromServer.data
+                        Log.d("DataNetworkProvider", "ChatHistoryEvent ${data.toSocketData()}")
                         val roomID: Int = data.room?.id?.toInt() ?: currentRoomID ?: return@collect
                         data.toChatItemInfo(currentRoomID = roomID).let { chatItemInfo ->
                             chatProvider.updateChat(chatItemInfo)
