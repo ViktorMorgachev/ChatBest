@@ -42,7 +42,7 @@ fun ChatTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable (
     chatSecondaryTextColor = Color(142, 142, 147)
 
     if (darkTheme){
-        toolbarBackground = Color(40, 43, 46, 1)
+        toolbarBackground = Color(40, 43, 46)
         messageOwnBackGround = Color(31, 57, 71)
         messageBackGround = Color(54, 54, 54)
         contentColor = Color.White
@@ -50,7 +50,7 @@ fun ChatTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable (
         chatSplitterColor = Color(60, 60, 67)
 
     } else {
-        toolbarBackground = Color(255, 255, 255, 1)
+        toolbarBackground = Color(255, 255, 255)
         messageOwnBackGround = Color(183, 229, 255)
         messageBackGround = Color(250, 250, 250)
         contentColor = Color.Black
