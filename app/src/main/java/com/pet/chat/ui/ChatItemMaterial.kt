@@ -42,7 +42,7 @@ fun ChatItemMaterial(modifier: Modifier = Modifier,
     ) {
         Column(modifier = modifier.fillMaxWidth()) {
             Row(modifier = modifier
-                .padding(horizontal = 16.dp)
+                .padding(start = 16.dp)
                 .padding(vertical = 8.dp)) {
                 Image(
                     painter = painterResource(R.drawable.ic_account),
@@ -52,14 +52,14 @@ fun ChatItemMaterial(modifier: Modifier = Modifier,
                         .clip(CircleShape)
                 )
                 Column(modifier = Modifier.padding(start = 16.dp)) {
-                    Text(text = "Пользователь ${chatDetails.usersIDs.first { it != MainChatModule.chatsPrefs?.userID }}", fontStyle = FontStyle.Normal, fontSize = 16.sp, modifier = Modifier.padding(bottom = 11.dp))
-                    Text(text = chatDetails.roomMessages.lastOrNull()?.text ?: "", color = chatSecondaryTextColor, fontSize = 14.sp)
+                    Text(text = "Пользователь ${chatDetails.usersIDs.first { it != MainChatModule.chatsPrefs?.userID }}", fontStyle = FontStyle.Normal, fontSize = 14.sp, modifier = Modifier.padding(bottom = 11.dp))
+                    Text(text = chatDetails.roomMessages.lastOrNull()?.text ?: "", color = chatSecondaryTextColor, fontSize = 12.sp)
                 }
                 Spacer(modifier = Modifier.weight(1f))
-                Text(text = "11/16/19", color = chatSecondaryTextColor, fontSize = 14.sp, modifier = Modifier.padding(end = 16.dp))
+                Text(text = "11/16/19", color = chatSecondaryTextColor, fontSize = 12.sp, modifier = Modifier.padding(end = 16.dp))
                 IconButton(
                     onClick = { deleteChat(ChatDelete(roomId = chatDetails.roomID)) },
-                    modifier = Modifier.padding(4.dp)
+                    modifier = Modifier.padding(vertical = 4.dp)
                 ) {
                     Icon(Icons.Filled.Delete, contentDescription = "Delete")
                 }

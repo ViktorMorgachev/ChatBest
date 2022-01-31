@@ -21,7 +21,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class MultipleChatProviderImpl @Inject constructor(override val chats: MutableStateFlow<List<ChatItemInfo>>) : ChatProvider<ChatItemInfo>, MultipleMessagesProvider<RoomMessage> {
+class MultipleChatProviderImpl @Inject constructor(override val chats: MutableStateFlow<List<ChatItemInfo>>) :
+    ChatProvider<ChatItemInfo>, MultipleMessagesProvider<RoomMessage> {
 
     init {
         Log.d("ChatProviderImpl", "Init")
@@ -46,10 +47,13 @@ class MultipleChatProviderImpl @Inject constructor(override val chats: MutableSt
             actualChat.roomMessages = listOf()
         }
         update()
-        Log.d("ChatProviderImpl", "clearChat Messages ${actualChat?.roomMessages} Size ${actualChat?.roomMessages?.size}")
+        Log.d(
+            "ChatProviderImpl",
+            "clearChat Messages ${actualChat?.roomMessages} Size ${actualChat?.roomMessages?.size}"
+        )
     }
 
-    private fun update(){
+    private fun update() {
         GlobalScope.launch(Dispatchers.IO) {
             chats.emit(listOf<ChatItemInfo>().addAll(chats.value))
         }
@@ -59,13 +63,15 @@ class MultipleChatProviderImpl @Inject constructor(override val chats: MutableSt
         val actualChat = getCurrentChat(roomID = chat.roomID)
         if (actualChat != null) {
             chat.roomMessages.forEach { roomMessage ->
-                if (!actualChat.roomMessages.map { it.messageID }.contains(roomMessage.messageID)){
-                    actualChat.roomMessages = actualChat.roomMessages.addLast(roomMessage).sortedBy { it.messageID }
+                if (!actualChat.roomMessages.map { it.messageID }.contains(roomMessage.messageID)) {
+                    actualChat.roomMessages =
+                        actualChat.roomMessages.addLast(roomMessage).sortedBy { it.messageID }
                 }
             }
 
         } else {
-            chats.value = chats.value.addLast(chat)
+            if (!chats.value.contains(chat))
+                chats.value = chats.value.addLast(chat)
         }
         chats.value.forEach {
             Log.d("ChatProviderImpl", "Chat: ${it.roomID} Messages: ${it.roomMessages.size}")
@@ -79,7 +85,11 @@ class MultipleChatProviderImpl @Inject constructor(override val chats: MutableSt
         if (currentChat != null) {
             currentChat.roomMessages = currentChat.roomMessages.addLast(message)
         }
-        Log.d("ChatProviderImpl", "addMessage Messages ${currentChat?.roomMessages} Size ${currentChat?.roomMessages?.size}")
+        update()
+        Log.d(
+            "ChatProviderImpl",
+            "addMessage Messages ${currentChat?.roomMessages} Size ${currentChat?.roomMessages?.size}"
+        )
     }
 
     override fun deleteMessageByID(messageID: Int, roomID: Int) {
@@ -89,7 +99,10 @@ class MultipleChatProviderImpl @Inject constructor(override val chats: MutableSt
                 currentChat.roomMessages = currentChat.roomMessages.removeWithInstance(it)
             }
         }
-        Log.d("ChatProviderImpl", "deleteMessageByID Messages ${currentChat?.roomMessages} Size ${currentChat?.roomMessages?.size}")
+        Log.d(
+            "ChatProviderImpl",
+            "deleteMessageByID Messages ${currentChat?.roomMessages} Size ${currentChat?.roomMessages?.size}"
+        )
     }
 
     override fun addTempMessage(data: RoomMessage, roomID: Int) {
@@ -97,7 +110,11 @@ class MultipleChatProviderImpl @Inject constructor(override val chats: MutableSt
         if (currentChat != null) {
             currentChat.roomMessages = currentChat.roomMessages.addLast(data)
         }
-        Log.d("ChatProviderImpl", "addTempMessage Messages ${currentChat?.roomMessages} Size ${currentChat?.roomMessages?.size}")
+        update()
+        Log.d(
+            "ChatProviderImpl",
+            "addTempMessage Messages ${currentChat?.roomMessages} Size ${currentChat?.roomMessages?.size}"
+        )
     }
 
     private fun getCurrentChat(roomID: Int): ChatItemInfo? {
@@ -106,12 +123,13 @@ class MultipleChatProviderImpl @Inject constructor(override val chats: MutableSt
 
 
     override fun updateChatState(data: Any) {
-        if (data is ChatRead){
+        if (data is ChatRead) {
             if (data.room.id == null) return
             chats.value.find { it.roomID == data.room.id!!.toInt() }?.let {
                 it.unreadCount = 0
             }
         }
+        update()
     }
 
     override fun fileUploadError(messageID: Int, roomID: Int) {
@@ -119,7 +137,10 @@ class MultipleChatProviderImpl @Inject constructor(override val chats: MutableSt
         if (currentChat != null) {
             currentChat.roomMessages.firstOrNull { it.messageID == messageID }?.let { roomMessage ->
                 roomMessage.file?.state = State.Error
-                currentChat.roomMessages = currentChat.roomMessages.replaceWithInstance(roomMessage, (roomMessage as RoomMessage.SendingMessage).copy())
+                currentChat.roomMessages = currentChat.roomMessages.replaceWithInstance(
+                    roomMessage,
+                    (roomMessage as RoomMessage.SendingMessage).copy()
+                )
             }
         }
     }

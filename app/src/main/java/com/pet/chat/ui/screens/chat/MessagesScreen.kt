@@ -271,6 +271,7 @@ fun MessagesView(
         }
 
         val sendAction = {
+            messageChange("")
             actionProvider?.sendMessageAction(
                 SendMessage(
                     roomId = roomID,
@@ -278,7 +279,6 @@ fun MessagesView(
                     attachmentId = null
                 )
             )
-            messageChange("")
         }
 
         Column() {
